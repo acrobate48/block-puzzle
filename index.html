@@ -17,6 +17,7 @@ canvas{display:block;touch-action:none;image-rendering:auto}
 <body><canvas id="c"></canvas>
 <script>
 'use strict';
+const CELL_CACHE=new Map();
 window.addEventListener('error', (e) => {
   document.body.style.background = '#111';
   document.body.innerHTML = '<pre style="color:#fff;padding:20px;white-space:pre-wrap;">' + e.message + '\n' + (e.filename || '') + '\nligne: ' + (e.lineno || '') + '</pre>';
@@ -73,7 +74,7 @@ function resize(){
   canvas.width=W;canvas.height=H;
   const portrait=H>W;
   CELL=portrait?Math.floor((W-14)/COLS):Math.floor((H-52)/ROWS);
-  CR=Math.max(3,CELL/7|0); // corner radius
+  CR=Math.max(3,CELL/7|0);
   GW=CELL*COLS;GH=CELL*ROWS;
   GRID_X=portrait?((W-GW)/2)|0:(W*0.06)|0;
   TRAY_H=Math.max((CELL*2.1)|0,68);
@@ -82,9 +83,7 @@ function resize(){
   if(GRID_Y<top)GRID_Y=top;
   TRAY_Y=GRID_Y+GH+6;
   PIECE_CELL=Math.floor(CELL*0.58);
-  if (typeof CELL_CACHE !== "undefined") {
-    CELL_CACHE.clear();
-  }
+  CELL_CACHE.clear();
 }
 window.addEventListener('resize',()=>{resize();menuBg=buildBg(selTheme);},false);
 resize();
@@ -184,7 +183,6 @@ function drawScore(ctx,text,x,y,th,font){
 }
 
 // ─── CELL CACHE ───────────────────────────────────────────────────────────────
-const CELL_CACHE=new Map();
 function getCached(col,sz,skin){
   const k=`${skin}_${col}_${sz}`;
   if(CELL_CACHE.has(k))return CELL_CACHE.get(k);

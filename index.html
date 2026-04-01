@@ -118,7 +118,7 @@ function rclip(ctx,x,y,sz,r,fn){ctx.save();rp(ctx,x,y,sz,sz,r);ctx.clip();fn();c
 // ─── PREMIUM TEXT ─────────────────────────────────────────────────────────────
 // Gradient + outline + glow for title characters
 function drawPremText(ctx,text,x,y,font,topCol,botCol,outlineCol,glowCol,glowSz=14,lw=3){
-  ctx.save();ctx.font=font;ctx.textAlign='left';ctx.textBaseline='middle';
+  ctx.save();ctx.font=font;ctx.textAlign='center';ctx.textBaseline='middle';
   const fsz=parseFloat((font.match(/[\d.]+/)||['14'])[0]);
   const g=ctx.createLinearGradient(0,y-fsz*0.5,0,y+fsz*0.5);
   g.addColorStop(0,topCol);g.addColorStop(0.55,botCol);g.addColorStop(1,lerpC(botCol,'#000000',0.3));
@@ -543,9 +543,9 @@ class Debris{
 }
 function spawnDebris(clC,ti,n){Object.entries(clC).forEach(([k,color])=>{const r=Math.floor(+k/100),c=(+k)%100;const cx=GRID_X+c*CELL+CELL/2,cy=GRID_Y+r*CELL+CELL/2;for(let i=0;i<n;i++)debris.push(new Debris(cx+rnd(-CELL/4,CELL/4),cy+rnd(-CELL/4,CELL/4),color,ti));});}
 class FloatText{
-  constructor(text,x,y,col){this.text=text;this.x=x;this.y=y;this.col=col;this.life=75;this.ml=75;this.vy=-1.1;}
+  constructor(text,x,y,col,sizeM=1,life=75){this.text=text;this.x=x;this.y=y;this.col=col;this.life=life;this.ml=life;this.vy=-1.1;this.sizeM=sizeM;}
   update(){this.y+=this.vy;this.vy*=0.97;this.life--;return this.life>0;}
-  draw(ctx){const a=this.life/this.ml,fsz=Math.max(10,CELL*0.5)|0;ctx.save();ctx.globalAlpha=a;ctx.font=`bold ${fsz}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor=this.col;ctx.shadowBlur=10;ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeText(this.text,this.x,this.y);ctx.fillStyle=this.col;ctx.fillText(this.text,this.x,this.y);ctx.restore();}
+  draw(ctx){const a=this.life/this.ml,fsz=Math.max(10,CELL*0.5*this.sizeM)|0;ctx.save();ctx.globalAlpha=a;ctx.font=`bold ${fsz}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor=this.col;ctx.shadowBlur=10;ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeText(this.text,this.x,this.y);ctx.fillStyle=this.col;ctx.fillText(this.text,this.x,this.y);ctx.restore();}
 }
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -565,11 +565,22 @@ let drag=null,mouseX=W/2,mouseY=H/2;
 let gameFx=null,gameBg=null;
 let placedCells=[]; // {r,c,f} popup animation
 let fadeAlpha=0; // screen fade in on game start
+let gridStars=Array.from({length:ROWS},()=>Array(COLS).fill(false));
+let gridBonus=Array.from({length:ROWS},()=>Array(COLS).fill(null));
+let secondChanceUsed=false,showSecondChance=false;
+let savedGrid=null,savedScore=0,savedTray=null,savedPlaced=0,savedStars=null,savedBonus=null;
+let secondChanceBtns={oui:null,non:null};
+let doublePointsUntil=0;
+let showAddCellsBonus=false,addCellsBonusRect=null,addCellsBonusTimer=10;
 
 function resetGame(){
   grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));
   tray=newTray();score=0;placed=0;over=false;combo=0;overT=0;
   particles=[];debris=[];floats=[];screenFlash=0;shake=0;drag=null;placedCells=[];
+  gridStars=Array.from({length:ROWS},()=>Array(COLS).fill(false));
+  gridBonus=Array.from({length:ROWS},()=>Array(COLS).fill(null));
+  secondChanceUsed=false;showSecondChance=false;doublePointsUntil=0;
+  showAddCellsBonus=false;addCellsBonusTimer=Math.floor(rnd(8,15));
   curTheme=selTheme;gameFx=initFx(selTheme);gameBg=buildBg(selTheme);fadeAlpha=1;
 }
 function getCurTheme(){return(selTheme+Math.floor(score/500))%THEMES.length;}
@@ -647,16 +658,17 @@ function drawMenu(t){
   themeRects.forEach((tr,i)=>{
     const sth=THEMES[i],sel=i===selTheme;const{x,y,w,h}=tr;
     if(sel){ctx.save();ctx.shadowColor=sth.tm;ctx.shadowBlur=9;rp(ctx,x,y,w,h,h/3);ctx.strokeStyle=sth.tm;ctx.lineWidth=2;ctx.stroke();ctx.restore();}
-    // Glass bg with theme tint
+    // Full color theme bg
     const tg=ctx.createLinearGradient(x,y,x,y+h);
-    tg.addColorStop(0,hexA(sth.gbg,sel?0.9:0.7));tg.addColorStop(1,hexA(sth.bg,sel?0.8:0.55));
+    tg.addColorStop(0,hexA(sth.tm,sel?0.92:0.78));tg.addColorStop(1,hexA(sth.ta,sel?0.82:0.62));
     rrect(ctx,x,y,w,h,h/3,tg,null);
-    ctx.fillStyle=hexA(sth.sl,0.3);ctx.fillRect(x,y,w/2,h);rp(ctx,x,y,w,h,h/3);ctx.fillStyle=hexA(sth.sl,0.22);ctx.fill();
+    const tsh=ctx.createLinearGradient(x,y,x,y+h*0.5);tsh.addColorStop(0,'rgba(255,255,255,0.22)');tsh.addColorStop(1,'rgba(255,255,255,0)');
+    rp(ctx,x,y,w,h,h/3);ctx.fillStyle=tsh;ctx.fill();
     rp(ctx,x,y,w,h,h/3);ctx.strokeStyle=sel?sth.tm:hexA(sth.dc,0.7);ctx.lineWidth=sel?2:1;ctx.stroke();
     const tfz=cl(Math.floor(h*0.44),6,12);
     ctx.save();ctx.font=`bold ${tfz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     if(sel){ctx.shadowColor=sth.tm;ctx.shadowBlur=5;}
-    ctx.fillStyle=sel?sth.tm:sth.tg;ctx.fillText(sth.name,x+w/2,y+h/2);ctx.restore();
+    ctx.fillStyle='rgba(255,255,255,0.95)';ctx.fillText(sth.name,x+w/2,y+h/2);ctx.restore();
   });
   // PLAY BUTTON
   if(playRect){
@@ -715,6 +727,10 @@ function drawGame(t){
     if(color){
       if(pop&&pop.f<8){const sc=0.72+0.28*(pop.f/8);const off=CELL*(1-sc)/2;drawCell(ctx,color,(x+off)|0,(y+off)|0,Math.ceil(CELL*sc),selSkin,t);}
       else drawCell(ctx,color,x,y,CELL,selSkin,t);
+      // Star overlay
+      if(gridStars[r][c]){const sfsz=Math.max(8,CELL*0.38)|0;ctx.save();ctx.font=`${sfsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalAlpha=0.9;ctx.fillStyle='#FFE030';ctx.shadowColor='#FFD700';ctx.shadowBlur=7;ctx.fillText('★',x+CELL/2,y+CELL/2);ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();}
+      // Bonus overlay
+      if(gridBonus[r][c]){const bfsz=Math.max(7,CELL*0.28)|0;const isB=gridBonus[r][c]==='bomb';ctx.save();ctx.font=`bold ${bfsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalAlpha=0.92;ctx.fillStyle=isB?'#FF5010':'#30FFAA';ctx.shadowColor=isB?'#FF7030':'#00FFB0';ctx.shadowBlur=7;ctx.fillText(isB?'✦×':'×2',x+CELL/2,y+CELL/2);ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();}
     }else{
       ctx.fillStyle=hexA(th.ge,0.6);ctx.fillRect(x+1,y+1,CELL-2,CELL-2);
       ctx.strokeStyle=hexA(th.sl,0.18);ctx.lineWidth=1;ctx.strokeRect(x+1,y+1,CELL-2,CELL-2);
@@ -770,6 +786,56 @@ function drawGame(t){
   const vig=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.28,W/2,H/2,Math.max(W,H)*0.68);
   vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,0,0.38)');
   ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
+  // Add 2 cells bonus banner
+  if(showAddCellsBonus&&!over&&!showSecondChance){
+    const bw2=Math.min(W-20,340),bh2=Math.round(H*0.082)+2;
+    const bx2=(W-bw2)/2,by2=H-bh2-8;
+    const pulse2=0.5+0.5*Math.sin(Date.now()*0.005);
+    const bbg=ctx.createLinearGradient(bx2,by2,bx2,by2+bh2);
+    bbg.addColorStop(0,hexA(th.sl,0.96));bbg.addColorStop(1,hexA(th.dc,0.92));
+    rrect(ctx,bx2,by2,bw2,bh2,bh2/2,bbg,null);
+    rp(ctx,bx2,by2,bw2,bh2,bh2/2);ctx.strokeStyle=hexA(th.tm,0.7+pulse2*0.3);ctx.lineWidth=1.5;ctx.stroke();
+    const bfsz2=cl(Math.floor(bh2*0.27),7,13);
+    ctx.save();ctx.font=`bold ${bfsz2}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=th.hi||th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;
+    ctx.fillText('BONUS : touchez pour +2 cases à un bloc',bx2+bw2/2,by2+bh2/2);
+    ctx.shadowBlur=0;ctx.restore();
+    addCellsBonusRect={x:bx2,y:by2,w:bw2,h:bh2};
+  }else if(!showAddCellsBonus){addCellsBonusRect=null;}
+  // Second Chance Panel
+  if(showSecondChance){
+    const scpW=Math.min(W-24,360),scpH=Math.round(H*0.4);
+    const scpX=(W-scpW)/2,scpY=(H-scpH)/2;
+    ctx.fillStyle='rgba(0,0,0,0.76)';ctx.fillRect(0,0,W,H);
+    const spg=ctx.createLinearGradient(scpX,scpY,scpX,scpY+scpH);
+    spg.addColorStop(0,hexA(th.gbg,0.97));spg.addColorStop(1,hexA(th.bg,0.95));
+    rrect(ctx,scpX,scpY,scpW,scpH,16,spg,null);
+    const spsh=ctx.createLinearGradient(scpX,scpY,scpX,scpY+scpH*0.35);
+    spsh.addColorStop(0,'rgba(255,255,255,0.11)');spsh.addColorStop(1,'rgba(255,255,255,0)');
+    rp(ctx,scpX,scpY,scpW,scpH*0.35,16);ctx.fillStyle=spsh;ctx.fill();
+    rp(ctx,scpX,scpY,scpW,scpH,16);ctx.strokeStyle=hexA(th.dc,0.7);ctx.lineWidth=2;ctx.stroke();
+    const qSz=cl(scpW*0.068|0,10,20);
+    ctx.save();ctx.font=`bold ${qSz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=th.hi||th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=12;
+    ctx.fillText('Voulez-vous une',scpX+scpW/2,scpY+scpH*0.22);
+    ctx.fillText('seconde chance ?',scpX+scpW/2,scpY+scpH*0.37);
+    ctx.shadowBlur=0;ctx.restore();
+    const btnW=Math.floor(scpW*0.32),btnH=Math.floor(scpH*0.2);
+    const ouiX=scpX+scpW*0.12,ouiY=scpY+scpH*0.55;
+    const ouiG=ctx.createLinearGradient(ouiX,ouiY,ouiX,ouiY+btnH);
+    ouiG.addColorStop(0,'#40C060');ouiG.addColorStop(1,'#205030');
+    rrect(ctx,ouiX,ouiY,btnW,btnH,btnH/3,ouiG,null);
+    ctx.save();ctx.font=`bold ${Math.floor(btnH*0.5)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='#FFF';ctx.shadowColor='#60FF80';ctx.shadowBlur=6;ctx.fillText('OUI',ouiX+btnW/2,ouiY+btnH/2);ctx.restore();
+    secondChanceBtns.oui={x:ouiX,y:ouiY,w:btnW,h:btnH};
+    const nonX=scpX+scpW*0.56,nonY=ouiY;
+    const nonG=ctx.createLinearGradient(nonX,nonY,nonX,nonY+btnH);
+    nonG.addColorStop(0,'#C04040');nonG.addColorStop(1,'#601020');
+    rrect(ctx,nonX,nonY,btnW,btnH,btnH/3,nonG,null);
+    ctx.save();ctx.font=`bold ${Math.floor(btnH*0.5)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='#FFF';ctx.shadowColor='#FF6060';ctx.shadowBlur=6;ctx.fillText('NON',nonX+btnW/2,nonY+btnH/2);ctx.restore();
+    secondChanceBtns.non={x:nonX,y:nonY,w:btnW,h:btnH};
+  }
   // Game Over
   if(over){
     const el=Date.now()-overT;
@@ -802,7 +868,6 @@ function drawGame(t){
         ctx.globalAlpha=tapA;ctx.font=`bold ${scSz*0.85}px Arial`;ctx.fillStyle='#A0E8A0';ctx.shadowColor='#A0E8A0';ctx.shadowBlur=6;
         ctx.fillText('Toucher pour continuer',W/2,py+ph2*0.82);ctx.shadowBlur=0;ctx.globalAlpha=1;
       }
-      ctx.font=`${scSz*0.75}px Arial`;ctx.fillStyle=hexA(th.tg,0.7);ctx.fillText('R = rejouer',W/2,py+ph2*0.92);
       ctx.textAlign='left';ctx.textBaseline='alphabetic';
     }
   }
@@ -825,6 +890,7 @@ function drawHUD(th){
     // Right: theme + combo
     ctx.textAlign='right';ctx.fillStyle=th.ta;ctx.fillText(THEMES[curTheme].name,W-8,bh*0.38);
     if(combo>1){ctx.save();ctx.font=`bold ${fz*0.88}px Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;ctx.fillText(`×${combo}`,W-8,bh*0.72);ctx.restore();}
+    if(doublePointsUntil>Date.now()){const rem=Math.ceil((doublePointsUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${fz*0.65}px Arial`;ctx.fillStyle='#30FFAA';ctx.shadowColor='#00FFB0';ctx.shadowBlur=5;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(`×2 ${rem}s`,W-8,combo>1?bh*0.52:bh*0.72);ctx.shadowBlur=0;ctx.restore();}
     ctx.textAlign='left';ctx.textBaseline='alphabetic';
   }else{
     const hx=GRID_X+GW+8,hw=W-hx-5;
@@ -843,39 +909,90 @@ function drawHUD(th){
 
 // ─── INPUT ───────────────────────────────────────────────────────────────────
 function getPos(e){if(e.touches&&e.touches.length>0)return{x:e.touches[0].clientX,y:e.touches[0].clientY};if(e.changedTouches&&e.changedTouches.length>0)return{x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};return{x:e.clientX,y:e.clientY};}
-function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;if(gameState==='menu'){handleMenuTap(x,y);return;}if(gameState==='gameover'){if(Date.now()-overT>1200)gameState='menu';return;}if(gameState==='playing'&&!over){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};break;}}}}
+function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;if(gameState==='menu'){handleMenuTap(x,y);return;}if(gameState==='gameover'){if(Date.now()-overT>1200)gameState='menu';return;}if(gameState==='playing'&&!over&&!showSecondChance){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};break;}}}}
 function onMove(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;}
+function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+function addCellsToShape(shape){
+  const cells=[];for(let r=0;r<shape.length;r++)for(let c=0;c<shape[r].length;c++)if(shape[r][c])cells.push([r,c]);
+  const occ=new Set(cells.map(([r,c])=>r+','+c));const adj=[];const dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+  cells.forEach(([r,c])=>{dirs.forEach(([dr,dc])=>{const nr=r+dr,nc=c+dc;if(nr>=0&&nc>=0&&!occ.has(nr+','+nc)){adj.push([nr,nc]);occ.add(nr+','+nc);}});});
+  shuffleArr(adj);const toAdd=adj.slice(0,Math.min(2,adj.length));
+  const all=[...cells,...toAdd];
+  const minR=Math.min(...all.map(([r])=>r)),minC=Math.min(...all.map(([,c])=>c));
+  const maxR=Math.max(...all.map(([r])=>r)),maxC=Math.max(...all.map(([,c])=>c));
+  const ns=Array.from({length:maxR-minR+1},()=>Array(maxC-minC+1).fill(0));
+  all.forEach(([r,c])=>{ns[r-minR][c-minC]=1;});return ns;
+}
 function onUp(e){
   e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;
-  if(drag&&gameState==='playing'&&!over){
+  // Second chance buttons
+  if(showSecondChance){
+    const ob=secondChanceBtns.oui,nb=secondChanceBtns.non;
+    if(ob&&x>=ob.x&&x<ob.x+ob.w&&y>=ob.y&&y<ob.y+ob.h){
+      grid=savedGrid;tray=savedTray;score=savedScore;placed=savedPlaced;
+      gridStars=savedStars;gridBonus=savedBonus;
+      showSecondChance=false;secondChanceUsed=true;combo=0;drag=null;return;
+    }
+    if(nb&&x>=nb.x&&x<nb.x+nb.w&&y>=nb.y&&y<nb.y+nb.h){
+      showSecondChance=false;secondChanceUsed=true;
+      over=true;overT=Date.now();
+      if(score>best){best=score;try{localStorage.setItem('blockpuzzle_best',String(best));}catch(e2){}}
+      setTimeout(()=>{gameState='gameover';},2000);drag=null;return;
+    }
+    drag=null;return;
+  }
+  // Add 2 cells bonus click
+  if(showAddCellsBonus&&addCellsBonusRect){
+    const br=addCellsBonusRect;
+    if(x>=br.x&&x<br.x+br.w&&y>=br.y&&y<br.y+br.h){
+      const avail=tray.map((p,i)=>p?i:-1).filter(i=>i>=0);
+      if(avail.length>0){const idx=avail[Math.floor(Math.random()*avail.length)];tray[idx]={...tray[idx],shape:addCellsToShape(tray[idx].shape)};}
+      showAddCellsBonus=false;drag=null;return;
+    }
+  }
+  if(drag&&gameState==='playing'&&!over&&!showSecondChance){
     const piece=tray[drag.idx];
     if(piece){const{gr,gc}=snapPos(x,y,piece.shape);if(canPlace(grid,piece.shape,gr,gc)){
+      // Save pre-move state for second chance
+      if(!secondChanceUsed){
+        savedGrid=grid.map(r=>[...r]);savedScore=score;
+        savedTray=tray.map(p=>p?{...p,shape:p.shape.map(row=>[...row])}:null);
+        savedPlaced=placed;savedStars=gridStars.map(r=>[...r]);savedBonus=gridBonus.map(r=>[...r]);
+      }
       placePiece(grid,piece.shape,piece.color,gr,gc);
-      // Pop anim for placed cells
-      piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)placedCells.push({r:gr+rr,c:gc+cc,f:0});}));
+      // Pop anim + stars/bonus assignment per cell
+      piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const ri=gr+rr,ci=gc+cc;placedCells.push({r:ri,c:ci,f:0});const rn=Math.random();gridStars[ri][ci]=rn<0.15;if(!gridStars[ri][ci]){const rn2=Math.random();gridBonus[ri][ci]=rn2<0.05?'bomb':rn2<0.09?'x2':null;}else gridBonus[ri][ci]=null;}}));
       tray[drag.idx]=null;placed++;
+      showAddCellsBonus=false;addCellsBonusTimer--;
+      if(addCellsBonusTimer<=0){showAddCellsBonus=true;addCellsBonusTimer=Math.floor(rnd(8,15));}
       const ti=getCurTheme(),{n,cells,colors}=clearLines(grid);
       if(n>0){
-        combo++;const pts=Math.round(n===1?100*(1+(combo-1)*0.5):n===2?350*(1+(combo-1)*0.5):n*165*(1+(combo-1)*0.5));
+        let starPts=0;const bombList=[];let hasX2=false;
+        cells.forEach(({r,c})=>{if(gridStars[r][c])starPts+=25;if(gridBonus[r][c]==='bomb')bombList.push({r,c});if(gridBonus[r][c]==='x2')hasX2=true;gridStars[r][c]=false;gridBonus[r][c]=null;});
+        const bombKilled=[];
+        bombList.forEach(({r,c})=>{for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const br=r+dr,bc=c+dc;if(br>=0&&br<ROWS&&bc>=0&&bc<COLS&&grid[br][bc]){bombKilled.push({r:br,c:bc});grid[br][bc]=null;gridStars[br][bc]=false;gridBonus[br][bc]=null;}}});
+        if(bombKilled.length>0){spawnParticles(bombKilled,8,2,['#FF6020','#FFA020','#FF2010']);shake=Math.max(shake,14);shakePow=Math.max(shakePow,6);screenFlash=Math.min(255,screenFlash+120);screenFlashCol='#FF4010';}
+        if(hasX2)doublePointsUntil=Date.now()+60000;
+        combo++;
+        let pts=Math.round(n===1?100*(1+(combo-1)*0.5):n===2?350*(1+(combo-1)*0.5):n*165*(1+(combo-1)*0.5));
+        pts+=starPts;
+        if(Date.now()<doublePointsUntil)pts=pts*2;
         score+=pts;
         spawnParticles(cells,6,1.2,THEMES[ti].pc);spawnDebris(colors,ti,8);
-        if(n>=2){shake=10;shakePow=3+(n>=3?4:0);}
-        screenFlash=80+(n>=3?120:0);screenFlashCol=THEMES[ti].tm;
+        if(n>=2){shake=Math.max(shake,10);shakePow=Math.max(shakePow,3+(n>=3?4:0));}
+        screenFlash=Math.max(screenFlash,80+(n>=3?120:0));screenFlashCol=THEMES[ti].tm;
         const miny=Math.min(...cells.map(c=>c.r));
         floats.push(new FloatText(n>=3?`★ +${pts} ★`:`+${pts}`,GRID_X+GW/2,GRID_Y+miny*CELL,THEMES[ti].tm));
+        if(n>=2){const cn=Math.min(n,4);floats.push(new FloatText(`COMBO ×${cn} POINT`,GRID_X+GW/2,GRID_Y+GH/2,THEMES[ti].hi||'#FFD700',1.6,110));}
+        if(starPts>0)floats.push(new FloatText(`★+${starPts}`,GRID_X+GW/2,GRID_Y+miny*CELL-CELL*1.5,THEMES[ti].hi||'#FFE030',1.2,90));
+        if(hasX2)floats.push(new FloatText('×2 POINTS 60s',GRID_X+GW/2,GRID_Y+GH*0.35,'#30FFAA',1.1,100));
         const newTh=getCurTheme();if(newTh!==curTheme){curTheme=newTh;gameBg=buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=200;screenFlashCol=THEMES[newTh].tm;}
       }else combo=0;
       if(tray.every(p=>p===null))tray=newTray();
       if(!anyValid(grid,tray)){
-        over = true;
-        overT = Date.now();
-        if(score > best){
-          best = score;
-          try {
-            localStorage.setItem('blockpuzzle_best', String(best));
-          } catch (err) {}
-        }
-        setTimeout(()=>{gameState='gameover';},2000);
+        if(score>best){best=score;try{localStorage.setItem('blockpuzzle_best',String(best));}catch(e2){}}
+        if(!secondChanceUsed){showSecondChance=true;}
+        else{over=true;overT=Date.now();setTimeout(()=>{gameState='gameover';},2000);}
       }
     }}
     drag=null;

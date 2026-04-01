@@ -17,6 +17,10 @@ canvas{display:block;touch-action:none;image-rendering:auto}
 <body><canvas id="c"></canvas>
 <script>
 'use strict';
+window.addEventListener('error', (e) => {
+  document.body.style.background = '#111';
+  document.body.innerHTML = '<pre style="color:#fff;padding:20px;white-space:pre-wrap;">' + e.message + '\n' + (e.filename || '') + '\nligne: ' + (e.lineno || '') + '</pre>';
+});
 // ─── SHAPES ──────────────────────────────────────────────────────────────────
 const SHAPES=[
   [[1]],[[1,1]],[[1],[1]],[[1,1,1]],[[1],[1],[1]],[[1,1],[1,1]],
@@ -545,7 +549,12 @@ class FloatText{
 }
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-let best=parseInt(localStorage.getItem('blockpuzzle_best')||'0');
+let best = 0;
+try {
+  best = parseInt(localStorage.getItem('blockpuzzle_best') || '0', 10) || 0;
+} catch (err) {
+  best = 0;
+}
 let gameState='menu';
 let selSkin=0,selTheme=0;
 let grid,tray,score,placed,over,combo,overT,curTheme;
@@ -857,7 +866,17 @@ function onUp(e){
         const newTh=getCurTheme();if(newTh!==curTheme){curTheme=newTh;gameBg=buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=200;screenFlashCol=THEMES[newTh].tm;}
       }else combo=0;
       if(tray.every(p=>p===null))tray=newTray();
-      if(!anyValid(grid,tray)){over=true;overT=Date.now();if(score>best){best=score;localStorage.setItem('blockpuzzle_best',best);}setTimeout(()=>{gameState='gameover';},2000);}
+      if(!anyValid(grid,tray)){
+        over = true;
+        overT = Date.now();
+        if(score > best){
+          best = score;
+          try {
+            localStorage.setItem('blockpuzzle_best', String(best));
+          } catch (err) {}
+        }
+        setTimeout(()=>{gameState='gameover';},2000);
+      }
     }}
     drag=null;
   }
@@ -871,7 +890,21 @@ function handleMenuTap(x,y){
 window.addEventListener('keydown',e=>{
   if(gameState==='gameover'){gameState='menu';return;}
   if(gameState==='menu'&&(e.key==='Enter'||e.key===' ')){resize();resetGame();gameState='playing';return;}
-  if(gameState==='playing'){if(e.key==='Escape'){gameState='menu';return;}if(e.key==='r'||e.key==='R'){if(score>best){best=score;localStorage.setItem('blockpuzzle_best',best);}resetGame();}}
+  if(gameState==='playing'){
+    if(e.key==='Escape'){
+      gameState='menu';
+      return;
+    }
+    if(e.key==='r'||e.key==='R'){
+      if(score > best){
+        best = score;
+        try {
+          localStorage.setItem('blockpuzzle_best', String(best));
+        } catch (err) {}
+      }
+      resetGame();
+    }
+  }
 });
 canvas.addEventListener('mousedown',onDown,{passive:false});
 canvas.addEventListener('mousemove',onMove,{passive:false});

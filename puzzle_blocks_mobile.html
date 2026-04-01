@@ -114,7 +114,7 @@ function rclip(ctx,x,y,sz,r,fn){ctx.save();rp(ctx,x,y,sz,sz,r);ctx.clip();fn();c
 // Gradient + outline + glow for title characters
 function drawPremText(ctx,text,x,y,font,topCol,botCol,outlineCol,glowCol,glowSz=14,lw=3){
   ctx.save();ctx.font=font;ctx.textAlign='left';ctx.textBaseline='middle';
-  const fsz=parseInt(font);
+  const fsz=parseFloat((font.match(/[\d.]+/)||['14'])[0]);
   const g=ctx.createLinearGradient(0,y-fsz*0.5,0,y+fsz*0.5);
   g.addColorStop(0,topCol);g.addColorStop(0.55,botCol);g.addColorStop(1,lerpC(botCol,'#000000',0.3));
   if(glowCol){ctx.shadowColor=glowCol;ctx.shadowBlur=glowSz;}
@@ -135,7 +135,7 @@ function bounceTitle(ctx,text,cx,by,t,font,topCol,botCol,glowCol,amp=7){
   const widths=chars.map(c=>ctx.measureText(c).width+1);
   const total=widths.reduce((s,w)=>s+w,0);
   let x=cx-total/2;
-  const fsz=parseInt(font);
+  const fsz=parseFloat((font.match(/[\d.]+/)||['14'])[0]);
   chars.forEach((ch,i)=>{
     const bob=Math.sin(t*0.0024+i*0.78)*amp;
     const shine=Math.sin(t*0.0028+i*0.4)*0.2;
@@ -168,7 +168,7 @@ function labelText(ctx,text,x,y,col,font,align='center',glow=false){
 // Score number with digit gradient
 function drawScore(ctx,text,x,y,th,font){
   ctx.save();ctx.font=font;ctx.textAlign='center';ctx.textBaseline='middle';
-  const fsz=parseInt(font);
+  const fsz=parseFloat((font.match(/[\d.]+/)||['14'])[0]);
   const g=ctx.createLinearGradient(0,y-fsz*0.5,0,y+fsz*0.5);
   g.addColorStop(0,th.hi||th.tm);g.addColorStop(0.5,th.tm);g.addColorStop(1,lerpC(th.ta,'#000',0.2));
   ctx.shadowColor=th.tm;ctx.shadowBlur=18;

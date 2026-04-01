@@ -82,7 +82,9 @@ function resize(){
   if(GRID_Y<top)GRID_Y=top;
   TRAY_Y=GRID_Y+GH+6;
   PIECE_CELL=Math.floor(CELL*0.58);
-  CELL_CACHE.clear();
+  if (typeof CELL_CACHE !== "undefined") {
+    CELL_CACHE.clear();
+  }
 }
 window.addEventListener('resize',()=>{resize();menuBg=buildBg(selTheme);},false);
 resize();

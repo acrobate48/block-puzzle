@@ -902,7 +902,7 @@ const MODES={
   puzzle: {name:'PUZZLE',   icon:'🧩', desc:'Blocs imposés.\nPlace-les tous!',           color:'#4080FF'},
   choix:  {name:'STRATÉGIE',icon:'🎯', desc:'Choisis ton bloc\nparmi 3 options.',        color:'#D040FF'},
   contraintes:{name:'CONTRAINTES',icon:'⚠',desc:'Cases bloquées.\nAdapte-toi!',         color:'#FFD700'},
-  histoire:{name:'HISTOIRE',icon:'📖', desc:'10 niveaux progressifs.\nUn voyage complet!',color:'#FF6080'},
+  histoire:{name:'HISTOIRE',icon:'📖', desc:'50 niveaux progressifs.\nAtteins le score de chaque niveau !',color:'#FF6080'},
 };
 const MODE_KEYS=['survie','chrono','puzzle','choix','contraintes','histoire'];
 
@@ -1102,19 +1102,22 @@ XXXXXXXXXX`), pieces:[L3,J3,SQ]},
               &&Array.isArray(lvl.fills));
 })();
 
-// Histoire: 10 levels [{mode, goal type, goal value, label}]
-const HISTOIRE_LEVELS=[
-  {mode:'survie',     goalType:'score',  goalVal:150,  label:'Marque 150 pts'},
-  {mode:'chrono',     goalType:'pieces', goalVal:5,    label:'Place 5 blocs'},
-  {mode:'puzzle',     goalType:'puzzle', goalVal:1,    label:'Complète le puzzle'},
-  {mode:'survie',     goalType:'lines',  goalVal:3,    label:'Efface 3 lignes'},
-  {mode:'choix',      goalType:'pieces', goalVal:6,    label:'Place 6 blocs'},
-  {mode:'chrono',     goalType:'score',  goalVal:300,  label:'Marque 300 pts'},
-  {mode:'contraintes',goalType:'score',  goalVal:200,  label:'Marque 200 pts'},
-  {mode:'puzzle',     goalType:'puzzle', goalVal:1,    label:'Complète le puzzle'},
-  {mode:'choix',      goalType:'score',  goalVal:500,  label:'Marque 500 pts'},
-  {mode:'survie',     goalType:'combo',  goalVal:3,    label:'Réalise un combo ×3'},
-];
+// Histoire: 50 niveaux — score progressif (niveau N = N×100 pts)
+// Niveaux 1-20 : Survie (apprentissage)
+// Niveaux 21-35 : Chrono (pression du temps)
+// Niveaux 36-50 : Contraintes (cases bloquées)
+const HISTOIRE_LEVELS=(()=>{
+  const lvls=[];
+  for(let i=0;i<50;i++){
+    const n=i+1;
+    let mode,goalVal,label;
+    if(n<=20){mode='survie';goalVal=n*100;label=`Marque ${n*100} pts`;}
+    else if(n<=35){mode='chrono';goalVal=Math.round(n*120);label=`${Math.round(n*120)} pts en temps limité`;}
+    else{mode='contraintes';goalVal=Math.round(n*150);label=`${Math.round(n*150)} pts avec contraintes`;}
+    lvls.push({mode,goalType:'score',goalVal,label});
+  }
+  return lvls;
+})();
 
 function _modeCanPlace(grid,shape,row,col){
   // Compute effective mode once, outside loop
@@ -1458,7 +1461,7 @@ function drawModeSelect(t){
     const hz=cl(Math.floor(H*0.02),7,13);
     ctx.save();ctx.font=`bold ${hz}px Arial`;ctx.textAlign='center';ctx.fillStyle='#FF6080';
     ctx.shadowColor='#FF6080';ctx.shadowBlur=5;
-    ctx.fillText(`📖 Histoire : niveau ${histoireLevel+1}/10`,W/2,Math.round(H*0.93));ctx.restore();
+    ctx.fillText(`📖 Histoire : niveau ${histoireLevel+1}/${HISTOIRE_LEVELS.length}`,W/2,Math.round(H*0.93));ctx.restore();
   }
   // JOUER button
   const bw2=cl(W-52,130,240),bh2=cl(Math.round(H*0.075),32,52);
@@ -2125,34 +2128,68 @@ function _drawModeOverlays(t,th){
     const hfsz=cl(Math.floor(bh2*0.52),7,14);
     ctx.save();ctx.font=`bold ${hfsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle=hcol;
-    const lvNum=histoireLevel%HISTOIRE_LEVELS.length+1;
-    ctx.fillText(`📖 Niv.${lvNum}: ${lvlDef.label}`,bx2+bw2/2,by2+bh2/2);ctx.restore();
-    // Goal met → show next button
+    const lvNum=histoireLevel+1;
+    const isLastLvl=histoireLevel>=HISTOIRE_LEVELS.length-1;
+    ctx.fillText(`📖 Niv.${lvNum}/${HISTOIRE_LEVELS.length}: ${lvlDef.label}`,bx2+bw2/2,by2+bh2/2);ctx.restore();
+    // Goal met → show next button or completion screen
     if(hmet){
       const el2=Date.now()-histoireGoalMetT;
       if(el2>1000){
-        ctx.fillStyle=`rgba(0,0,0,${Math.min(0.65,el2/1500*0.65).toFixed(3)})`;ctx.fillRect(0,0,W,H);
-        const npw=Math.min(W-24,320),nph=cl(Math.round(H*0.36),110,200);
+        ctx.fillStyle=`rgba(0,0,0,${Math.min(0.75,el2/1500*0.75).toFixed(3)})`;ctx.fillRect(0,0,W,H);
+        const npw=Math.min(W-24,320),nph=cl(Math.round(H*0.42),130,230);
         const npx=(W-npw)/2,npy=(H-nph)/2;
-        rrect(ctx,npx,npy,npw,nph,16,'rgba(5,20,10,0.97)',null);
-        rp(ctx,npx,npy,npw,nph,16);ctx.strokeStyle='rgba(64,255,100,0.7)';ctx.lineWidth=2;ctx.stroke();
-        const nfsz=cl(npw*0.09|0,12,26);
-        ctx.save();ctx.font=`bold ${nfsz}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillStyle='#40FF80';ctx.shadowColor='#40FF80';ctx.shadowBlur=10;
-        ctx.fillText(`✅ NIVEAU ${lvNum} RÉUSSI !`,W/2,npy+nph*0.28);ctx.shadowBlur=0;
-        ctx.font=`${nfsz*0.65}px Arial`;ctx.fillStyle='rgba(255,255,255,0.7)';
-        ctx.fillText(lvlDef.label,W/2,npy+nph*0.46);ctx.restore();
-        // Next level button
-        const nbw=Math.min(npw-40,200),nbh=cl(Math.round(nph*0.22),28,44);
-        const nbx=(W-nbw)/2,nby=npy+nph*0.62;
-        const nbg2=ctx.createLinearGradient(nbx,nby,nbx,nby+nbh);
-        nbg2.addColorStop(0,'#2A6040');nbg2.addColorStop(1,'#143020');
-        rrect(ctx,nbx,nby,nbw,nbh,nbh/2,nbg2,null);
-        rp(ctx,nbx,nby,nbw,nbh,nbh/2);ctx.strokeStyle='rgba(64,255,100,0.6)';ctx.lineWidth=1.5;ctx.stroke();
-        const nbfsz=cl(Math.floor(nbh*0.5),10,18);
-        ctx.save();ctx.font=`bold ${nbfsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillStyle='#FFFFFF';ctx.fillText('▶  NIVEAU SUIVANT',nbx+nbw/2,nby+nbh/2);ctx.restore();
-        histoireNextRect={x:nbx,y:nby,w:nbw,h:nbh};
+        if(isLastLvl){
+          // ── HISTOIRE TERMINÉE ──
+          const cbg=ctx.createLinearGradient(npx,npy,npx,npy+nph);
+          cbg.addColorStop(0,'rgba(20,10,40,0.98)');cbg.addColorStop(1,'rgba(5,3,12,0.98)');
+          rrect(ctx,npx,npy,npw,nph,16,cbg,null);
+          rp(ctx,npx,npy,npw,nph,16);ctx.strokeStyle='rgba(255,200,50,0.9)';ctx.lineWidth=2.5;ctx.stroke();
+          const nfsz=cl(npw*0.09|0,12,26);
+          ctx.save();ctx.font=`bold ${nfsz*1.2}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillStyle='#FFD700';ctx.shadowColor='#FFD700';ctx.shadowBlur=18;
+          ctx.fillText('🏆 HISTOIRE TERMINÉE !',W/2,npy+nph*0.22);ctx.shadowBlur=0;
+          ctx.font=`${nfsz*0.7}px Arial`;ctx.fillStyle='rgba(255,220,100,0.9)';
+          ctx.fillText('50 niveaux complétés !',W/2,npy+nph*0.40);
+          ctx.font=`${nfsz*0.6}px Arial`;ctx.fillStyle='rgba(200,180,255,0.7)';
+          ctx.fillText('La progression repart de zéro',W/2,npy+nph*0.54);ctx.restore();
+          const nbw=Math.min(npw-40,200),nbh=cl(Math.round(nph*0.20),28,44);
+          const nbx=(W-nbw)/2,nby=npy+nph*0.68;
+          const nbg2=ctx.createLinearGradient(nbx,nby,nbx,nby+nbh);
+          nbg2.addColorStop(0,'#806000');nbg2.addColorStop(1,'#402800');
+          rrect(ctx,nbx,nby,nbw,nbh,nbh/2,nbg2,null);
+          rp(ctx,nbx,nby,nbw,nbh,nbh/2);ctx.strokeStyle='rgba(255,200,50,0.7)';ctx.lineWidth=1.5;ctx.stroke();
+          const nbfsz=cl(Math.floor(nbh*0.5),10,18);
+          ctx.save();ctx.font=`bold ${nbfsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillStyle='#FFD700';ctx.fillText('🏠  RETOUR AU MENU',nbx+nbw/2,nby+nbh/2);ctx.restore();
+          histoireNextRect={x:nbx,y:nby,w:nbw,h:nbh};
+        } else {
+          // ── NIVEAU RÉUSSI ──
+          rrect(ctx,npx,npy,npw,nph,16,'rgba(5,20,10,0.97)',null);
+          rp(ctx,npx,npy,npw,nph,16);ctx.strokeStyle='rgba(64,255,100,0.7)';ctx.lineWidth=2;ctx.stroke();
+          const nfsz=cl(npw*0.09|0,12,26);
+          ctx.save();ctx.font=`bold ${nfsz}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillStyle='#40FF80';ctx.shadowColor='#40FF80';ctx.shadowBlur=10;
+          ctx.fillText(`✅ NIVEAU ${lvNum} RÉUSSI !`,W/2,npy+nph*0.24);ctx.shadowBlur=0;
+          ctx.font=`${nfsz*0.65}px Arial`;ctx.fillStyle='rgba(255,255,255,0.7)';
+          ctx.fillText(lvlDef.label,W/2,npy+nph*0.40);
+          // Progress bar
+          const pbw=npw*0.75,pbh=8,pbx=npx+(npw-pbw)/2,pby=npy+nph*0.52;
+          ctx.fillStyle='rgba(255,255,255,0.12)';rrect(ctx,pbx,pby,pbw,pbh,4,'rgba(255,255,255,0.12)',null);
+          const prog=lvNum/HISTOIRE_LEVELS.length;
+          rrect(ctx,pbx,pby,pbw*prog,pbh,4,'#40FF80',null);
+          ctx.font=`${nfsz*0.55}px Arial`;ctx.fillStyle='rgba(150,255,180,0.6)';
+          ctx.fillText(`${lvNum} / ${HISTOIRE_LEVELS.length}`,npx+npw/2,pby+pbh+12);ctx.restore();
+          const nbw=Math.min(npw-40,200),nbh=cl(Math.round(nph*0.20),28,44);
+          const nbx=(W-nbw)/2,nby=npy+nph*0.70;
+          const nbg2=ctx.createLinearGradient(nbx,nby,nbx,nby+nbh);
+          nbg2.addColorStop(0,'#2A6040');nbg2.addColorStop(1,'#143020');
+          rrect(ctx,nbx,nby,nbw,nbh,nbh/2,nbg2,null);
+          rp(ctx,nbx,nby,nbw,nbh,nbh/2);ctx.strokeStyle='rgba(64,255,100,0.6)';ctx.lineWidth=1.5;ctx.stroke();
+          const nbfsz=cl(Math.floor(nbh*0.5),10,18);
+          ctx.save();ctx.font=`bold ${nbfsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillStyle='#FFFFFF';ctx.fillText('▶  NIVEAU SUIVANT',nbx+nbw/2,nby+nbh/2);ctx.restore();
+          histoireNextRect={x:nbx,y:nby,w:nbw,h:nbh};
+        }
       }
     }
     _checkHistoireGoal();
@@ -2264,7 +2301,14 @@ function onUp(e){
     if(currentMode==='histoire'&&histoireGoalMet&&histoireNextRect){
       const r=histoireNextRect;
       if(x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h){
-        histoireLevel=(histoireLevel+1)%HISTOIRE_LEVELS.length;
+        const isLast=histoireLevel>=HISTOIRE_LEVELS.length-1;
+        if(isLast){
+          // Histoire complétée — retour menu, reset progression
+          histoireLevel=0;
+          try{localStorage.setItem('bp_histoire','0');}catch(e2){}
+          gameState='menu';return;
+        }
+        histoireLevel=histoireLevel+1;
         try{localStorage.setItem('bp_histoire',String(histoireLevel));}catch(e2){}
         resetGame();return;
       }

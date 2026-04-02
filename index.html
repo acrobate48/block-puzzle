@@ -665,6 +665,21 @@ function drawFx(ctx,fx,t){
 }
 
 // ─── GAME LOGIC ───────────────────────────────────────────────────────────────
+// Rotate a shape 90° clockwise
+function rotateShape(s){
+  const rows=s.length,cols=s[0].length;
+  const out=Array.from({length:cols},(_,r)=>Array.from({length:rows},(_,c)=>s[rows-1-c][r]));
+  return out;
+}
+// Apply N*90° rotations
+function rotateN(s,n){let r=s;for(let i=0;i<(n%4);i++)r=rotateShape(r);return r;}
+// Rotate piece in tray slot i by 90° CW
+let rotBtnRects=[null,null,null]; // set during draw
+function rotateTrayPiece(i){
+  if(!tray[i])return;
+  tray[i].shape=rotateShape(tray[i].shape);
+  sndPlace(); // brief click feedback
+}
 function newPiece(){return{shape:rndc(SHAPES),color:rndc(COLORS)};}
 function newParasitePiece(){return{shape:rndc(SHAPES.filter(s=>s.flat().reduce((a,v)=>a+v,0)<=4)),color:'#1A0A2E',isParasite:true};}
 function newTray(){
@@ -890,21 +905,225 @@ const MODES={
 };
 const MODE_KEYS=['survie','chrono','puzzle','choix','contraintes','histoire'];
 
-// Puzzle: 6 hand-crafted levels  [{fills:[{r,c}], pieces:[shape,...]}]
-const PUZZLE_LEVELS=[
-  {fills:[{r:9,c:0},{r:9,c:1},{r:9,c:2},{r:9,c:3},{r:9,c:5},{r:9,c:6},{r:9,c:7},{r:9,c:8}],
-   pieces:[[[1,1,1]],[[1,0],[1,0],[1,1]],[[1,1],[0,1],[0,1]]]},
-  {fills:[{r:0,c:0},{r:1,c:0},{r:2,c:0},{r:3,c:0},{r:0,c:9},{r:1,c:9},{r:2,c:9},{r:3,c:9}],
-   pieces:[[[1,1],[1,1]],[[1,1,1],[0,0,1]],[[1,0,0],[1,1,1]]]},
-  {fills:[{r:5,c:2},{r:5,c:3},{r:5,c:4},{r:5,c:5},{r:5,c:6},{r:5,c:7},{r:4,c:2},{r:4,c:7}],
-   pieces:[[[1,1,1,1]],[[1,1],[1,1]],[[1,1,1]]]},
-  {fills:[{r:0,c:4},{r:1,c:4},{r:2,c:4},{r:3,c:4},{r:4,c:4},{r:4,c:3},{r:4,c:5},{r:0,c:5},{r:0,c:3}],
-   pieces:[[[1,1],[1,0],[1,0]],[[1,1,1]],[[0,1],[1,1],[1,0]]]},
-  {fills:(()=>{const f=[];for(let c=0;c<10;c++)if(c!==3&&c!==6)f.push({r:9,c});for(let r=0;r<8;r+=2)f.push({r,c:0},{r,c:9});return f;})(),
-   pieces:[[[1,0],[1,0],[1,1]],[[1,1,1],[0,1,0]],[[0,1,0],[1,1,1],[0,1,0]]]},
-  {fills:(()=>{const f=[];for(let r=2;r<8;r++)for(let c=2;c<8;c++)if(r===2||r===7||c===2||c===7)f.push({r,c});return f;})(),
-   pieces:[[[1,1,1,1]],[[1,1,1,1]],[[1,1,1,1]]]},
-];
+// Puzzle: 12 hard hand-crafted levels — require rotation + planning
+// fills = obstacle cells already on grid.  pieces = 3 exact pieces to fit in the empty gaps.
+// Rotation allowed. Challenge = figuring out orientation + placement order.
+// All piece shapes are max 5 cells, fit within 10×10.
+const PUZZLE_LEVELS=(()=>{
+  // shapes library
+  const I2=[[1,1]],I3=[[1,1,1]],I4=[[1,1,1,1]],I5=[[1,1,1,1,1]];
+  const SQ=[[1,1],[1,1]];
+  const L3=[[1,0],[1,0],[1,1]];   // L-tromino
+  const J3=[[0,1],[0,1],[1,1]];   // J-tromino
+  const L4=[[1,0],[1,0],[1,0],[1,1]]; // L-tetromino
+  const J4=[[0,1],[0,1],[0,1],[1,1]]; // J-tetromino
+  const T4=[[1,1,1],[0,1,0]];     // T-tetromino
+  const S4=[[0,1,1],[1,1,0]];     // S-tetromino
+  const Z4=[[1,1,0],[0,1,1]];     // Z-tetromino
+  const L5=[[1,0],[1,0],[1,0],[1,0],[1,1]]; // L-pentomino
+  const T5=[[1,1,1],[0,1,0],[0,1,0]]; // T-pentomino
+
+  function G(str){
+    const f=[];str.trim().split('\n').forEach((row,r)=>{
+      [...row.trim()].forEach((ch,c)=>{if(ch==='X')f.push({r,c});});
+    });return f;
+  }
+  return[
+    // ── LVL 1 ── Coin brisé
+    // Bottom-right quadrant: 3 gaps for I3, L3, J3 — need rotation
+    {title:'Coin Brisé',   hint:'Bouche le coin — tourne les L',
+     fills:G(`XXXXXXX...
+XXXXXXX...
+XXXXXXX...
+XXXXXXX...
+XXXXXXX...
+XXXXXXX...
+XXXXXXX...
+XXXXXXX.XX
+XXXXXXX...
+XXXXXXX...`),
+     pieces:[I3,L3,J3]},
+
+    // ── LVL 2 ── Le Couloir
+    // Vertical corridor top half + horizontal bottom — pieces must be rotated to fit
+    {title:'Le Couloir',  hint:'Horizontal ou vertical ? Tourne chaque pièce',
+     fills:G(`XXX.XXXXXX
+XXX.XXXXXX
+XXX.XXXXXX
+XXX.XXXXXX
+XXX.XXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+....XXXXXX
+....XXXXXX
+....XXXXXX`),
+     pieces:[I4,[...Array(5)].map((_,i)=>i===0?[1]:[1]),I3]},
+    // Replace with valid pieces:
+    {title:'Le Couloir',  hint:'Horizontal ou vertical ? Tourne chaque pièce',
+     fills:G(`XXX.XXXXXX
+XXX.XXXXXX
+XXX.XXXXXX
+XXX.XXXXXX
+XXX.XXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+....XXXXXX
+....XXXXXX
+....XXXXXX`),
+     pieces:[[[1],[1],[1],[1],[1]],[[1,1,1,1]],[[1,1,1]]]},
+
+    // ── LVL 3 ── L'Escalier
+    // Staircase of 2×1 steps — each piece is an L that hooks on a step
+    {title:"L'Escalier",  hint:'Chaque marche a sa forme — 1 rotation = 1 solution',
+     fills:G(`XX........
+XX........
+XXXX......
+XXXX......
+XXXXXX....
+XXXXXX....
+XXXXXXXX..
+XXXXXXXX..
+XXXXXXXXXX
+XXXXXXXXXX`),
+     pieces:[[[1,1,1,1]],[[1,1,1,1]],[[1,1,1,1]]]},
+
+    // ── LVL 4 ── Le Tunnel
+    // Dense grid with a horizontal 3×2 gap + two 1×2 side gaps
+    {title:'Le Tunnel',   hint:'Un seul passage — quelle orientation ?',
+     fills:G(`XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XX......XX
+XX......XX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX`),
+     pieces:[[[1,1],[1,1]],[[1,1,1,1]],[[1,1],[1,1]]]},
+
+    // ── LVL 5 ── La Croix
+    // Open cross shape — 4 arms of 2×2 squares, center open
+    {title:'La Croix',    hint:'Ferme les 4 bras de la croix',
+     fills:G(`XXXX..XXXX
+XXXX..XXXX
+..........
+..........
+..XXXXXX..
+..XXXXXX..
+..........
+..........
+XXXX..XXXX
+XXXX..XXXX`),
+     pieces:[[[1,1,1,1,1,1,1,1,1,1]],[[1,1],[1,1],[1,1],[1,1]],[[1,1],[1,1],[1,1],[1,1]]]},
+
+    // ── LVL 6 ── L Imbriqués
+    // Rectangle frame 6×7 — fill interior with 3 L-pentominoes
+    {title:'L Imbriqués',  hint:'3 L-pièces s\'emboîtent — une seule façon',
+     fills:G(`XXXXXXXXXX
+X........X
+X........X
+X........X
+X........X
+X........X
+X........X
+X........X
+XXXXXXXXXX
+XXXXXXXXXX`),
+     pieces:[[[1,1,1,1,1],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0]],[[1,1,1,1,1],[0,0,0,0,1],[0,0,0,0,1],[0,0,0,0,1]],[[1,1,1,1,1,1,1,1]]]},
+
+    // ── LVL 7 ── Le Pont
+    // Full grid except col 5 — must be filled top to bottom with a single vertical bar
+    {title:'Le Pont',     hint:'Relie les deux rives — pense vertical !',
+     fills:G(`XXXX.XXXXX
+XXXX.XXXXX
+XXXX.XXXXX
+XXXX.XXXXX
+XXXX.XXXXX
+XXXX.XXXXX
+XXXX......
+XXXX......
+XXXX......
+XXXX......`),
+     pieces:[[[1],[1],[1],[1],[1],[1]],[[1,1,1,1]],[[1,1,1,1]]]},
+
+    // ── LVL 8 ── Zigzag
+    // Diagonal zigzag strip — S and Z pieces needed, order matters
+    {title:'Zigzag',      hint:'S, Z et barre — une seule combinaison marche',
+     fills:G(`....XXXXXX
+....XXXXXX
+..XXXXXXXX
+..XXXXXXXX
+XXXXXXXXXX
+XXXXXXXX..
+XXXXXXXX..
+XXXXXX....
+XXXXXX....
+XXXXXXXXXX`),
+     pieces:[S4,Z4,[[1,1,1,1]]]},
+
+    // ── LVL 9 ── Triple T
+    // Three T-shaped gaps in a mostly filled grid
+    {title:'Triple T',   hint:'3 pièces en T cachées — essaie toutes rotations',
+     fills:G(`XXXXXXXXXX
+XXXXXXXXXX
+XX.XXXXX.X
+X...XXXX.X
+XX.XXXXX.X
+XXXXXXXXXX
+XX.X.XXXXX
+X...XXXXXX
+XX.X.XXXXX
+XXXXXXXXXX`),
+     pieces:[T4,T4,T4]},
+
+    // ── LVL 10 ── Spirale
+    // Concentric rings, inner ring has gaps
+    {title:'La Spirale',  hint:'3 brèches dans la spirale — trouve leur forme',
+     fills:G(`XXXXXXXXXX
+X........X
+X.XXXXXX.X
+X.X....X.X
+X.X.XX.X.X
+X.X....X.X
+X.XXXXXX.X
+X........X
+XXXXXXXXXX
+XXXXXXXXXX`),
+     pieces:[[[1,1,1,1],[1,0,0,0],[1,0,0,0],[1,0,0,0]],[[1,1,1,1],[0,0,0,1],[0,0,0,1],[0,0,0,1]],[[1,1],[1,1]]]},
+
+    // ── LVL 11 ── Mosaïque
+    // Checkerboard with isolated gaps — pieces must match the exact empty pattern
+    {title:'Mosaïque',   hint:'Chaque île a une forme précise',
+     fills:G(`X.X.X.X.X.
+.X.X.X.X.X
+X.X.X.X.X.
+.X.X.X.X.X
+X.X...X.X.
+.X...X.X.X
+X.X.X.X.X.
+.X.X.X.X.X
+X.X.X.X.X.
+.X.X.X.X.X`),
+     pieces:[S4,Z4,I3]},
+
+    // ── LVL 12 ── BOSS: Z Final
+    // Near-full grid with two mirrored Z-gaps + a 4-bar gap
+    {title:'★ BOSS — Z Final',hint:'Grille quasi-pleine. Trouve les 3 pièces exactes.',
+     fills:G(`XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXX..XXXX
+XXX..XXXXX
+XXXX..XXXX
+XXX..XXXXX
+XXXXXXXXXX
+XXXXXXXXXX`),
+     pieces:[S4,Z4,I4]},
+  ].filter(lvl=>lvl&&lvl.pieces&&lvl.pieces.every(p=>Array.isArray(p)&&p.length>0&&Array.isArray(p[0])&&p[0].length>0&&p.flat().some(v=>v))
+              &&Array.isArray(lvl.fills));
+})();
 
 // Histoire: 10 levels [{mode, goal type, goal value, label}]
 const HISTOIRE_LEVELS=[
@@ -1478,6 +1697,35 @@ function drawGame(t){
       sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox+cc*PIECE_CELL,oy+rr*PIECE_CELL,PIECE_CELL,selSkin,t,dim?0.3:1);}));
     }
   }
+  // ── Boutons de rotation ↻ sous chaque slot ───────────────────────────────
+  {
+    const eM2=currentMode==='histoire'?_getHistoireSubMode():currentMode;
+    const ROT_H=cl(Math.round(TRAY_H*0.32),18,32);
+    const ROT_Y=TRAY_Y+TRAY_H+2;
+    for(let i=0;i<3;i++){
+      if(!tray[i])continue;
+      const rx=GRID_X+i*pw+pw*0.2,ry=ROT_Y,rw=pw*0.6,rh=ROT_H;
+      rotBtnRects[i]={x:rx,y:ry,w:rw,h:rh};
+      const hover=(mouseX>=rx&&mouseX<rx+rw&&mouseY>=ry&&mouseY<ry+rh);
+      // pill bg
+      ctx.save();
+      if(hover){ctx.shadowColor='#80C0FF';ctx.shadowBlur=8;}
+      const rbg3=ctx.createLinearGradient(rx,ry,rx,ry+rh);
+      rbg3.addColorStop(0,hover?'rgba(40,80,140,0.92)':'rgba(20,40,80,0.75)');
+      rbg3.addColorStop(1,hover?'rgba(20,50,100,0.88)':'rgba(10,20,50,0.60)');
+      rrect(ctx,rx,ry,rw,rh,rh/2,rbg3,null);
+      rp(ctx,rx,ry,rw,rh,rh/2);ctx.strokeStyle=hover?'rgba(128,200,255,0.7)':'rgba(64,120,200,0.45)';ctx.lineWidth=1.2;ctx.stroke();
+      ctx.shadowBlur=0;
+      // Icon + label
+      const fsz3=cl(Math.floor(rh*0.52),8,15);
+      ctx.font=`bold ${fsz3}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle=hover?'#B8E0FF':'rgba(160,200,255,0.9)';
+      ctx.fillText('↻  Tourner',rx+rw/2,ry+rh/2);
+      ctx.restore();
+    }
+    // Cleanup rects for empty slots
+    for(let i=0;i<3;i++){if(!tray[i])rotBtnRects[i]=null;}
+  }
   // ── Aperçu 2 prochains blocs ─────────────────────────────────────────────
   if(nextTrayPreview){
     const pvH=Math.max((CELL*1.3)|0,44);
@@ -1750,15 +1998,35 @@ function _drawModeOverlays(t,th){
   if((effectiveMode==='puzzle')&&!over){
     // Count remaining tray pieces
     const rem=tray.filter(Boolean).length;
-    const pw2=Math.min(W-20,260),ph2=cl(Math.round(H*0.085),34,60);
-    const px2=(W-pw2)/2,py2=GRID_Y-ph2-8;
+    const lvlDef2=PUZZLE_LEVELS[(currentMode==='puzzle'?puzzleLevel:histoireLevel)%PUZZLE_LEVELS.length];
+    const lvlTitle=lvlDef2?lvlDef2.title:'Puzzle';
+    const lvlHint=lvlDef2?lvlDef2.hint:'';
+    const lvlNum2=(currentMode==='puzzle'?puzzleLevel:histoireLevel)%PUZZLE_LEVELS.length+1;
+    const pw2=Math.min(W-14,340),ph2=cl(Math.round(H*0.115),48,80);
+    const px2=(W-pw2)/2,py2=GRID_Y-ph2-6;
     const pbg2=ctx.createLinearGradient(px2,py2,px2,py2+ph2);
-    pbg2.addColorStop(0,'rgba(20,30,80,0.92)');pbg2.addColorStop(1,'rgba(10,15,40,0.88)');
-    rrect(ctx,px2,py2,pw2,ph2,ph2/2,pbg2,null);
-    rp(ctx,px2,py2,pw2,ph2,ph2/2);ctx.strokeStyle='rgba(64,128,255,0.55)';ctx.lineWidth=1.5;ctx.stroke();
-    const psz=cl(Math.floor(ph2*0.46),10,18);
-    ctx.save();ctx.font=`bold ${psz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle='#80B0FF';ctx.fillText(`🧩 Blocs restants : ${rem}`,px2+pw2/2,py2+ph2/2);ctx.restore();
+    pbg2.addColorStop(0,'rgba(10,20,60,0.97)');pbg2.addColorStop(1,'rgba(5,10,30,0.93)');
+    rrect(ctx,px2,py2,pw2,ph2,10,pbg2,null);
+    rp(ctx,px2,py2,pw2,ph2,10);ctx.strokeStyle='rgba(64,128,255,0.6)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.save();
+    // Level number
+    const psz=cl(Math.floor(ph2*0.24),8,14);
+    ctx.font=`${psz}px Arial`;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle='rgba(100,160,255,0.7)';
+    ctx.fillText(`NV.${lvlNum2} / ${PUZZLE_LEVELS.length}`,px2+10,py2+6);
+    // Pieces left badge (right)
+    const remCol=rem===0?'#40FF80':rem===1?'#FFD700':'#80B0FF';
+    ctx.font=`bold ${psz}px Arial`;ctx.textAlign='right';ctx.fillStyle=remCol;
+    ctx.fillText(`🧩 ×${rem}`,px2+pw2-10,py2+6);
+    // Title
+    const ttsz=cl(Math.floor(ph2*0.30),10,18);
+    ctx.font=`bold ${ttsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='#C0D8FF';ctx.shadowColor='#4080FF';ctx.shadowBlur=5;
+    ctx.fillText(lvlTitle,px2+pw2/2,py2+ph2*0.44);ctx.shadowBlur=0;
+    // Hint
+    const htsz=cl(Math.floor(ph2*0.20),7,12);
+    ctx.font=`${htsz}px Arial`;ctx.fillStyle='rgba(150,190,255,0.65)';ctx.shadowBlur=0;
+    ctx.fillText(lvlHint,px2+pw2/2,py2+ph2*0.76);
+    ctx.restore();
     // Detect puzzle success: all 3 tray pieces placed
     if(rem===0&&placed>=3&&!puzzleSuccess&&!puzzleFail){
       puzzleSuccess=true;puzzleSuccessT=Date.now();
@@ -1974,7 +2242,9 @@ function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;
   if(gameState==='gameover'){if(Date.now()-overT>1200)gameState='menu';return;}
   // Block tray drag only when in choix PICKING phase; all other modes allow normal drag
   const _inChoixPick=(currentMode==='choix'||_getHistoireSubMode()==='choix')&&choixState==='picking';
-  if(gameState==='playing'&&!over&&!showSecondChance&&!showBonusPicker&&!_inChoixPick){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};break;}}}}
+  // Also block drag if tap is on a rotation button
+  const _onRotBtn=rotBtnRects.some(rb=>rb&&x>=rb.x&&x<rb.x+rb.w&&y>=rb.y&&y<rb.y+rb.h);
+  if(gameState==='playing'&&!over&&!showSecondChance&&!showBonusPicker&&!_inChoixPick&&!_onRotBtn){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};break;}}}}
 function onMove(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;}
 function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
 
@@ -1982,6 +2252,13 @@ function onUp(e){
   e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;
   // Sound toggle (in-game bar only — menu has its own handler in handleMenuTap)
   if(gameState==='playing'&&_soundRect&&x>=_soundRect.x&&x<_soundRect.x+_soundRect.w&&y>=_soundRect.y&&y<_soundRect.y+_soundRect.h){_soundEnabled=!_soundEnabled;return;}
+  // Rotation buttons — check before drag placement
+  if(gameState==='playing'&&!over&&!showSecondChance){
+    for(let _ri=0;_ri<3;_ri++){
+      const rb=rotBtnRects[_ri];
+      if(rb&&x>=rb.x&&x<rb.x+rb.w&&y>=rb.y&&y<rb.y+rb.h){rotateTrayPiece(_ri);drag=null;return;}
+    }
+  }
   // ── MODE taps ──
   if(gameState==='playing'){
     const subMode=_getHistoireSubMode();

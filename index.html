@@ -41,7 +41,7 @@ window.addEventListener('error', (e) => {
   document.body.innerHTML = '<pre style="color:#fff;padding:20px;white-space:pre-wrap;">' + e.message + '\n' + (e.filename || '') + '\nligne: ' + (e.lineno || '') + '</pre>';
 });
 // ─── WEB AUDIO ────────────────────────────────────────────────────────────────
-let _ac=null,_soundEnabled=true;
+let _ac=null,_soundEnabled=true,_volume=0.7;
 function _getAC(){if(!_ac)try{_ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}return _ac;}
 function _tone(freq,dur,type,vol,delay){
   if(!_soundEnabled)return;
@@ -49,16 +49,18 @@ function _tone(freq,dur,type,vol,delay){
   const o=ac.createOscillator(),g=ac.createGain();
   o.connect(g);g.connect(ac.destination);o.type=type||'square';o.frequency.value=freq;
   const t=ac.currentTime+(delay||0);
-  g.gain.setValueAtTime(0.001,t);g.gain.linearRampToValueAtTime(vol||0.15,t+0.01);
+  g.gain.setValueAtTime(0.001,t);g.gain.linearRampToValueAtTime((vol||0.15)*_volume,t+0.01);
   g.gain.exponentialRampToValueAtTime(0.001,t+dur);
   o.start(t);o.stop(t+dur+0.05);}catch(e){}
 }
-function sndPlace(){_tone(200,0.06,'square',0.10);}
-function sndClear(n){_tone(440,0.10,'sine',0.20);_tone(660,0.12,'sine',0.16,0.08);if(n>=2)_tone(880,0.14,'sine',0.18,0.17);}
-function sndCombo(c){const b=400+c*60;_tone(b,0.09,'sine',0.22);_tone(b*1.5,0.09,'sine',0.18,0.09);_tone(b*2,0.16,'sine',0.22,0.18);}
-function sndGameOver(){_tone(220,0.35,'sawtooth',0.22);_tone(165,0.45,'sawtooth',0.18,0.32);_tone(110,0.55,'sawtooth',0.15,0.65);}
-function sndBonus(){_tone(660,0.07,'sine',0.18);_tone(880,0.07,'sine',0.18,0.09);_tone(1100,0.11,'sine',0.22,0.18);}
+function _vib(pattern){try{if(navigator.vibrate)navigator.vibrate(pattern);}catch(e){}}
+function sndPlace(){_tone(200,0.06,'square',0.10);_vib(18);}
+function sndClear(n){_tone(440,0.10,'sine',0.20);_tone(660,0.12,'sine',0.16,0.08);if(n>=2)_tone(880,0.14,'sine',0.18,0.17);_vib(n>=3?[40,20,40]:30);}
+function sndCombo(c){const b=400+c*60;_tone(b,0.09,'sine',0.22);_tone(b*1.5,0.09,'sine',0.18,0.09);_tone(b*2,0.16,'sine',0.22,0.18);_vib(c>=4?[30,15,30,15,60]:40);}
+function sndGameOver(){_tone(220,0.35,'sawtooth',0.22);_tone(165,0.45,'sawtooth',0.18,0.32);_tone(110,0.55,'sawtooth',0.15,0.65);_vib([80,40,80,40,120]);}
+function sndBonus(){_tone(660,0.07,'sine',0.18);_tone(880,0.07,'sine',0.18,0.09);_tone(1100,0.11,'sine',0.22,0.18);_vib([20,10,20]);}
 let _soundRect=null,_pauseHudRect=null,_pauseBtns={},_pauseStartTime=0;
+let _volumeSliderRect=null;
 const CELL_CACHE=new Map();
 // ─── SHAPES ──────────────────────────────────────────────────────────────────
 const SHAPES=[
@@ -674,13 +676,6 @@ function rotateShape(s){
 }
 // Apply N*90° rotations
 function rotateN(s,n){let r=s;for(let i=0;i<(n%4);i++)r=rotateShape(r);return r;}
-// Rotate piece in tray slot i by 90° CW
-let rotBtnRects=[null,null,null]; // set during draw
-function rotateTrayPiece(i){
-  if(!tray[i])return;
-  tray[i].shape=rotateShape(tray[i].shape);
-  sndPlace(); // brief click feedback
-}
 function newPiece(){return{shape:rndc(SHAPES),color:rndc(COLORS)};}
 function newParasitePiece(){return{shape:rndc(SHAPES.filter(s=>s.flat().reduce((a,v)=>a+v,0)<=4)),color:'#1A0A2E',isParasite:true};}
 function newTray(){
@@ -693,6 +688,14 @@ function canPlace(grid,shape,row,col){for(let r=0;r<shape.length;r++)for(let c=0
 function placePiece(grid,shape,color,row,col){for(let r=0;r<shape.length;r++)for(let c=0;c<shape[r].length;c++)if(shape[r][c])grid[row+r][col+c]=color;}
 function clearLines(grid){const rf=[],cf=[];for(let r=0;r<ROWS;r++)if(grid[r].every(v=>v))rf.push(r);for(let c=0;c<COLS;c++){let f=true;for(let r=0;r<ROWS;r++)if(!grid[r][c]){f=false;break;}if(f)cf.push(c);}const cl2=new Set(),clC={};rf.forEach(r=>{for(let c=0;c<COLS;c++){const k=r*100+c;cl2.add(k);clC[k]=grid[r][c];}});cf.forEach(c=>{for(let r=0;r<ROWS;r++){const k=r*100+c;cl2.add(k);clC[k]=grid[r][c];}});cl2.forEach(k=>{grid[Math.floor(k/100)][k%100]=null;});return{n:rf.length+cf.length,cells:[...cl2].map(k=>({r:Math.floor(k/100),c:k%100})),colors:clC};}
 function anyValid(grid,tray){for(const p of tray)if(p)for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(_modeCanPlace(grid,p.shape,r,c))return true;return false;}
+function _zenClearRows(){
+  // Remove up to 2 rows with the most filled cells to make room
+  const counts=Array.from({length:ROWS},(_,r)=>({r,n:grid[r].filter(Boolean).length}));
+  counts.sort((a,b)=>b.n-a.n);
+  const toClear=counts.slice(0,2).map(x=>x.r).filter(r=>counts.find(x=>x.r===r).n>0);
+  toClear.forEach(r=>{grid[r]=Array(COLS).fill(null);gridStars[r]=Array(COLS).fill(false);gridBonus[r]=Array(COLS).fill(null);});
+  if(toClear.length>0){screenFlash=100;screenFlashCol='#60C880';floats.push(new FloatText('🍃 ZEN — place libérée !',GRID_X+GW/2,GRID_Y+GH/2,'#60C880',1.0,80));}
+}
 function snapPos(mx,my,shape){return{gr:Math.round((my-GRID_Y)/CELL-shape.length/2),gc:Math.round((mx-GRID_X)/CELL-shape[0].length/2)};}
 
 // ─── PARTICLES / DEBRIS / FLOATTEXT ──────────────────────────────────────────
@@ -820,7 +823,7 @@ function resetGame(){
   gameStartTime=Date.now();totalLinesCleared=0;maxComboGame=0;
   // Mode-specific reset
   contraBlocked=[];choixState='picking';choixOptions=[];choixOptionRects=[];choixSelected=-1;
-  puzzleSuccess=false;puzzleFail=false;histoireGoalMet=false;histoireNextRect=null;
+  histoireGoalMet=false;histoireNextRect=null;
   curTheme=selTheme;gameFx=initFx(selTheme);gameBg=buildBg(selTheme);fadeAlpha=1;
   _initMode();
 }
@@ -867,23 +870,22 @@ function tickParasites(){
   parasites=parasites.filter(p=>now-p.born<PARASITE_LIFE);
   // Determine which pieces are "playable" for the current mode
   const _tkEM=currentMode==='histoire'?_getHistoireSubMode():currentMode;
-  const _tkCheck=_tkEM==='choix'?choixOptions:_tkEM==='puzzle'?[]:tray.filter(Boolean);
+  const _tkCheck=_tkEM==='choix'?choixOptions:tray.filter(Boolean);
   if(_tkCheck.length>0&&!anyValid(grid,_tkCheck)&&!showSecondChance){
-    if(!secondChanceUsed)showSecondChance=true;
+    const _eM_zen=currentMode==='histoire'?_getHistoireSubMode():currentMode;
+    if(_eM_zen==='zen'){_zenClearRows();tray=newTray();}
+    else if(!secondChanceUsed){showSecondChance=true;}
     else{over=true;overT=Date.now();setTimeout(()=>{gameState='gameover';},2000);}
   }
 }
 setInterval(()=>{if(gameState==='playing'&&!over)tickParasites();},150);
 
 // ─── MODE MANAGER ────────────────────────────────────────────────────────────
-let currentMode='survie'; // 'survie'|'chrono'|'puzzle'|'choix'|'contraintes'|'histoire'
+let currentMode='survie'; // 'survie'|'chrono'|'choix'|'contraintes'|'histoire'|'zen'
 let modeSelectRects=[];
 
 // Chrono mode
 let chronoTimeLeft=8000,chronoMaxTime=8000,chronoLastTick=0;
-
-// Puzzle mode
-let puzzleLevel=0,puzzlePiecesLeft=0,puzzleSuccess=false,puzzleSuccessT=0,puzzleFail=false,puzzleFailT=0;
 
 // Choix / Stratégie mode
 let choixState='picking'; // 'picking'|'placing'
@@ -899,193 +901,12 @@ let histoireGoalMet=false,histoireGoalMetT=0,histoireNextRect=null;
 const MODES={
   survie: {name:'SURVIE',   icon:'♾',  desc:'Blocs infinis.\nDure le plus longtemps!',  color:'#40FF80'},
   chrono: {name:'CHRONO',   icon:'⏱',  desc:'8 sec par bloc.\nDépêche-toi!',             color:'#FF8020'},
-  puzzle: {name:'PUZZLE',   icon:'🧩', desc:'Blocs imposés.\nPlace-les tous!',           color:'#4080FF'},
   choix:  {name:'STRATÉGIE',icon:'🎯', desc:'Choisis ton bloc\nparmi 3 options.',        color:'#D040FF'},
   contraintes:{name:'CONTRAINTES',icon:'⚠',desc:'Cases bloquées.\nAdapte-toi!',         color:'#FFD700'},
   histoire:{name:'HISTOIRE',icon:'📖', desc:'50 niveaux progressifs.\nAtteins le score de chaque niveau !',color:'#FF6080'},
+  zen:    {name:'ZEN',      icon:'🍃', desc:'Aucun game over.\nJoue sans limite !',         color:'#60C880'},
 };
-const MODE_KEYS=['survie','chrono','puzzle','choix','contraintes','histoire'];
-
-// Puzzle: 12 hard hand-crafted levels — require rotation + planning
-// fills = obstacle cells already on grid.  pieces = 3 exact pieces to fit in the empty gaps.
-// Rotation allowed. Challenge = figuring out orientation + placement order.
-// All piece shapes are max 5 cells, fit within 10×10.
-const PUZZLE_LEVELS=(()=>{
-  // Piece shapes — player uses rotation buttons to orient them
-  const I3=[[1,1,1]],I4=[[1,1,1,1]];
-  const SQ=[[1,1],[1,1]];
-  const L3=[[1,0],[1,0],[1,1]]; // L-tetromino
-  const J3=[[0,1],[0,1],[1,1]]; // J-tetromino
-  const T4=[[1,1,1],[0,1,0]];   // T-tetromino
-  const S4=[[0,1,1],[1,1,0]];   // S-tetromino
-  const Z4=[[1,1,0],[0,1,1]];   // Z-tetromino
-
-  // G(str): 'X'=pre-filled obstacle, '.'=empty (player zone)
-  function G(str){
-    const f=[];str.trim().split('\n').forEach((row,r)=>{
-      [...row.trim()].forEach((ch,c)=>{if(ch==='X')f.push({r,c});});
-    });return f;
-  }
-  return[
-    // LVL 1 — L'Aube : grande zone 5×5 (25 vides), pièces simples
-    {title:"L'Aube", hint:'Beaucoup d\'espace — explore et retourne les pièces !',
-     fills:G(`XXXXX.....
-XXXXX.....
-XXXXX.....
-XXXXX.....
-XXXXX.....
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[I3,I4,SQ]},
-
-    // LVL 2 — Le Plateau : zone 6×6 (36 vides), intro au T
-    {title:'Le Plateau', hint:'Le T a 4 orientations — laquelle rentrera le mieux ?',
-     fills:G(`......XXXX
-......XXXX
-......XXXX
-......XXXX
-......XXXX
-......XXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[T4,I4,SQ]},
-
-    // LVL 3 — La Clairière : 6 lignes × 6 cols + 2 rochers (28 vides)
-    {title:'La Clairière', hint:'Contourne les rochers — le T passe si tu le retournes !',
-     fills:G(`XXXXXXXXXX
-XX......XX
-XX.X....XX
-XX......XX
-XX......XX
-XX....X.XX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[T4,L3,J3]},
-
-    // LVL 4 — Les Marécages : grande zone 8×5 + 2 obstacles (38 vides)
-    {title:'Les Marécages', hint:'S et Z sont miroirs l\'un de l\'autre — tourne-les bien !',
-     fills:G(`XXXXXXXXXX
-X........X
-X..X.....X
-X........X
-X.....X..X
-X........X
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[S4,Z4,T4]},
-
-    // LVL 5 — La Forêt : 6 lignes × 6 cols + 3 arbres (28 vides)
-    {title:'La Forêt', hint:'3 obstacles intérieurs — cherche l\'espace libre !',
-     fills:G(`XXXXXXXXXX
-XXXXXXXXXX
-XX......XX
-XX.X....XX
-XX......XX
-XX....X.XX
-XX......XX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[T4,J3,SQ]},
-
-    // LVL 6 — Les Falaises : couloir vertical + piliers (28 vides)
-    {title:'Les Falaises', hint:'Les piliers réduisent l\'espace — adapte ton orientation !',
-     fills:G(`XXXXXXXXXX
-XXXXXXXXXX
-X.....XXXX
-X..X..XXXX
-X.....XXXX
-X..X..XXXX
-X.....XXXX
-X.....XXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[T4,S4,I4]},
-
-    // LVL 7 — L'Oasis : carré 7×7 + obstacle 2×2 central (38 vides)
-    {title:"L'Oasis", hint:'Grande zone mais un bloc au cœur — contourne-le !',
-     fills:G(`XXXXXXXXXX
-X.......XX
-X.......XX
-X...XX..XX
-X...XX..XX
-X.......XX
-X.......XX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[T4,Z4,L3]},
-
-    // LVL 8 — Le Détroit : deux zones 4×4 séparées (32 vides)
-    {title:'Le Détroit', hint:'Deux zones séparées — répartis les pièces intelligemment !',
-     fills:G(`XXXXXXXXXX
-X....XXXXX
-X....XXXXX
-X....XXXXX
-X....XXXXX
-XXXXX....X
-XXXXX....X
-XXXXX....X
-XXXXX....X
-XXXXXXXXXX`), pieces:[T4,L3,J3]},
-
-    // LVL 9 — Les Ruines : grande zone + 4 obstacles épars (38 vides)
-    {title:'Les Ruines', hint:'Zone criblée de débris — il reste de la place, cherche !',
-     fills:G(`XXXXXXXXXX
-XXXXXXXXXX
-X.......XX
-X..X..X.XX
-X.......XX
-X.X.....XX
-X.......XX
-X...X...XX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[T4,S4,Z4]},
-
-    // LVL 10 — Le Dédale : obstacles en quinconce (40 vides)
-    {title:'Le Dédale', hint:'Obstacles en damier — certaines orientations sont bloquées !',
-     fills:G(`XXXXXXXXXX
-X.X.X.X.XX
-X.......XX
-X.X.....XX
-X.......XX
-X...X.X.XX
-X.......XX
-X.X.X...XX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[T4,L3,S4]},
-
-    // LVL 11 — La Tempête : zone 6 cols + 5 obstacles intérieurs (37 vides)
-    {title:'La Tempête', hint:'S et Z en miroir — un seul sens rentre dans chaque espace !',
-     fills:G(`XXXXXXXXXX
-XX......XX
-XX.X.X..XX
-XX......XX
-XX..X...XX
-XX......XX
-XX.X....XX
-XX......XX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[S4,Z4,T4]},
-
-    // LVL 12 — ★ BOSS Le Vortex : obstacles complexes (42 vides)
-    {title:'★ BOSS — Le Vortex', hint:'Explore toute la zone — tourne chaque pièce avant de placer !',
-     fills:G(`XXXXXXXXXX
-X.......XX
-X.X..X..XX
-X.......XX
-X..XX...XX
-X.......XX
-X...X.X.XX
-X.......XX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[T4,S4,Z4]},
-
-  ].filter(lvl=>lvl&&lvl.pieces&&lvl.pieces.every(p=>Array.isArray(p)&&p.length>0&&Array.isArray(p[0])&&p[0].length>0&&p.flat().some(v=>v))
-              &&Array.isArray(lvl.fills));
-})();
+const MODE_KEYS=['survie','chrono','choix','contraintes','histoire','zen'];
 
 // Histoire: 50 niveaux — score progressif (niveau N = N×100 pts)
 // Niveaux 1-20 : Survie (apprentissage)
@@ -1143,13 +964,6 @@ function _initMode(){
   // Called at start of each game to set up mode-specific state
   if(currentMode==='chrono'){
     chronoTimeLeft=chronoMaxTime;chronoLastTick=Date.now();
-  }else if(currentMode==='puzzle'){
-    const lvl=PUZZLE_LEVELS[puzzleLevel%PUZZLE_LEVELS.length];
-    const col=COLORS[rndI(0,COLORS.length-1)];
-    lvl.fills.forEach(({r,c})=>{grid[r][c]=col;});
-    tray=lvl.pieces.map(shape=>({shape,color:rndc(COLORS)}));
-    nextTrayPreview=null;
-    puzzlePiecesLeft=3;puzzleSuccess=false;puzzleFail=false;
   }else if(currentMode==='choix'){
     _generateChoixOptions();
   }else if(currentMode==='contraintes'){
@@ -1168,13 +982,6 @@ function _initMode(){
 function _applyHistoireSubMode(subMode){
   if(subMode==='chrono'){
     chronoTimeLeft=chronoMaxTime;chronoLastTick=Date.now();
-  }else if(subMode==='puzzle'){
-    const lvl=PUZZLE_LEVELS[histoireLevel%PUZZLE_LEVELS.length];
-    const col=rndc(COLORS);
-    lvl.fills.forEach(({r,c})=>{grid[r][c]=col;});
-    tray=lvl.pieces.map(shape=>({shape,color:rndc(COLORS)}));
-    nextTrayPreview=null;
-    puzzlePiecesLeft=3;puzzleSuccess=false;puzzleFail=false;
   }else if(subMode==='choix'){
     _generateChoixOptions();
   }else if(subMode==='contraintes'){
@@ -1196,7 +1003,6 @@ function _checkHistoireGoal(){
   else if(lvlDef.goalType==='pieces'&&placed>=lvlDef.goalVal)met=true;
   else if(lvlDef.goalType==='lines'&&totalLinesCleared>=lvlDef.goalVal)met=true;
   else if(lvlDef.goalType==='combo'&&maxComboGame>=lvlDef.goalVal)met=true;
-  else if(lvlDef.goalType==='puzzle'&&puzzleSuccess)met=true;
   if(met){histoireGoalMet=true;histoireGoalMetT=Date.now();}
 }
 
@@ -1391,12 +1197,14 @@ function layoutPause(){
   const badgeH=26;
   const scoreH=24;
   const padV=20;
-  const panelH=padV+titleH+10+badgeH+gap+bh*4+gap*3+scoreH+padV;
+  const panelH=padV+titleH+10+badgeH+gap+bh*4+gap*3+scoreH+padV+52;
   const px=(W-pw)/2|0;
   const py=((H-panelH)/2)|0;
-  _pauseBtns={_panel:{x:px,y:py,w:pw,h:panelH},_titleY:py+padV+titleH*0.78,_badgeY:py+padV+titleH+10,_scoreY:py+panelH-padV-scoreH};
+  _pauseBtns={_panel:{x:px,y:py,w:pw,h:panelH},_titleY:py+padV+titleH*0.78,_badgeY:py+padV+titleH+10,_scoreY:py+panelH-padV-scoreH-52};
   let cy=py+padV+titleH+10+badgeH+gap;
   ['resume','restart','sound','quit'].forEach(k=>{_pauseBtns[k]={x:px+10,y:cy,w:pw-20,h:bh};cy+=bh+gap;});
+  const sliderY=_pauseBtns._scoreY+20;
+  _volumeSliderRect={x:_pauseBtns._panel.x+20,y:sliderY,w:_pauseBtns._panel.w-40,h:20};
 }
 
 function drawPause(t){
@@ -1465,10 +1273,44 @@ function drawPause(t){
   const scSz=cl(H*0.026,10,14);
   ctx.font=`${scSz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=th.tm;
   ctx.fillText(`Score actuel : ${score}`,p.x+p.w/2,_pauseBtns._scoreY+scSz/2);
+  // Volume slider
+  if(_volumeSliderRect){
+    const{x:vx,y:vy,w:vw,h:vh}=_volumeSliderRect;
+    const th2=THEMES[curTheme];
+    // Label
+    ctx.font=`bold ${cl(vh*0.7,9,13)}px Arial`;ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillStyle=th2.tg;ctx.fillText('🔊 Volume',vx,vy-10);
+    // Track background
+    rrect(ctx,vx,vy,vw,vh,vh/2,hexA(th2.sl,0.4),hexA(th2.sl,0.7),1);
+    // Filled portion
+    const fillW=Math.max(vh,vw*_volume);
+    rrect(ctx,vx,vy,fillW,vh,vh/2,hexA(th2.ta,0.85),null);
+    // Shine
+    const ssh2=ctx.createLinearGradient(vx,vy,vx,vy+vh*0.5);
+    ssh2.addColorStop(0,'rgba(255,255,255,0.25)');ssh2.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.save();rp(ctx,vx,vy,fillW,vh,vh/2);ctx.clip();ctx.fillStyle=ssh2;ctx.fillRect(vx,vy,fillW,vh);ctx.restore();
+    // Thumb
+    const tx2=vx+vw*_volume;
+    ctx.save();ctx.shadowColor=th2.tm;ctx.shadowBlur=6;
+    ctx.beginPath();ctx.arc(tx2,vy+vh/2,vh*0.75,0,Math.PI*2);
+    ctx.fillStyle=th2.tm;ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.6)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.restore();
+    // Value text
+    ctx.font=`bold ${cl(vh*0.65,8,12)}px Arial`;ctx.textAlign='right';ctx.fillStyle=th2.tm;
+    ctx.fillText(`${Math.round(_volume*100)}%`,vx+vw,vy-10);
+  }
   ctx.restore();
 }
 
 function handlePauseTap(x,y){
+  if(_volumeSliderRect){
+    const{x:vx,y:vy,w:vw,h:vh}=_volumeSliderRect;
+    if(x>=vx-10&&x<=vx+vw+10&&y>=vy-10&&y<=vy+vh+10){
+      _volume=cl((x-vx)/vw,0,1);
+      return;
+    }
+  }
   if(!_pauseBtns.resume)return;
   ['resume','restart','sound','quit'].forEach(k=>{
     const b=_pauseBtns[k];if(!b)return;
@@ -1734,16 +1576,18 @@ function drawGame(t){
     ctx.fillStyle=sg;ctx.fillRect(GRID_X,GRID_Y,GW,GH);
     return true;
   });
-  // Snap preview
-  if(drag&&!over){
+  // Ghost piece (snap preview)
+  if(drag&&gameState==='playing'&&!over){
     const piece=tray[drag.idx];
     if(piece){
       const{gr,gc}=snapPos(mouseX,mouseY,piece.shape);
       const valid=_modeCanPlace(grid,piece.shape,gr,gc);
-      const pr=valid?hr(piece.color):210,pg=valid?hg(piece.color):45,pb_=valid?hb(piece.color):45;
-      const pt=Date.now()*0.006;const pa=0.25+0.12*Math.sin(pt);
-      piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS){rclip(ctx,GRID_X+pc2*CELL+1,GRID_Y+pr2*CELL+1,CELL-2,CR,()=>{ctx.fillStyle=`rgba(${pr},${pg},${pb_},${pa})`;ctx.fillRect(GRID_X+pc2*CELL+1,GRID_Y+pr2*CELL+1,CELL-2,CELL-2);});ctx.strokeStyle=`rgba(${pr},${pg},${pb_},${0.7+0.2*Math.sin(pt)})`;ctx.lineWidth=2;ctx.strokeRect(GRID_X+pc2*CELL+2,GRID_Y+pr2*CELL+2,CELL-4,CELL-4);}}
+      const ghostColor=valid?piece.color:'#FF4040';
+      const ghostAlpha=valid?0.35:0.25;
+      ctx.globalAlpha=ghostAlpha;
+      piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS){drawCell(ctx,ghostColor,GRID_X+pc2*CELL,GRID_Y+pr2*CELL,CELL,selSkin,t);}}
       }));
+      ctx.globalAlpha=1;
     }
   }
   // Tray (glass)
@@ -1773,34 +1617,6 @@ function drawGame(t){
       ctx.fillText('☠ PARASITE',GRID_X+i*pw+pw/2,TRAY_Y+TRAY_H-lsz*0.75);ctx.shadowBlur=0;ctx.restore();
     }else{
       sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox+cc*PIECE_CELL,oy+rr*PIECE_CELL,PIECE_CELL,selSkin,t,dim?0.3:1);}));
-    }
-  }
-  // ── Boutons de rotation ↻ — mode puzzle uniquement ───────────────────────
-  {
-    const eM2=currentMode==='histoire'?_getHistoireSubMode():currentMode;
-    rotBtnRects=[null,null,null]; // reset systématique
-    if(eM2==='puzzle'){
-      const ROT_H=cl(Math.round(TRAY_H*0.32),18,32);
-      const ROT_Y=TRAY_Y+TRAY_H+2;
-      for(let i=0;i<3;i++){
-        if(!tray[i])continue;
-        const rx=GRID_X+i*pw+pw*0.2,ry=ROT_Y,rw=pw*0.6,rh=ROT_H;
-        rotBtnRects[i]={x:rx,y:ry,w:rw,h:rh};
-        const hover=(mouseX>=rx&&mouseX<rx+rw&&mouseY>=ry&&mouseY<ry+rh);
-        ctx.save();
-        if(hover){ctx.shadowColor='#80C0FF';ctx.shadowBlur=8;}
-        const rbg3=ctx.createLinearGradient(rx,ry,rx,ry+rh);
-        rbg3.addColorStop(0,hover?'rgba(40,80,140,0.92)':'rgba(20,40,80,0.75)');
-        rbg3.addColorStop(1,hover?'rgba(20,50,100,0.88)':'rgba(10,20,50,0.60)');
-        rrect(ctx,rx,ry,rw,rh,rh/2,rbg3,null);
-        rp(ctx,rx,ry,rw,rh,rh/2);ctx.strokeStyle=hover?'rgba(128,200,255,0.7)':'rgba(64,120,200,0.45)';ctx.lineWidth=1.2;ctx.stroke();
-        ctx.shadowBlur=0;
-        const fsz3=cl(Math.floor(rh*0.52),8,15);
-        ctx.font=`bold ${fsz3}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillStyle=hover?'#B8E0FF':'rgba(160,200,255,0.9)';
-        ctx.fillText('↻  Tourner',rx+rw/2,ry+rh/2);
-        ctx.restore();
-      }
     }
   }
   // ── Aperçu 2 prochains blocs ─────────────────────────────────────────────
@@ -2071,90 +1887,6 @@ function _drawModeOverlays(t,th){
       setTimeout(()=>{gameState='gameover';},2000);
     }
   }
-  // ── PUZZLE ──
-  if((effectiveMode==='puzzle')&&!over){
-    // Count remaining tray pieces
-    const rem=tray.filter(Boolean).length;
-    const lvlDef2=PUZZLE_LEVELS[(currentMode==='puzzle'?puzzleLevel:histoireLevel)%PUZZLE_LEVELS.length];
-    const lvlTitle=lvlDef2?lvlDef2.title:'Puzzle';
-    const lvlHint=lvlDef2?lvlDef2.hint:'';
-    const lvlNum2=(currentMode==='puzzle'?puzzleLevel:histoireLevel)%PUZZLE_LEVELS.length+1;
-    const pw2=Math.min(W-14,340),ph2=cl(Math.round(H*0.115),48,80);
-    const px2=(W-pw2)/2,py2=GRID_Y-ph2-6;
-    const pbg2=ctx.createLinearGradient(px2,py2,px2,py2+ph2);
-    pbg2.addColorStop(0,'rgba(10,20,60,0.97)');pbg2.addColorStop(1,'rgba(5,10,30,0.93)');
-    rrect(ctx,px2,py2,pw2,ph2,10,pbg2,null);
-    rp(ctx,px2,py2,pw2,ph2,10);ctx.strokeStyle='rgba(64,128,255,0.6)';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.save();
-    // Level number
-    const psz=cl(Math.floor(ph2*0.24),8,14);
-    ctx.font=`${psz}px Arial`;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle='rgba(100,160,255,0.7)';
-    ctx.fillText(`NV.${lvlNum2} / ${PUZZLE_LEVELS.length}`,px2+10,py2+6);
-    // Pieces left badge (right)
-    const remCol=rem===0?'#40FF80':rem===1?'#FFD700':'#80B0FF';
-    ctx.font=`bold ${psz}px Arial`;ctx.textAlign='right';ctx.fillStyle=remCol;
-    ctx.fillText(`🧩 ×${rem}`,px2+pw2-10,py2+6);
-    // Title
-    const ttsz=cl(Math.floor(ph2*0.30),10,18);
-    ctx.font=`bold ${ttsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle='#C0D8FF';ctx.shadowColor='#4080FF';ctx.shadowBlur=5;
-    ctx.fillText(lvlTitle,px2+pw2/2,py2+ph2*0.44);ctx.shadowBlur=0;
-    // Hint
-    const htsz=cl(Math.floor(ph2*0.20),7,12);
-    ctx.font=`${htsz}px Arial`;ctx.fillStyle='rgba(150,190,255,0.65)';ctx.shadowBlur=0;
-    ctx.fillText(lvlHint,px2+pw2/2,py2+ph2*0.76);
-    ctx.restore();
-    // Detect puzzle success: all 3 tray pieces placed
-    if(rem===0&&placed>=3&&!puzzleSuccess&&!puzzleFail){
-      puzzleSuccess=true;puzzleSuccessT=Date.now();
-      floats.push(new FloatText('🎉 PUZZLE RÉUSSI !',W/2,H/2,'#40FF80',1.6,160));
-      screenFlash=200;screenFlashCol='#40FF80';
-      score+=500;
-      if(currentMode==='puzzle'){puzzleLevel++;try{localStorage.setItem('bp_puzzlelvl',String(puzzleLevel));}catch(e2){}}
-    }
-    // Detect fail: tray has pieces but no valid move
-    if(!anyValid(grid,tray.filter(Boolean))&&rem>0&&!puzzleSuccess&&!puzzleFail){
-      puzzleFail=true;puzzleFailT=Date.now();
-      floats.push(new FloatText('❌ PUZZLE ÉCHOUÉ',W/2,H/2,'#FF4040',1.4,140));
-      screenFlash=180;screenFlashCol='#FF2010';
-    }
-    // Success panel
-    if(puzzleSuccess){
-      const el2=Date.now()-puzzleSuccessT;
-      if(el2>600){
-        ctx.fillStyle=`rgba(0,0,0,${Math.min(0.7,el2/800*0.7).toFixed(3)})`;ctx.fillRect(0,0,W,H);
-        const spw=Math.min(W-24,340),sph=cl(Math.round(H*0.38),120,240);
-        const spx=(W-spw)/2,spy=(H-sph)/2;
-        rrect(ctx,spx,spy,spw,sph,16,'rgba(10,30,15,0.95)',null);
-        rp(ctx,spx,spy,spw,sph,16);ctx.strokeStyle='rgba(64,255,100,0.7)';ctx.lineWidth=2;ctx.stroke();
-        const stsz=cl(spw*0.10|0,14,30);
-        ctx.save();ctx.font=`bold ${stsz}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillStyle='#40FF80';ctx.shadowColor='#40FF80';ctx.shadowBlur=12;
-        ctx.fillText('🎉 PUZZLE RÉUSSI!',W/2,spy+sph*0.28);
-        ctx.shadowBlur=0;ctx.font=`bold ${stsz*0.7}px Arial`;ctx.fillStyle='#FFFFFF';
-        ctx.fillText(`+500 pts bonus`,W/2,spy+sph*0.5);
-        ctx.font=`${stsz*0.58}px Arial`;ctx.fillStyle='rgba(255,255,255,0.65)';
-        ctx.fillText('Toucher pour continuer',W/2,spy+sph*0.75);ctx.restore();
-      }
-    }
-    // Fail panel
-    if(puzzleFail){
-      const el2=Date.now()-puzzleFailT;
-      if(el2>600){
-        ctx.fillStyle=`rgba(0,0,0,${Math.min(0.7,el2/800*0.7).toFixed(3)})`;ctx.fillRect(0,0,W,H);
-        const fpw=Math.min(W-24,320),fph=cl(Math.round(H*0.35),110,220);
-        const fpx=(W-fpw)/2,fpy=(H-fph)/2;
-        rrect(ctx,fpx,fpy,fpw,fph,16,'rgba(30,8,8,0.95)',null);
-        rp(ctx,fpx,fpy,fpw,fph,16);ctx.strokeStyle='rgba(255,60,40,0.7)';ctx.lineWidth=2;ctx.stroke();
-        const fsz2=cl(fpw*0.10|0,12,28);
-        ctx.save();ctx.font=`bold ${fsz2}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillStyle='#FF4040';ctx.shadowColor='#FF2020';ctx.shadowBlur=10;
-        ctx.fillText('❌ PUZZLE ÉCHOUÉ',W/2,fpy+fph*0.3);
-        ctx.shadowBlur=0;ctx.font=`${fsz2*0.62}px Arial`;ctx.fillStyle='rgba(255,255,255,0.65)';
-        ctx.fillText('Toucher pour réessayer',W/2,fpy+fph*0.72);ctx.restore();
-      }
-    }
-  }
   // ── CHOIX / STRATÉGIE ──
   if((effectiveMode==='choix')&&choixState==='picking'&&!over){
     // Full picker overlay
@@ -2370,10 +2102,15 @@ function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;
   if(gameState==='gameover'){if(Date.now()-overT>1200)gameState='menu';return;}
   // Block tray drag only when in choix PICKING phase; all other modes allow normal drag
   const _inChoixPick=(currentMode==='choix'||_getHistoireSubMode()==='choix')&&choixState==='picking';
-  // Also block drag if tap is on a rotation button
-  const _onRotBtn=rotBtnRects.some(rb=>rb&&x>=rb.x&&x<rb.x+rb.w&&y>=rb.y&&y<rb.y+rb.h);
-  if(gameState==='playing'&&!over&&!showSecondChance&&!showBonusPicker&&!_inChoixPick&&!_onRotBtn){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};break;}}}}
-function onMove(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;}
+  if(gameState==='playing'&&!over&&!showSecondChance&&!showBonusPicker&&!_inChoixPick){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};break;}}}}
+function onMove(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;
+  if(gameState==='pause'&&_volumeSliderRect){
+    const{x:vx,y:vy,w:vw,h:vh}=_volumeSliderRect;
+    if(mouseY>=vy-14&&mouseY<=vy+vh+14){
+      _volume=cl((mouseX-vx)/vw,0,1);
+    }
+  }
+}
 function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
 
 function onUp(e){
@@ -2384,13 +2121,6 @@ function onUp(e){
   if(gameState==='playing'&&_pauseHudRect&&x>=_pauseHudRect.x&&x<_pauseHudRect.x+_pauseHudRect.w&&y>=_pauseHudRect.y&&y<_pauseHudRect.y+_pauseHudRect.h){gameState='pause';_pauseStartTime=Date.now();return;}
   // Sound toggle (in-game bar only — menu has its own handler in handleMenuTap)
   if(gameState==='playing'&&_soundRect&&x>=_soundRect.x&&x<_soundRect.x+_soundRect.w&&y>=_soundRect.y&&y<_soundRect.y+_soundRect.h){_soundEnabled=!_soundEnabled;return;}
-  // Rotation buttons — check before drag placement
-  if(gameState==='playing'&&!over&&!showSecondChance){
-    for(let _ri=0;_ri<3;_ri++){
-      const rb=rotBtnRects[_ri];
-      if(rb&&x>=rb.x&&x<rb.x+rb.w&&y>=rb.y&&y<rb.y+rb.h){rotateTrayPiece(_ri);drag=null;return;}
-    }
-  }
   // ── MODE taps ──
   if(gameState==='playing'){
     const subMode=_getHistoireSubMode();
@@ -2407,14 +2137,6 @@ function onUp(e){
       return; // tap outside overlay → ignore
     }
     // (Choix tray refresh is handled in the placement block below)
-    // Puzzle: tap on success panel → next puzzle
-    if(eMode==='puzzle'&&puzzleSuccess){
-      resetGame();return;
-    }
-    // Puzzle: tap on fail panel → restart same puzzle
-    if(eMode==='puzzle'&&puzzleFail){
-      puzzleLevel=Math.max(0,puzzleLevel-1);resetGame();return;
-    }
     // Histoire: tap "niveau suivant" button
     if(currentMode==='histoire'&&histoireGoalMet&&histoireNextRect){
       const r=histoireNextRect;
@@ -2512,8 +2234,6 @@ function onUp(e){
       lastPlaceTime=now2;
       // Chrono: reset timer on successful placement
       if(_getHistoireSubMode()==='chrono'||currentMode==='chrono'){chronoTimeLeft=chronoMaxTime;chronoLastTick=now2;}
-      // Histoire: trigger puzzle piece count update
-      if(currentMode==='histoire'&&_getHistoireSubMode()==='puzzle'){puzzlePiecesLeft=tray.filter(Boolean).length;}
       let speedMul=1.0,speedLabel=null,speedCol='#FFFFFF';
       if(thinkMs<SPEED_TURBO){speedMul=1.8;speedLabel='⚡ TURBO ×1.8';speedCol='#FF4020';}
       else if(thinkMs<SPEED_FAST){speedMul=1.3;speedLabel='⚡ RAPIDE ×1.3';speedCol='#FFA020';}
@@ -2540,9 +2260,7 @@ function onUp(e){
       tray[drag.idx]=null;placed++;
       showAddCellsBonus=false;addCellsBonusTimer--;
       if(addCellsBonusTimer<=0){showAddCellsBonus=true;addCellsBonusTimer=Math.floor(rnd(8,15));}
-      // Puzzle mode: no line clearing (would destroy pre-filled puzzle cells)
-      const _eM_now=currentMode==='histoire'?_getHistoireSubMode():currentMode;
-      const ti=getCurTheme(),{n,cells,colors}=_eM_now==='puzzle'?{n:0,cells:[],colors:[]}:clearLines(grid);
+      const ti=getCurTheme(),{n,cells,colors}=clearLines(grid);
       if(n>0){
         sndClear(n);
         totalLinesCleared+=n;
@@ -2581,25 +2299,31 @@ function onUp(e){
       // Speed float (show regardless of line clear)
       if(speedLabel)floats.push(new FloatText(speedLabel,GRID_X+GW/2,GRID_Y+GH*0.25,speedCol,0.85,70));
       const subM=_getHistoireSubMode();const eM=currentMode==='histoire'?subM:currentMode;
-      if(tray.every(p=>p===null)&&eM!=='puzzle'&&eM!=='choix'){tray=nextTrayPreview||newTray();nextTrayPreview=newTray();}
+      if(tray.every(p=>p===null)&&eM!=='choix'){tray=nextTrayPreview||newTray();nextTrayPreview=newTray();}
       if(tray.every(p=>p===null)&&eM==='choix'){_generateChoixOptions();}
       // Sauvegarde automatique
       try{localStorage.setItem('bp_save',JSON.stringify({v:1,grid,score,placed,combo,curTheme,gridStars,gridBonus,tray:tray.map(p=>p?{shape:p.shape,color:p.color,isParasite:!!p.isParasite}:null),ntp:nextTrayPreview?nextTrayPreview.map(p=>p?{shape:p.shape,color:p.color}:null):null,gameStartTime,totalLinesCleared,maxComboGame}));}catch(e2){}
       hasSave=true;
       // For choix mode use choixOptions as the validity check (tray is empty between picks)
-      // For puzzle mode skip the validity check (puzzle has its own success/fail logic)
-      const _validCheck=eM==='choix'?choixOptions:eM==='puzzle'?[]:tray;
+      const _validCheck=eM==='choix'?choixOptions:tray;
       if(_validCheck.length>0&&!anyValid(grid,_validCheck)){
-        if(score>best){best=score;try{localStorage.setItem('blockpuzzle_best',String(best));}catch(e2){}}
-        scoreHistory.push(score);scoreHistory.sort((a,b)=>b-a);scoreHistory=scoreHistory.slice(0,5);
-        try{localStorage.setItem('bp_scores',JSON.stringify(scoreHistory));}catch(e2){}
-        if(!secondChanceUsed){showSecondChance=true;}
-        else{
-          over=true;overT=Date.now();
-          try{localStorage.removeItem('bp_save');}catch(e2){}hasSave=false;
-          _triggerScoreSubmit(score);
-          sndGameOver();
-          setTimeout(()=>{gameState='gameover';},2000);
+        const _eM_zen=currentMode==='histoire'?_getHistoireSubMode():currentMode;
+        if(_eM_zen==='zen'){
+          // Zen: no game over — clear 2 bottom-most filled rows instead
+          _zenClearRows();
+          tray=newTray();
+        }else{
+          if(score>best){best=score;try{localStorage.setItem('blockpuzzle_best',String(best));}catch(e2){}}
+          scoreHistory.push(score);scoreHistory.sort((a,b)=>b-a);scoreHistory=scoreHistory.slice(0,5);
+          try{localStorage.setItem('bp_scores',JSON.stringify(scoreHistory));}catch(e2){}
+          if(_eM_zen!=='zen'&&!secondChanceUsed){showSecondChance=true;}
+          else{
+            over=true;overT=Date.now();
+            try{localStorage.removeItem('bp_save');}catch(e2){}hasSave=false;
+            _triggerScoreSubmit(score);
+            sndGameOver();
+            setTimeout(()=>{gameState='gameover';},2000);
+          }
         }
       }
     }}

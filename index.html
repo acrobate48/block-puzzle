@@ -17,11 +17,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 canvas{display:block;touch-action:none;image-rendering:auto}
 #lb-pseudo-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99;align-items:center;justify-content:center;}
 #lb-pseudo-box{background:linear-gradient(180deg,#1a2040,#0a1020);border:2px solid #4080ff;border-radius:18px;padding:28px 28px 22px;display:flex;flex-direction:column;align-items:center;gap:13px;box-shadow:0 0 48px #2040ff90;max-width:320px;width:88%;}
-#lb-pseudo-box p{color:#90c8ff;font:bold 17px Arial,sans-serif;text-align:center;margin:0;}
-#lb-pseudo-box small{color:#506080;font:13px Arial,sans-serif;text-align:center;}
-#lb-pseudo-inp{width:100%;padding:11px 14px;border-radius:8px;border:2px solid #4080ff;background:#0a1830;color:#fff;font:16px Arial;outline:none;text-align:center;box-sizing:border-box;letter-spacing:1px;}
+#lb-pseudo-box p{color:#90c8ff;font:bold 17px system-ui,-apple-system,"SF Pro Display",Arial,sans-serif;text-align:center;margin:0;}
+#lb-pseudo-box small{color:#506080;font:13px system-ui,-apple-system,"SF Pro Display",Arial,sans-serif;text-align:center;}
+#lb-pseudo-inp{width:100%;padding:11px 14px;border-radius:8px;border:2px solid #4080ff;background:#0a1830;color:#fff;font:16px system-ui,-apple-system,"SF Pro Display",Arial;outline:none;text-align:center;box-sizing:border-box;letter-spacing:1px;}
 #lb-pseudo-inp:focus{border-color:#80b0ff;box-shadow:0 0 12px #4080ff60;}
-#lb-pseudo-btn{padding:11px 0;border-radius:10px;border:none;background:linear-gradient(180deg,#4a8fff,#2040c0);color:#fff;font:bold 16px Arial;cursor:pointer;box-shadow:0 0 14px #4080ff80;width:100%;}
+#lb-pseudo-btn{padding:11px 0;border-radius:10px;border:none;background:linear-gradient(180deg,#4a8fff,#2040c0);color:#fff;font:bold 16px system-ui,-apple-system,"SF Pro Display",Arial;cursor:pointer;box-shadow:0 0 14px #4080ff80;width:100%;}
 #lb-pseudo-btn:active{opacity:0.8;}
 </style>
 </head>
@@ -244,7 +244,7 @@ function drawBombIcon(ctx,cx,cy,sz){
 function drawX2Icon(ctx,cx,cy,sz){
   ctx.save();
   const fsz=sz*0.72;
-  ctx.font=`bold ${fsz|0}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font=`bold ${fsz|0}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
   // Dark outline + shadow
   ctx.shadowColor='rgba(0,0,0,0.7)';ctx.shadowBlur=sz*0.25;
   ctx.strokeStyle='#4A2000';ctx.lineWidth=fsz*0.16;ctx.lineJoin='round';ctx.strokeText('×2',cx,cy);
@@ -307,7 +307,7 @@ function drawParasiteOverlay(ctx,x,y,sz,t,phase){
   ctx.fillStyle=sg;ctx.fillRect(x,scanY-2,sz,5);
   // Skull emoji hint (small, pulsing)
   const esz=Math.max(8,sz*0.36)|0;
-  ctx.save();ctx.font=`${esz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.save();ctx.font=`${esz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.globalAlpha=0.55+0.35*pulse;ctx.shadowColor='#00FF50';ctx.shadowBlur=sz*0.3;
   ctx.fillText('☠',x+sz/2,y+sz/2);ctx.shadowBlur=0;ctx.restore();
 }
@@ -318,25 +318,71 @@ function drawScore(ctx,text,x,y,th,font){
   const fsz=parseFloat((font.match(/[\d.]+/)||['14'])[0]);
   const g=ctx.createLinearGradient(0,y-fsz*0.5,0,y+fsz*0.5);
   g.addColorStop(0,th.hi||th.tm);g.addColorStop(0.5,th.tm);g.addColorStop(1,lerpC(th.ta,'#000',0.2));
-  ctx.shadowColor=th.tm;ctx.shadowBlur=18;
-  ctx.strokeStyle='rgba(0,0,0,0.5)';ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeText(text,x,y);
-  ctx.shadowBlur=0;ctx.fillStyle=g;ctx.fillText(text,x,y);
-  ctx.restore();
+  // Bloom pass 1 — wide soft glow
+  ctx.globalAlpha=0.22;ctx.shadowColor=th.tm;ctx.shadowBlur=fsz*1.1;
+  ctx.fillStyle=th.hi||th.tm;ctx.fillText(text,x,y);
+  // Bloom pass 2 — tight inner glow
+  ctx.globalAlpha=0.40;ctx.shadowBlur=fsz*0.45;ctx.fillText(text,x,y);
+  // Final crisp pass
+  ctx.globalAlpha=1;ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeText(text,x,y);
+  ctx.fillStyle=g;ctx.fillText(text,x,y);
+  // Shine pass
+  ctx.globalAlpha=0.20;
+  const sg=ctx.createLinearGradient(x,y-fsz*0.5,x,y+fsz*0.05);
+  sg.addColorStop(0,'rgba(255,255,255,1)');sg.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=sg;ctx.fillText(text,x,y);
+  ctx.globalAlpha=1;ctx.restore();
 }
 
 // ─── CELL CACHE ───────────────────────────────────────────────────────────────
+// ── 3D bevel + specular — baked into every skin ──────────────────────────────
+function _drawBevel(ctx,x,y,sz){
+  const r=Math.max(3,sz/5|0);
+  ctx.save();
+  rp(ctx,x,y,sz,sz,r);ctx.clip();
+  // Top light bevel
+  const tg=ctx.createLinearGradient(x,y,x,y+sz*0.24);
+  tg.addColorStop(0,'rgba(255,255,255,0.44)');tg.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=tg;ctx.fillRect(x,y,sz,sz*0.24);
+  // Left light bevel
+  const lg=ctx.createLinearGradient(x,y,x+sz*0.22,y);
+  lg.addColorStop(0,'rgba(255,255,255,0.30)');lg.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=lg;ctx.fillRect(x,y,sz*0.22,sz);
+  // Bottom dark bevel
+  const bg=ctx.createLinearGradient(x,y+sz*0.70,x,y+sz);
+  bg.addColorStop(0,'rgba(0,0,0,0)');bg.addColorStop(1,'rgba(0,0,0,0.38)');
+  ctx.fillStyle=bg;ctx.fillRect(x,y+sz*0.70,sz,sz*0.30);
+  // Right dark bevel
+  const rg=ctx.createLinearGradient(x+sz*0.70,y,x+sz,y);
+  rg.addColorStop(0,'rgba(0,0,0,0)');rg.addColorStop(1,'rgba(0,0,0,0.28)');
+  ctx.fillStyle=rg;ctx.fillRect(x+sz*0.70,y,sz*0.30,sz);
+  // Specular spot — top-left corner glow
+  const sp=ctx.createRadialGradient(x+sz*0.26,y+sz*0.20,0,x+sz*0.26,y+sz*0.20,sz*0.40);
+  sp.addColorStop(0,'rgba(255,255,255,0.40)');sp.addColorStop(0.45,'rgba(255,255,255,0.10)');sp.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=sp;ctx.fillRect(x,y,sz,sz);
+  ctx.restore();
+}
+
 function getCached(col,sz,skin){
   const k=`${skin}_${col}_${sz}`;
   if(CELL_CACHE.has(k))return CELL_CACHE.get(k);
   const oc=document.createElement('canvas');oc.width=sz;oc.height=sz;
   const c2=oc.getContext('2d');
   SKIN_FNS[skin](c2,col,0,0,sz,0);
+  _drawBevel(c2,0,0,sz);
   CELL_CACHE.set(k,oc);return oc;
 }
 function drawCell(ctx,col,x,y,sz,skin,t,alpha=1){
   x=x|0;y=y|0;sz=sz|0;if(sz<1)return;
+  // Drop shadow (drawn before skin, outside clip)
+  const _r=Math.max(3,sz/5|0);
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.38)';ctx.shadowBlur=sz*0.14;ctx.shadowOffsetX=sz*0.04;ctx.shadowOffsetY=sz*0.07;
+  rp(ctx,x,y,sz,sz,_r);ctx.fillStyle='#000';ctx.fill();
+  ctx.restore();
   if(alpha<1)ctx.globalAlpha=alpha;
-  if(ANIMATED_SKINS.has(skin))SKIN_FNS[skin](ctx,col,x,y,sz,t);
+  if(ANIMATED_SKINS.has(skin)){SKIN_FNS[skin](ctx,col,x,y,sz,t);_drawBevel(ctx,x,y,sz);}
   else ctx.drawImage(getCached(col,sz,skin),x,y);
   if(alpha<1)ctx.globalAlpha=1;
 }
@@ -709,7 +755,7 @@ function spawnDebris(clC,ti,n){Object.entries(clC).forEach(([k,color])=>{const r
 class FloatText{
   constructor(text,x,y,col,sizeM=1,life=75){this.text=text;this.x=x;this.y=y;this.col=col;this.life=life;this.ml=life;this.vy=-1.1;this.sizeM=sizeM;}
   update(){this.y+=this.vy;this.vy*=0.97;this.life--;return this.life>0;}
-  draw(ctx){const a=this.life/this.ml,fsz=Math.max(10,CELL*0.5*this.sizeM)|0;ctx.save();ctx.globalAlpha=a;ctx.font=`bold ${fsz}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor=this.col;ctx.shadowBlur=10;ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeText(this.text,this.x,this.y);ctx.fillStyle=this.col;ctx.fillText(this.text,this.x,this.y);ctx.restore();}
+  draw(ctx){const a=this.life/this.ml,fsz=Math.max(10,CELL*0.5*this.sizeM)|0;ctx.save();ctx.globalAlpha=a;ctx.font=`bold ${fsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor=this.col;ctx.shadowBlur=10;ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeText(this.text,this.x,this.y);ctx.fillStyle=this.col;ctx.fillText(this.text,this.x,this.y);ctx.restore();}
 }
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -1054,17 +1100,17 @@ function drawMenu(t){
   ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(0,0,W,H);
   layoutMenu();
   // Title
-  const fsz=cl(Math.floor(H*0.082),20,62),font=`${fsz}px Impact,Arial`;
+  const fsz=cl(Math.floor(H*0.082),20,62),font=`${fsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;
   const titleY=Math.round(H*0.086)+fsz;
   bounceTitle(ctx,'BLOCK',W/2,titleY,t,font,th.hi||th.tm,lerpC(th.tm,'#804000',0.4),th.ta,7);
   bounceTitle(ctx,'PUZZLE',W/2,titleY+fsz*1.1,t,font,th.ta,lerpC(th.ta,'#003060',0.5),th.tm,5);
   // Subtitle
   const subSz=cl(Math.floor(H*0.026),9,19);
-  ctx.save();ctx.font=`${subSz}px Arial`;ctx.fillStyle=th.tg;ctx.textAlign='center';ctx.shadowColor=th.tg;ctx.shadowBlur=6;
+  ctx.save();ctx.font=`${subSz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tg;ctx.textAlign='center';ctx.shadowColor=th.tg;ctx.shadowBlur=6;
   ctx.fillText('— Choisis ton style —',W/2,titleY+fsz*2.28);ctx.restore();
   // SKIN label
   const lblSz=cl(Math.floor(H*0.022),8,15);
-  if(skinRects.length){labelText(ctx,'SKIN',W/2,skinRects[0].y-lblSz-1,th.tg,`bold ${lblSz}px Arial`,'center',true);}
+  if(skinRects.length){labelText(ctx,'SKIN',W/2,skinRects[0].y-lblSz-1,th.tg,`bold ${lblSz}px system-ui,-apple-system,"SF Pro Display",Arial`,'center',true);}
   // Skin cards — glassmorphism
   skinRects.forEach((sr,i)=>{
     const sel=i===selSkin;const{x,y,w,h}=sr;
@@ -1085,14 +1131,14 @@ function drawMenu(t){
     drawCell(ctx,COLORS[i%COLORS.length],(x+w/2-psz/2)|0,y+5,psz,i,t);
     // Name
     const nfz=cl(Math.floor(h*0.19),7,14);
-    ctx.save();ctx.font=`bold ${nfz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`bold ${nfz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     if(sel){ctx.shadowColor=th.tm;ctx.shadowBlur=6;}
     ctx.fillStyle=sel?th.tm:th.ta;ctx.fillText(SKIN_NAMES[i],x+w/2,y+h-nfz*0.6);
     ctx.restore();
-    if(sel){ctx.font=`bold ${nfz}px Arial`;ctx.fillStyle=th.tm;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('✓',x+4,y+nfz+3);}
+    if(sel){ctx.font=`bold ${nfz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tm;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('✓',x+4,y+nfz+3);}
   });
   // THEME label
-  if(themeRects.length){labelText(ctx,'THÈME',W/2,themeRects[0].y-lblSz-1,th.tg,`bold ${lblSz}px Arial`,'center',true);}
+  if(themeRects.length){labelText(ctx,'THÈME',W/2,themeRects[0].y-lblSz-1,th.tg,`bold ${lblSz}px system-ui,-apple-system,"SF Pro Display",Arial`,'center',true);}
   // Theme buttons
   themeRects.forEach((tr,i)=>{
     const sth=THEMES[i],sel=i===selTheme;const{x,y,w,h}=tr;
@@ -1105,7 +1151,7 @@ function drawMenu(t){
     rp(ctx,x,y,w,h,h/3);ctx.fillStyle=tsh;ctx.fill();
     rp(ctx,x,y,w,h,h/3);ctx.strokeStyle=sel?sth.tm:hexA(sth.dc,0.7);ctx.lineWidth=sel?2:1;ctx.stroke();
     const tfz=cl(Math.floor(h*0.44),6,12);
-    ctx.save();ctx.font=`bold ${tfz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`bold ${tfz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     if(sel){ctx.shadowColor=sth.tm;ctx.shadowBlur=5;}
     ctx.fillStyle='rgba(255,255,255,0.95)';ctx.fillText(sth.name,x+w/2,y+h/2);ctx.restore();
   });
@@ -1124,7 +1170,7 @@ function drawMenu(t){
     rp(ctx,x+2,y+2,w-4,h*0.45,h/2);ctx.fillStyle=shg;ctx.fill();
     rp(ctx,x,y,w,h,h/2);ctx.strokeStyle=hexA(th.tm,0.6);ctx.lineWidth=1.5;ctx.stroke();
     const pfz=cl(Math.floor(h*0.48),12,22);
-    drawPremText(ctx,'▶  JOUER',x+w/2,y+h/2,`bold ${pfz}px Arial`,th.hi||th.tm,lerpC(th.tm,'#fff',0.3),'rgba(0,0,0,0.5)',th.tm,10,2.5);
+    drawPremText(ctx,'▶  JOUER',x+w/2,y+h/2,`bold ${pfz}px system-ui,-apple-system,"SF Pro Display",Arial`,th.hi||th.tm,lerpC(th.tm,'#fff',0.3),'rgba(0,0,0,0.5)',th.tm,10,2.5);
     ctx.textAlign='center';ctx.textBaseline='middle';
   }
   // ── REPRENDRE (si sauvegarde) ── [between JOUER and CLASSEMENT]
@@ -1141,7 +1187,7 @@ function drawMenu(t){
     rp(ctx,x,y,w,h,h/2);ctx.strokeStyle=hexA('#40FF80',0.5);ctx.lineWidth=1.5;ctx.stroke();
     ctx.shadowBlur=0;
     const rfz=cl(Math.floor(h*0.48),12,22);
-    drawPremText(ctx,'▶  REPRENDRE',x+w/2,y+h/2,`bold ${rfz}px Arial`,'#FFFFFF','#A0FFB0','rgba(0,0,0,0.5)','#40FF80',8,2);
+    drawPremText(ctx,'▶  REPRENDRE',x+w/2,y+h/2,`bold ${rfz}px system-ui,-apple-system,"SF Pro Display",Arial`,'#FFFFFF','#A0FFB0','rgba(0,0,0,0.5)','#40FF80',8,2);
     ctx.restore();
   }
   // ── CLASSEMENT MONDIAL ──
@@ -1158,7 +1204,7 @@ function drawMenu(t){
     rp(ctx,x,y,w,h,h/2);ctx.strokeStyle=hexA('#FFD700',0.55);ctx.lineWidth=1.5;ctx.stroke();
     ctx.shadowBlur=0;
     const lfz=cl(Math.floor(h*0.46),12,21);
-    drawPremText(ctx,'🏆  CLASSEMENT',x+w/2,y+h/2,`bold ${lfz}px Arial`,'#FFD700','#B8860B','rgba(0,0,0,0.5)','#FFD700',8,2);
+    drawPremText(ctx,'🏆  CLASSEMENT',x+w/2,y+h/2,`bold ${lfz}px system-ui,-apple-system,"SF Pro Display",Arial`,'#FFD700','#B8860B','rgba(0,0,0,0.5)','#FFD700',8,2);
     ctx.restore();
   }
   // ── BOUTON SON (icône fixée en haut à droite) ──
@@ -1175,7 +1221,7 @@ function drawMenu(t){
     rp(ctx,x+2,y+2,w-4,h*0.5,8);ctx.fillStyle=ssh;ctx.fill();
     rp(ctx,x,y,w,h,10);ctx.strokeStyle=hexA(on?'#40D8FF':'#FF6060',0.6);ctx.lineWidth=1.5;ctx.stroke();
     ctx.shadowBlur=0;
-    ctx.font=`${Math.floor(h*0.58)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font=`${Math.floor(h*0.58)}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(on?'🔊':'🔇',x+w/2,y+h/2);
     ctx.restore();
   }
@@ -1183,8 +1229,8 @@ function drawMenu(t){
   const bsz=cl(Math.floor(H*0.020),8,14);
   const btmY=H-bsz*2.5;
   ctx.textAlign='center';ctx.textBaseline='alphabetic';
-  if(best>0){ctx.save();ctx.font=`bold ${bsz}px Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=5;ctx.fillText(`RECORD : ${best}`,W/2,btmY);ctx.restore();}
-  ctx.font=`${bsz*0.76}px Arial`;ctx.fillStyle=hexA(th.tg,0.45);ctx.fillText('Toucher JOUER pour commencer',W/2,H-4);
+  if(best>0){ctx.save();ctx.font=`bold ${bsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=5;ctx.fillText(`RECORD : ${best}`,W/2,btmY);ctx.restore();}
+  ctx.font=`${bsz*0.76}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=hexA(th.tg,0.45);ctx.fillText('Toucher JOUER pour commencer',W/2,H-4);
   ctx.textAlign='left';ctx.textBaseline='alphabetic';
 }
 
@@ -1227,15 +1273,15 @@ function drawPause(t){
   rp(ctx,p.x,p.y,p.w,p.h,20);ctx.strokeStyle=hexA(th.sl,0.7);ctx.lineWidth=1.5;ctx.stroke();
   // Title
   const tsz=cl(p.h*0.10,18,30);
-  drawPremText(ctx,'⏸  PAUSE',p.x+p.w/2,_pauseBtns._titleY,`bold ${tsz}px Arial`,th.hi||th.tm,th.ta,'rgba(0,0,0,0.5)',th.hi||th.tm,10,2);
+  drawPremText(ctx,'⏸  PAUSE',p.x+p.w/2,_pauseBtns._titleY,`bold ${tsz}px system-ui,-apple-system,"SF Pro Display",Arial`,th.hi||th.tm,th.ta,'rgba(0,0,0,0.5)',th.hi||th.tm,10,2);
   // Mode badge
   const mode=MODES[currentMode]||MODES.survie;
   const bw2=ctx.measureText(mode.icon+' '+mode.name).width+30;
-  ctx.font=`bold 13px Arial`;
+  ctx.font=`bold 13px system-ui,-apple-system,"SF Pro Display",Arial`;
   const bx2=(W-bw2)/2|0;
   const by2=_pauseBtns._badgeY|0;
   rrect(ctx,bx2,by2,bw2,24,12,hexA(mode.color,0.22),hexA(mode.color,0.80),1.5);
-  ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=mode.color;
+  ctx.font='bold 13px system-ui,-apple-system,"SF Pro Display",Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=mode.color;
   ctx.fillText(mode.icon+' '+mode.name,p.x+p.w/2,by2+12);
   // Buttons
   const btnDefs={
@@ -1263,7 +1309,7 @@ function drawPause(t){
     ctx.save();rp(ctx,bx,by,bw,bh,br);ctx.clip();ctx.fillStyle=sh;ctx.fillRect(bx,by,bw,bh*0.45);ctx.restore();
     // Label
     const fs=cl(bh*0.40,12,20);
-    ctx.font=`bold ${fs}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font=`bold ${fs}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle='rgba(255,255,255,0.95)';
     ctx.shadowColor=def.border;ctx.shadowBlur=4;
     ctx.fillText(def.icon+'  '+def.lbl,bx+bw/2,by+bh/2);
@@ -1271,14 +1317,14 @@ function drawPause(t){
   });
   // Score actuel
   const scSz=cl(H*0.026,10,14);
-  ctx.font=`${scSz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=th.tm;
+  ctx.font=`${scSz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=th.tm;
   ctx.fillText(`Score actuel : ${score}`,p.x+p.w/2,_pauseBtns._scoreY+scSz/2);
   // Volume slider
   if(_volumeSliderRect){
     const{x:vx,y:vy,w:vw,h:vh}=_volumeSliderRect;
     const th2=THEMES[curTheme];
     // Label
-    ctx.font=`bold ${cl(vh*0.7,9,13)}px Arial`;ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.font=`bold ${cl(vh*0.7,9,13)}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='left';ctx.textBaseline='middle';
     ctx.fillStyle=th2.tg;ctx.fillText('🔊 Volume',vx,vy-10);
     // Track background
     rrect(ctx,vx,vy,vw,vh,vh/2,hexA(th2.sl,0.4),hexA(th2.sl,0.7),1);
@@ -1297,7 +1343,7 @@ function drawPause(t){
     ctx.strokeStyle='rgba(255,255,255,0.6)';ctx.lineWidth=1.5;ctx.stroke();
     ctx.restore();
     // Value text
-    ctx.font=`bold ${cl(vh*0.65,8,12)}px Arial`;ctx.textAlign='right';ctx.fillStyle=th2.tm;
+    ctx.font=`bold ${cl(vh*0.65,8,12)}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='right';ctx.fillStyle=th2.tm;
     ctx.fillText(`${Math.round(_volume*100)}%`,vx+vw,vy-10);
   }
   ctx.restore();
@@ -1349,12 +1395,12 @@ function drawModeSelect(t){
   layoutModeSelect();
   // Title
   const tsz=cl(Math.floor(H*0.06),14,40);
-  ctx.save();ctx.font=`bold ${tsz}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.save();ctx.font=`bold ${tsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=10;
   ctx.fillText('CHOISIR UN MODE',W/2,Math.round(H*0.10));ctx.restore();
   // Subtitle
   const ssz=cl(Math.floor(H*0.022),8,14);
-  ctx.save();ctx.font=`${ssz}px Arial`;ctx.textAlign='center';ctx.fillStyle=hexA(th.tg,0.65);
+  ctx.save();ctx.font=`${ssz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.fillStyle=hexA(th.tg,0.65);
   ctx.fillText('Quel défi veux-tu relever ?',W/2,Math.round(H*0.17));ctx.restore();
   // Mode cards
   modeSelectRects.forEach(({key,x,y,w,h})=>{
@@ -1378,28 +1424,28 @@ function drawModeSelect(t){
     rp(ctx,x,y,w,4,12);ctx.fillStyle=ab;ctx.fill();
     // Icon
     const isz=cl(Math.floor(h*0.38),14,32);
-    ctx.save();ctx.font=`${isz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`${isz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(m.icon,x+w*0.18,y+h*0.38);ctx.restore();
     // Name
     const nsz=cl(Math.floor(h*0.22),8,18);
-    ctx.save();ctx.font=`bold ${nsz}px Arial`;ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`bold ${nsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='left';ctx.textBaseline='middle';
     ctx.fillStyle=sel?m.color:th.tm;
     if(sel){ctx.shadowColor=m.color;ctx.shadowBlur=5;}
     ctx.fillText(m.name,x+w*0.32,y+h*0.35);ctx.restore();
     // Description
     const dsz=cl(Math.floor(h*0.15),6,12);
-    ctx.save();ctx.font=`${dsz}px Arial`;ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.save();ctx.font=`${dsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='left';ctx.textBaseline='top';
     ctx.fillStyle=hexA(th.tg,0.75);
     const lines=m.desc.split('\n');
     lines.forEach((ln,li)=>ctx.fillText(ln,x+w*0.32,y+h*0.55+li*(dsz*1.35)));
     ctx.restore();
     // Selected check
-    if(sel){ctx.save();ctx.font=`bold ${nsz}px Arial`;ctx.fillStyle=m.color;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText('✓',x+w-8,y+h*0.35);ctx.restore();}
+    if(sel){ctx.save();ctx.font=`bold ${nsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=m.color;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText('✓',x+w-8,y+h*0.35);ctx.restore();}
   });
   // Histoire progression indicator
   if(histoireLevel>0){
     const hz=cl(Math.floor(H*0.02),7,13);
-    ctx.save();ctx.font=`bold ${hz}px Arial`;ctx.textAlign='center';ctx.fillStyle='#FF6080';
+    ctx.save();ctx.font=`bold ${hz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.fillStyle='#FF6080';
     ctx.shadowColor='#FF6080';ctx.shadowBlur=5;
     ctx.fillText(`📖 Histoire : niveau ${histoireLevel+1}/${HISTOIRE_LEVELS.length}`,W/2,Math.round(H*0.93));ctx.restore();
   }
@@ -1418,12 +1464,12 @@ function drawModeSelect(t){
   rp(ctx,bx,by,bw2,bh2,bh2/2);ctx.strokeStyle=hexA(selM.color,0.6);ctx.lineWidth=1.5;ctx.stroke();
   ctx.shadowBlur=0;
   const pfz=cl(Math.floor(bh2*0.48),10,20);
-  drawPremText(ctx,`▶  JOUER EN MODE ${selM.name}`,bx+bw2/2,by+bh2/2,`bold ${pfz}px Arial`,'#FFFFFF',hexA(selM.color,0.6),'rgba(0,0,0,0.5)',selM.color,8,2);
+  drawPremText(ctx,`▶  JOUER EN MODE ${selM.name}`,bx+bw2/2,by+bh2/2,`bold ${pfz}px system-ui,-apple-system,"SF Pro Display",Arial`,'#FFFFFF',hexA(selM.color,0.6),'rgba(0,0,0,0.5)',selM.color,8,2);
   ctx.restore();
   _modePlayRect={x:bx,y:by,w:bw2,h:bh2};
   // Back button
   const backSz=cl(Math.floor(H*0.035),10,22);
-  ctx.save();ctx.font=`${backSz}px Arial`;ctx.textAlign='left';ctx.textBaseline='middle';
+  ctx.save();ctx.font=`${backSz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='left';ctx.textBaseline='middle';
   ctx.fillStyle=hexA(th.tg,0.6);ctx.fillText('← Retour',8,Math.round(H*0.04));ctx.restore();
   _modeBackRect={x:0,y:0,w:cl(W*0.25,60,140),h:Math.round(H*0.08)};
 }
@@ -1448,12 +1494,12 @@ function drawLeaderboard(t){
   rp(ctx,px,py,pw,ph,18);ctx.strokeStyle=hexA('#FFD700',0.55);ctx.lineWidth=2;ctx.stroke();
   // Title
   const tsz=cl(pw*0.098|0,15,32);
-  ctx.save();ctx.font=`bold ${tsz}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.save();ctx.font=`bold ${tsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillStyle='#FFD700';ctx.shadowColor='#FFD700';ctx.shadowBlur=12+5*Math.sin(t*0.002);
   ctx.fillText('🏆 CLASSEMENT MONDIAL',W/2,py+ph*0.085);ctx.restore();
   // Live badge
   const ssz=cl(pw*0.052|0,8,14);
-  ctx.save();ctx.font=`bold ${ssz}px Arial`;ctx.textAlign='center';ctx.fillStyle='#FF4040';
+  ctx.save();ctx.font=`bold ${ssz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.fillStyle='#FF4040';
   ctx.shadowColor='#FF4040';ctx.shadowBlur=6+3*Math.abs(Math.sin(t*0.003));
   ctx.fillText('● EN DIRECT',W/2,py+ph*0.15);ctx.restore();
   // Separator
@@ -1465,7 +1511,7 @@ function drawLeaderboard(t){
   const entryH=listH/10;
   const entrySz=cl(entryH*0.48|0,9,17);
   if(leaderboardData.length===0){
-    ctx.save();ctx.font=`${entrySz*1.1}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`${entrySz*1.1}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle=hexA(th.tg,0.55);ctx.fillText('Chargement…',W/2,listTop+listH/2);ctx.restore();
   }else{
     leaderboardData.slice(0,10).forEach((e,i)=>{
@@ -1477,17 +1523,17 @@ function drawLeaderboard(t){
       if(e.pseudo===playerPseudo){ctx.fillStyle='rgba(64,255,128,0.08)';rp(ctx,px+8,ey+1,pw-16,entryH-2,4);ctx.fill();}
       ctx.save();ctx.textBaseline='middle';
       // Rank / medal
-      if(i<3){ctx.font=`${entrySz*1.05}px Arial`;ctx.textAlign='left';ctx.fillText(medals[i],px+13,ey+entryH/2);}
-      else{ctx.font=`bold ${entrySz*0.9}px Arial`;ctx.textAlign='left';ctx.fillStyle=hexA(th.tg,0.65);ctx.fillText(`#${i+1}`,px+14,ey+entryH/2);}
+      if(i<3){ctx.font=`${entrySz*1.05}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='left';ctx.fillText(medals[i],px+13,ey+entryH/2);}
+      else{ctx.font=`bold ${entrySz*0.9}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='left';ctx.fillStyle=hexA(th.tg,0.65);ctx.fillText(`#${i+1}`,px+14,ey+entryH/2);}
       // Pseudo
-      ctx.font=`bold ${entrySz}px Arial`;ctx.textAlign='left';
+      ctx.font=`bold ${entrySz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='left';
       const isSelf=e.pseudo===playerPseudo;
       ctx.fillStyle=isSelf?'#40FF80':th.tm;
       if(isSelf){ctx.shadowColor='#40FF80';ctx.shadowBlur=5;}
       ctx.fillText(e.pseudo,px+46,ey+entryH/2);
       ctx.shadowBlur=0;
       // Score
-      ctx.textAlign='right';ctx.font=`bold ${entrySz}px Impact,Arial`;
+      ctx.textAlign='right';ctx.font=`bold ${entrySz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;
       ctx.fillStyle=i<3?'#FFD700':th.ta;
       ctx.fillText(e.score.toLocaleString('fr-FR'),px+pw-14,ey+entryH/2);
       ctx.restore();
@@ -1500,7 +1546,7 @@ function drawLeaderboard(t){
   // Personal best
   if(best>0){
     const ysz=cl(pw*0.052|0,8,14);
-    ctx.save();ctx.font=`bold ${ysz}px Arial`;ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,0.55)';
+    ctx.save();ctx.font=`bold ${ysz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,0.55)';
     const pseudo=playerPseudo||'Toi';
     ctx.fillText(`Ton record : ${best.toLocaleString('fr-FR')}  (${pseudo})`,W/2,sepY+ysz*1.6);ctx.restore();
   }
@@ -1512,7 +1558,7 @@ function drawLeaderboard(t){
   rrect(ctx,bx2,by2,bw,bh2,bh2/2,bbg,null);
   rp(ctx,bx2,by2,bw,bh2,bh2/2);ctx.strokeStyle=hexA(th.dc,0.5);ctx.lineWidth=1.5;ctx.stroke();
   const bfz=cl(Math.floor(bh2*0.5),10,18);
-  ctx.save();ctx.font=`bold ${bfz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.save();ctx.font=`bold ${bfz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillStyle='rgba(255,255,255,0.8)';ctx.fillText('← RETOUR',bx2+bw/2,by2+bh2/2);ctx.restore();
   _backLbRect={x:bx2,y:by2,w:bw,h:bh2};
 }
@@ -1531,62 +1577,105 @@ function drawGame(t){
   // Grid frame (glass effect)
   const b2=Math.max(4,CELL*0.1|0);
   const fg3=ctx.createLinearGradient(GRID_X-b2,GRID_Y-b2,GRID_X-b2,GRID_Y+GH+b2);
-  fg3.addColorStop(0,hexA(th.sl,0.8));fg3.addColorStop(1,hexA(th.dc,0.8));
+  fg3.addColorStop(0,hexA(th.sl,0.9));fg3.addColorStop(1,hexA(th.dc,0.9));
   rrect(ctx,GRID_X-b2,GRID_Y-b2,GW+b2*2,GH+b2*2,CR+b2,fg3,null);
   // Grid glass inner
   const gig=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X,GRID_Y+GH);
-  gig.addColorStop(0,hexA(th.gbg,0.88));gig.addColorStop(1,hexA(th.ge,0.88));
+  gig.addColorStop(0,hexA(th.gbg,0.90));gig.addColorStop(1,hexA(th.ge,0.90));
   ctx.fillStyle=gig;ctx.fillRect(GRID_X,GRID_Y,GW,GH);
+  // Inner rim light — top + left edge brighter (Apple glassmorphism)
+  const rimT=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X,GRID_Y+GH*0.12);
+  rimT.addColorStop(0,'rgba(255,255,255,0.14)');rimT.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=rimT;ctx.fillRect(GRID_X,GRID_Y,GW,GH*0.12);
+  const rimL=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X+GW*0.06,GRID_Y);
+  rimL.addColorStop(0,'rgba(255,255,255,0.09)');rimL.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=rimL;ctx.fillRect(GRID_X,GRID_Y,GW*0.06,GH);
   // Cells
+  // Spring bounce curve: 10 frames, overshoots then settles (Apple-style)
+  const _SPRING=[0.46,0.74,0.98,1.14,1.18,1.11,1.05,1.02,1.01,1.00];
   for(let r=0;r<ROWS;r++){for(let c=0;c<COLS;c++){
     const x=GRID_X+c*CELL,y=GRID_Y+r*CELL,color=grid[r][c];
-    // Pop animation for recently placed cells
+    // Spring pop animation for recently placed cells
     const popF=placedCellsMap.get(r*100+c);
     if(color){
-      if(popF!==undefined&&popF<8){const sc=0.72+0.28*(popF/8);const off=CELL*(1-sc)/2;drawCell(ctx,color,(x+off)|0,(y+off)|0,Math.ceil(CELL*sc),selSkin,t);}
-      else drawCell(ctx,color,x,y,CELL,selSkin,t);
+      if(popF!==undefined&&popF<_SPRING.length){
+        const sc=_SPRING[popF];const off=(CELL*(1-sc)/2)|0;
+        drawCell(ctx,color,x+off,y+off,Math.ceil(CELL*sc),selSkin,t);
+      } else drawCell(ctx,color,x,y,CELL,selSkin,t);
       // Star overlay
-      if(gridStars[r][c]){const sfsz=Math.max(8,CELL*0.38)|0;ctx.save();ctx.font=`${sfsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalAlpha=0.9;ctx.fillStyle='#FFE030';ctx.shadowColor='#FFD700';ctx.shadowBlur=7;ctx.fillText('★',x+CELL/2,y+CELL/2);ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();}
+      if(gridStars[r][c]){const sfsz=Math.max(8,CELL*0.38)|0;ctx.save();ctx.font=`${sfsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalAlpha=0.9;ctx.fillStyle='#FFE030';ctx.shadowColor='#FFD700';ctx.shadowBlur=7;ctx.fillText('★',x+CELL/2,y+CELL/2);ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();}
       // Bonus overlay
       if(gridBonus[r][c]){const bsz=Math.max(10,CELL*0.72)|0;ctx.globalAlpha=0.93;if(gridBonus[r][c]==='bomb')drawBombIcon(ctx,x+CELL/2,y+CELL/2,bsz);else drawX2Icon(ctx,x+CELL/2,y+CELL/2,bsz);ctx.globalAlpha=1;}
       // Parasite overlay (if this cell is an active parasite source)
       if(parasites.some(p=>p.r===r&&p.c===c)){drawParasiteOverlay(ctx,x,y,CELL,t,r*17+c*31);}
     }else{
-      ctx.fillStyle=hexA(th.ge,0.6);ctx.fillRect(x+1,y+1,CELL-2,CELL-2);
-      ctx.strokeStyle=hexA(th.sl,0.18);ctx.lineWidth=1;ctx.strokeRect(x+1,y+1,CELL-2,CELL-2);
+      // Empty cell — subtle rounded inset with center dot (Apple style)
+      const er=Math.max(2,CELL/6|0);
+      rrect(ctx,x+2,y+2,CELL-4,CELL-4,er,hexA(th.ge,0.30),hexA(th.sl,0.10),1);
+      ctx.fillStyle=hexA(th.sl,0.14);
+      ctx.beginPath();ctx.arc(x+CELL/2,y+CELL/2,Math.max(1,CELL*0.055),0,Math.PI*2);ctx.fill();
     }
   }}
   // Update pop animations (O(1) per entry)
-  placedCellsMap.forEach((f,k)=>{if(f+1>=8)placedCellsMap.delete(k);else placedCellsMap.set(k,f+1);});
-  // Clear line sweep animations
+  placedCellsMap.forEach((f,k)=>{if(f+1>=_SPRING.length)placedCellsMap.delete(k);else placedCellsMap.set(k,f+1);});
+  // Clear line sweep animations — Apple-style: flash + bright sweep + glow trail
   clearAnims=clearAnims.filter(a=>{
-    const p=Math.min(1,(Date.now()-a.born)/400);
+    const dur=520;
+    const p=Math.min(1,(Date.now()-a.born)/dur);
     if(p>=1)return false;
-    const alpha=Math.sin(p*Math.PI)*0.75;
-    a.cells.forEach(({r,c})=>{
-      const x=GRID_X+c*CELL,y=GRID_Y+r*CELL;
-      ctx.fillStyle=`rgba(255,255,255,${alpha.toFixed(3)})`;
-      ctx.fillRect(x+1,y+1,CELL-2,CELL-2);
-    });
-    const sweepX=GRID_X+p*GW;
-    const sg=ctx.createLinearGradient(sweepX-CELL*2,0,sweepX+CELL,0);
+    const eased=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2; // ease-in-out quad
+    const ring=Math.sin(p*Math.PI);
+    // Phase 1 (0-0.4): cells flash white then fade out
+    if(p<0.5){
+      const flashA=ring*0.9;
+      a.cells.forEach(({r,c})=>{
+        const x=GRID_X+c*CELL,y=GRID_Y+r*CELL;
+        const er=Math.max(2,CELL/6|0);
+        ctx.save();ctx.shadowColor=a.color;ctx.shadowBlur=CELL*0.5*ring;
+        rrect(ctx,x+1,y+1,CELL-2,CELL-2,er,`rgba(255,255,255,${(flashA).toFixed(3)})`,null);
+        ctx.restore();
+      });
+    }
+    // Sweep beam: bright vertical light moving left-to-right
+    const sweepX=GRID_X+eased*GW;
+    const beamW=CELL*3.5;
+    const sg=ctx.createLinearGradient(sweepX-beamW,0,sweepX+beamW*0.4,0);
     sg.addColorStop(0,'rgba(255,255,255,0)');
-    sg.addColorStop(0.6,hexA(a.color,0.7*Math.sin(p*Math.PI)));
+    sg.addColorStop(0.55,hexA(a.color,0.65*ring));
+    sg.addColorStop(0.75,'rgba(255,255,255,'+(0.50*ring).toFixed(3)+')');
     sg.addColorStop(1,'rgba(255,255,255,0)');
+    // Clip to the cleared rows only
+    const rows=[...new Set(a.cells.map(c=>c.r))];
+    ctx.save();
+    ctx.beginPath();
+    rows.forEach(r=>{ctx.rect(GRID_X,GRID_Y+r*CELL,GW,CELL);});
+    ctx.clip();
     ctx.fillStyle=sg;ctx.fillRect(GRID_X,GRID_Y,GW,GH);
+    ctx.restore();
     return true;
   });
-  // Ghost piece (snap preview)
+  // Ghost piece (snap preview) + column highlight + ambient glow
   if(drag&&gameState==='playing'&&!over){
     const piece=tray[drag.idx];
     if(piece){
       const{gr,gc}=snapPos(mouseX,mouseY,piece.shape);
       const valid=_modeCanPlace(grid,piece.shape,gr,gc);
       const ghostColor=valid?piece.color:'#FF4040';
-      const ghostAlpha=valid?0.35:0.25;
-      ctx.globalAlpha=ghostAlpha;
-      piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS){drawCell(ctx,ghostColor,GRID_X+pc2*CELL,GRID_Y+pr2*CELL,CELL,selSkin,t);}}
-      }));
+      // Column highlight — subtle pulse under ghost columns
+      const hlA=(0.06+0.03*Math.sin(Date.now()*0.004)).toFixed(3);
+      ctx.save();ctx.fillStyle=`rgba(255,255,255,${hlA})`;
+      piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pc2=gc+cc;if(pc2>=0&&pc2<COLS)ctx.fillRect(GRID_X+pc2*CELL,GRID_Y,CELL,GH);}}));
+      ctx.restore();
+      // Ambient glow under ghost cells
+      ctx.save();ctx.shadowColor=ghostColor;ctx.shadowBlur=CELL*0.65;ctx.globalAlpha=0.20;
+      piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;
+        if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS){const er=Math.max(2,CELL/6|0);rrect(ctx,GRID_X+pc2*CELL+2,GRID_Y+pr2*CELL+2,CELL-4,CELL-4,er,ghostColor,null);}
+      }}));ctx.restore();
+      // Ghost cells (translucent)
+      ctx.globalAlpha=valid?0.38:0.28;
+      piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;
+        if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS)drawCell(ctx,ghostColor,GRID_X+pc2*CELL,GRID_Y+pr2*CELL,CELL,selSkin,t);
+      }}));
       ctx.globalAlpha=1;
     }
   }
@@ -1612,7 +1701,7 @@ function drawGame(t){
       ctx.shadowBlur=0;ctx.restore();
       // Label "☠ PARASITE"
       const lsz=cl(Math.floor(TRAY_H*0.16),7,12);
-      ctx.save();ctx.font=`bold ${lsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.save();ctx.font=`bold ${lsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
       ctx.fillStyle=`rgba(0,${(200+55*pulse)|0},60,0.95)`;ctx.shadowColor='#00FF60';ctx.shadowBlur=6;
       ctx.fillText('☠ PARASITE',GRID_X+i*pw+pw/2,TRAY_Y+TRAY_H-lsz*0.75);ctx.shadowBlur=0;ctx.restore();
     }else{
@@ -1629,7 +1718,7 @@ function drawGame(t){
     rrect(ctx,GRID_X,pvY,GW,pvH,CR,pvBg,hexA(th.dc,0.28),1);
     // Label "SUIVANT" à gauche
     const lsz=Math.max(7,pvH*0.22)|0;
-    ctx.save();ctx.font=`bold ${lsz}px Arial`;ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`bold ${lsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='left';ctx.textBaseline='middle';
     ctx.fillStyle=hexA(th.tg,0.7);ctx.fillText('SUIVANT',GRID_X+5,pvY+pvH/2);ctx.restore();
     // Affiche les 2 premiers blocs du prochain tray (indices 0 et 1)
     const pvPc=Math.floor(CELL*0.42);
@@ -1671,7 +1760,7 @@ function drawGame(t){
         ctx.beginPath();ctx.arc(pcx,pcy,ringR,-Math.PI/2,-Math.PI/2+frac*Math.PI*2);ctx.stroke();
         // Label near ring
         const lsz=Math.max(8,CELL*0.28)|0;
-        ctx.font=`bold ${lsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowBlur=0;
+        ctx.font=`bold ${lsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowBlur=0;
         const label=elapsed<SPEED_TURBO?'⚡ TURBO':elapsed<SPEED_FAST?'⚡ RAPIDE':elapsed>=SPEED_SLOW?'🐢 LENT':'';
         if(label){ctx.fillStyle=`rgba(${rc},${gc2},${bc2},0.9)`;ctx.fillText(label,pcx,pcy-ringR-lsz);}
         ctx.restore();
@@ -1708,10 +1797,10 @@ function drawGame(t){
     ctx.strokeStyle=bord;ctx.lineWidth=1.5+pulse2;ctx.stroke();
     // Star icon left
     const ico=bh2*0.45;
-    ctx.save();ctx.font=`${ico|0}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#FFD700';ctx.shadowBlur=10;ctx.fillStyle='#FFD700';ctx.fillText('🎁',bx2+bh2*0.62,by2+bh2/2);ctx.shadowBlur=0;ctx.restore();
+    ctx.save();ctx.font=`${ico|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#FFD700';ctx.shadowBlur=10;ctx.fillStyle='#FFD700';ctx.fillText('🎁',bx2+bh2*0.62,by2+bh2/2);ctx.shadowBlur=0;ctx.restore();
     // Text
     const bfsz2=cl(Math.floor(bh2*0.29),8,14);
-    ctx.save();ctx.font=`bold ${bfsz2}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`bold ${bfsz2}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     const tg2=ctx.createLinearGradient(0,by2+bh2*0.15,0,by2+bh2*0.85);
     tg2.addColorStop(0,'#FFF0A0');tg2.addColorStop(0.5,'#FFD700');tg2.addColorStop(1,'#FFA020');
     ctx.fillStyle=tg2;ctx.shadowColor='rgba(255,200,0,0.6)';ctx.shadowBlur=8;
@@ -1739,7 +1828,7 @@ function drawGame(t){
     rp(ctx,px3,py3,pw3,ph3*0.35,16);ctx.fillStyle=psh;ctx.fill();
     // Title
     const tsz=cl(pw3*0.062|0,10,19);
-    ctx.save();ctx.font=`bold ${tsz}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`bold ${tsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     const ttg=ctx.createLinearGradient(0,py3+ph3*0.06,0,py3+ph3*0.2);
     ttg.addColorStop(0,'#FFF0A0');ttg.addColorStop(1,'#FFA000');
     ctx.fillStyle=ttg;ctx.shadowColor='rgba(255,200,0,0.7)';ctx.shadowBlur=12;
@@ -1767,7 +1856,7 @@ function drawGame(t){
     });
     // Dismiss hint
     const hsz=cl(pw3*0.038|0,8,12);
-    ctx.save();ctx.font=`${hsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(180,180,200,0.7)';
+    ctx.save();ctx.font=`${hsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(180,180,200,0.7)';
     ctx.fillText('(appuyez en dehors pour ignorer)',px3+pw3/2,py3+ph3*0.93);ctx.restore();
   }
   // Second Chance Panel
@@ -1783,12 +1872,12 @@ function drawGame(t){
     rp(ctx,scpX,scpY,scpW,scpH*0.35,16);ctx.fillStyle=spsh;ctx.fill();
     rp(ctx,scpX,scpY,scpW,scpH,16);ctx.strokeStyle=hexA(th.dc,0.7);ctx.lineWidth=2;ctx.stroke();
     const qSz=cl(scpW*0.068|0,10,20);
-    ctx.save();ctx.font=`bold ${qSz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`bold ${qSz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle=th.hi||th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=12;
     ctx.fillText('SECONDE CHANCE ?',scpX+scpW/2,scpY+scpH*0.18);
     ctx.shadowBlur=0;
     const scSub=cl(qSz*0.72|0,8,14);
-    ctx.font=`${scSub}px Arial`;ctx.fillStyle=hexA(th.tg,0.9);ctx.shadowBlur=0;
+    ctx.font=`${scSub}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=hexA(th.tg,0.9);ctx.shadowBlur=0;
     ctx.fillText('OUI : retire les 5 derniers blocs posés',scpX+scpW/2,scpY+scpH*0.33);
     ctx.fillText('et remplace le plateau par 3 à 5 nouvelles pièces',scpX+scpW/2,scpY+scpH*0.44);
     ctx.shadowBlur=0;ctx.restore();
@@ -1797,14 +1886,14 @@ function drawGame(t){
     const ouiG=ctx.createLinearGradient(ouiX,ouiY,ouiX,ouiY+btnH);
     ouiG.addColorStop(0,'#40C060');ouiG.addColorStop(1,'#205030');
     rrect(ctx,ouiX,ouiY,btnW,btnH,btnH/3,ouiG,null);
-    ctx.save();ctx.font=`bold ${Math.floor(btnH*0.5)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`bold ${Math.floor(btnH*0.5)}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle='#FFF';ctx.shadowColor='#60FF80';ctx.shadowBlur=6;ctx.fillText('OUI',ouiX+btnW/2,ouiY+btnH/2);ctx.restore();
     secondChanceBtns.oui={x:ouiX,y:ouiY,w:btnW,h:btnH};
     const nonX=scpX+scpW*0.56,nonY=ouiY;
     const nonG=ctx.createLinearGradient(nonX,nonY,nonX,nonY+btnH);
     nonG.addColorStop(0,'#C04040');nonG.addColorStop(1,'#601020');
     rrect(ctx,nonX,nonY,btnW,btnH,btnH/3,nonG,null);
-    ctx.save();ctx.font=`bold ${Math.floor(btnH*0.5)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`bold ${Math.floor(btnH*0.5)}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle='#FFF';ctx.shadowColor='#FF6060';ctx.shadowBlur=6;ctx.fillText('NON',nonX+btnW/2,nonY+btnH/2);ctx.restore();
     secondChanceBtns.non={x:nonX,y:nonY,w:btnW,h:btnH};
   }
@@ -1826,23 +1915,23 @@ function drawGame(t){
       rp(ctx,px,py,pw2,ph2,18);ctx.strokeStyle=hexA(th.dc,0.7);ctx.lineWidth=2;ctx.stroke();
       // Title
       const goSz=cl(pw2*0.12|0,16,40);
-      drawPremText(ctx,'GAME OVER',W/2,py+ph2*0.20,`bold ${goSz}px Impact,Arial`,'#FF6040','#CC2010','rgba(0,0,0,0.6)','#FF4020',18,3);
+      drawPremText(ctx,'GAME OVER',W/2,py+ph2*0.20,`bold ${goSz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`,'#FF6040','#CC2010','rgba(0,0,0,0.6)','#FF4020',18,3);
       ctx.textAlign='center';ctx.textBaseline='middle';
       // Score
       const scSz=cl(pw2*0.075|0,12,26);
       const isRec=score>=best&&score>0;
-      if(isRec){drawPremText(ctx,`★  ${score}  ★`,W/2,py+ph2*0.39,`bold ${scSz}px Impact,Arial`,'#FFEE60','#FFA020','rgba(0,0,0,0.5)','#FFCC00',12,2.5);}
-      else{ctx.font=`bold ${scSz}px Impact,Arial`;ctx.fillStyle=th.tm;ctx.fillText(`Score : ${score}`,W/2,py+ph2*0.39);}
-      ctx.font=`bold ${scSz*0.88}px Arial`;
+      if(isRec){drawPremText(ctx,`★  ${score}  ★`,W/2,py+ph2*0.39,`bold ${scSz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`,'#FFEE60','#FFA020','rgba(0,0,0,0.5)','#FFCC00',12,2.5);}
+      else{ctx.font=`bold ${scSz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tm;ctx.fillText(`Score : ${score}`,W/2,py+ph2*0.39);}
+      ctx.font=`bold ${scSz*0.88}px system-ui,-apple-system,"SF Pro Display",Arial`;
       ctx.fillStyle=isRec?th.hi||th.ta:th.ta;ctx.fillText(isRec?'NOUVEAU RECORD !':` Record : ${best}`,W/2,py+ph2*0.54);
       // Stats détaillées
       const stSz=cl(scSz*0.65|0,8,14);
-      ctx.font=`${stSz}px Arial`;ctx.fillStyle=th.tg;
+      ctx.font=`${stSz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tg;
       const elapsed=Date.now()-gameStartTime;
       ctx.fillText(`⏱ ${Math.floor(elapsed/60000)}:${String(Math.floor(elapsed%60000/1000)).padStart(2,'0')}  |  📊 ${totalLinesCleared} lignes  |  ×${maxComboGame} max`,W/2,py+ph2*0.73);
       if(el>1200){
         const tapA=0.5+0.5*Math.abs(Math.sin(Date.now()*0.004));
-        ctx.globalAlpha=tapA;ctx.font=`bold ${scSz*0.85}px Arial`;ctx.fillStyle='#A0E8A0';ctx.shadowColor='#A0E8A0';ctx.shadowBlur=6;
+        ctx.globalAlpha=tapA;ctx.font=`bold ${scSz*0.85}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='#A0E8A0';ctx.shadowColor='#A0E8A0';ctx.shadowBlur=6;
         ctx.fillText('Toucher pour continuer',W/2,py+ph2*0.88);ctx.shadowBlur=0;ctx.globalAlpha=1;
       }
       ctx.textAlign='left';ctx.textBaseline='alphabetic';
@@ -1873,7 +1962,7 @@ function _drawModeOverlays(t,th){
     // Seconds label
     const sec=Math.ceil(chronoTimeLeft/1000);
     const csz=cl(Math.floor(CELL*0.55),10,20);
-    ctx.save();ctx.font=`bold ${csz}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`bold ${csz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     if(frac<0.3){ctx.fillStyle='#FF4020';ctx.shadowColor='#FF2010';ctx.shadowBlur=8+4*Math.abs(Math.sin(t*0.012));}else ctx.fillStyle='rgba(255,255,255,0.85)';
     ctx.fillText(`⏱ ${sec}`,GRID_X+GW/2,barY-csz*0.6);ctx.restore();
     // Timeout → game over
@@ -1898,7 +1987,7 @@ function _drawModeOverlays(t,th){
     rrect(ctx,cx2,cy2,cw,ch,16,cbg,null);
     rp(ctx,cx2,cy2,cw,ch,16);ctx.strokeStyle='rgba(200,80,255,0.55)';ctx.lineWidth=2;ctx.stroke();
     const ctsz=cl(Math.floor(ch*0.12),10,20);
-    ctx.save();ctx.font=`bold ${ctsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`bold ${ctsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle='#D040FF';ctx.shadowColor='#D040FF';ctx.shadowBlur=8;
     ctx.fillText('🎯 CHOISIS TON BLOC',cx2+cw/2,cy2+ch*0.11);ctx.restore();
     // 3 piece cards
@@ -1918,7 +2007,7 @@ function _drawModeOverlays(t,th){
       const ox2=(sx+sw/2-pcw*pc/2)|0,oy2=(sy+sh*0.42-pch*pc/2)|0;
       piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox2+cc*pc,oy2+rr*pc,pc,selSkin,t);}));
     });
-    ctx.save();ctx.font=`${cl(Math.floor(ch*0.075),8,13)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`${cl(Math.floor(ch*0.075),8,13)}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle='rgba(255,255,255,0.45)';ctx.fillText('Touche un bloc pour le sélectionner',cx2+cw/2,cy2+ch*0.9);ctx.restore();
   }
   // ── CONTRAINTES ──
@@ -1942,7 +2031,7 @@ function _drawModeOverlays(t,th){
     rrect(ctx,bx2,by2,bw2,bh2,bh2/2,'rgba(100,10,10,0.85)',null);
     rp(ctx,bx2,by2,bw2,bh2,bh2/2);ctx.strokeStyle='rgba(255,60,40,0.55)';ctx.lineWidth=1.2;ctx.stroke();
     const bfsz=cl(Math.floor(bh2*0.52),8,14);
-    ctx.save();ctx.font=`bold ${bfsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`bold ${bfsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle='#FF6050';ctx.fillText(`⚠ ${bcount} cases bloquées`,bx2+bw2/2,by2+bh2/2);ctx.restore();
   }
   // ── HISTOIRE ──
@@ -1955,7 +2044,7 @@ function _drawModeOverlays(t,th){
     rrect(ctx,bx2,by2,bw2,bh2,bh2/2,hmet?'rgba(10,40,15,0.9)':'rgba(40,8,20,0.9)',null);
     rp(ctx,bx2,by2,bw2,bh2,bh2/2);ctx.strokeStyle=hexA(hcol,0.55);ctx.lineWidth=1.5;ctx.stroke();
     const hfsz=cl(Math.floor(bh2*0.52),7,14);
-    ctx.save();ctx.font=`bold ${hfsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.save();ctx.font=`bold ${hfsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle=hcol;
     const lvNum=histoireLevel+1;
     const isLastLvl=histoireLevel>=HISTOIRE_LEVELS.length-1;
@@ -1974,12 +2063,12 @@ function _drawModeOverlays(t,th){
           rrect(ctx,npx,npy,npw,nph,16,cbg,null);
           rp(ctx,npx,npy,npw,nph,16);ctx.strokeStyle='rgba(255,200,50,0.9)';ctx.lineWidth=2.5;ctx.stroke();
           const nfsz=cl(npw*0.09|0,12,26);
-          ctx.save();ctx.font=`bold ${nfsz*1.2}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.save();ctx.font=`bold ${nfsz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
           ctx.fillStyle='#FFD700';ctx.shadowColor='#FFD700';ctx.shadowBlur=18;
           ctx.fillText('🏆 HISTOIRE TERMINÉE !',W/2,npy+nph*0.22);ctx.shadowBlur=0;
-          ctx.font=`${nfsz*0.7}px Arial`;ctx.fillStyle='rgba(255,220,100,0.9)';
+          ctx.font=`${nfsz*0.7}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='rgba(255,220,100,0.9)';
           ctx.fillText('50 niveaux complétés !',W/2,npy+nph*0.40);
-          ctx.font=`${nfsz*0.6}px Arial`;ctx.fillStyle='rgba(200,180,255,0.7)';
+          ctx.font=`${nfsz*0.6}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='rgba(200,180,255,0.7)';
           ctx.fillText('La progression repart de zéro',W/2,npy+nph*0.54);ctx.restore();
           const nbw=Math.min(npw-40,200),nbh=cl(Math.round(nph*0.20),28,44);
           const nbx=(W-nbw)/2,nby=npy+nph*0.68;
@@ -1988,7 +2077,7 @@ function _drawModeOverlays(t,th){
           rrect(ctx,nbx,nby,nbw,nbh,nbh/2,nbg2,null);
           rp(ctx,nbx,nby,nbw,nbh,nbh/2);ctx.strokeStyle='rgba(255,200,50,0.7)';ctx.lineWidth=1.5;ctx.stroke();
           const nbfsz=cl(Math.floor(nbh*0.5),10,18);
-          ctx.save();ctx.font=`bold ${nbfsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.save();ctx.font=`bold ${nbfsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
           ctx.fillStyle='#FFD700';ctx.fillText('🏠  RETOUR AU MENU',nbx+nbw/2,nby+nbh/2);ctx.restore();
           histoireNextRect={x:nbx,y:nby,w:nbw,h:nbh};
         } else {
@@ -1996,17 +2085,17 @@ function _drawModeOverlays(t,th){
           rrect(ctx,npx,npy,npw,nph,16,'rgba(5,20,10,0.97)',null);
           rp(ctx,npx,npy,npw,nph,16);ctx.strokeStyle='rgba(64,255,100,0.7)';ctx.lineWidth=2;ctx.stroke();
           const nfsz=cl(npw*0.09|0,12,26);
-          ctx.save();ctx.font=`bold ${nfsz}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.save();ctx.font=`bold ${nfsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
           ctx.fillStyle='#40FF80';ctx.shadowColor='#40FF80';ctx.shadowBlur=10;
           ctx.fillText(`✅ NIVEAU ${lvNum} RÉUSSI !`,W/2,npy+nph*0.24);ctx.shadowBlur=0;
-          ctx.font=`${nfsz*0.65}px Arial`;ctx.fillStyle='rgba(255,255,255,0.7)';
+          ctx.font=`${nfsz*0.65}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='rgba(255,255,255,0.7)';
           ctx.fillText(lvlDef.label,W/2,npy+nph*0.40);
           // Progress bar
           const pbw=npw*0.75,pbh=8,pbx=npx+(npw-pbw)/2,pby=npy+nph*0.52;
           ctx.fillStyle='rgba(255,255,255,0.12)';rrect(ctx,pbx,pby,pbw,pbh,4,'rgba(255,255,255,0.12)',null);
           const prog=lvNum/HISTOIRE_LEVELS.length;
           rrect(ctx,pbx,pby,pbw*prog,pbh,4,'#40FF80',null);
-          ctx.font=`${nfsz*0.55}px Arial`;ctx.fillStyle='rgba(150,255,180,0.6)';
+          ctx.font=`${nfsz*0.55}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='rgba(150,255,180,0.6)';
           ctx.fillText(`${lvNum} / ${HISTOIRE_LEVELS.length}`,npx+npw/2,pby+pbh+12);ctx.restore();
           const nbw=Math.min(npw-40,200),nbh=cl(Math.round(nph*0.20),28,44);
           const nbx=(W-nbw)/2,nby=npy+nph*0.70;
@@ -2015,7 +2104,7 @@ function _drawModeOverlays(t,th){
           rrect(ctx,nbx,nby,nbw,nbh,nbh/2,nbg2,null);
           rp(ctx,nbx,nby,nbw,nbh,nbh/2);ctx.strokeStyle='rgba(64,255,100,0.6)';ctx.lineWidth=1.5;ctx.stroke();
           const nbfsz=cl(Math.floor(nbh*0.5),10,18);
-          ctx.save();ctx.font=`bold ${nbfsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.save();ctx.font=`bold ${nbfsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
           ctx.fillStyle='#FFFFFF';ctx.fillText('▶  NIVEAU SUIVANT',nbx+nbw/2,nby+nbh/2);ctx.restore();
           histoireNextRect={x:nbx,y:nby,w:nbw,h:nbh};
         }
@@ -2036,12 +2125,12 @@ function drawHUD(th){
     ctx.strokeStyle=hexA(th.sl,0.35);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,bh);ctx.lineTo(W,bh);ctx.stroke();
     // Score centré
     const fz=cl(bh*0.55|0,11,24);
-    drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,Arial`);
+    drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);
     // Left: mode + record
     const modeInfo=MODES[currentMode]||MODES.survie;
-    ctx.font=`bold ${fz*0.62}px Arial`;ctx.fillStyle=modeInfo.color;ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.font=`bold ${fz*0.62}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=modeInfo.color;ctx.textAlign='left';ctx.textBaseline='middle';
     ctx.shadowColor=modeInfo.color;ctx.shadowBlur=4;ctx.fillText(modeInfo.icon+' '+modeInfo.name,8,bh*0.3);ctx.shadowBlur=0;
-    ctx.font=`${fz*0.62}px Arial`;ctx.fillStyle=th.tg;ctx.fillText(`REC: ${best}`,8,bh*0.72);
+    ctx.font=`${fz*0.62}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tg;ctx.fillText(`REC: ${best}`,8,bh*0.72);
     // Right: deux boutons icônes carrés — ⏸ pause | 🔊 son
     const iconSz=cl(bh-4,24,44);
     const soundX=W-(iconSz+2)-4;
@@ -2056,7 +2145,7 @@ function drawHUD(th){
     pbg.addColorStop(0,hexA(th.ta,0.50));pbg.addColorStop(1,hexA(th.ta,0.22));
     rrect(ctx,pauseX,btnY,iconSz,iconSz,iconSz/4,pbg,null);
     rp(ctx,pauseX,btnY,iconSz,iconSz,iconSz/4);ctx.strokeStyle=hexA(th.ta,0.65);ctx.lineWidth=1;ctx.stroke();
-    ctx.shadowBlur=0;ctx.font=`${iconSz*0.56|0}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.shadowBlur=0;ctx.font=`${iconSz*0.56|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle=th.hi||th.tm;ctx.fillText('⏸',pauseX+iconSz/2,btnY+iconSz/2);
     ctx.restore();
     // ── Son button ──
@@ -2067,15 +2156,15 @@ function drawHUD(th){
     sbg2.addColorStop(0,sOn?'#1A3A50':'#3A1010');sbg2.addColorStop(1,sOn?'#0A1A26':'#1E0808');
     rrect(ctx,soundX,btnY,iconSz,iconSz,iconSz/4,sbg2,null);
     rp(ctx,soundX,btnY,iconSz,iconSz,iconSz/4);ctx.strokeStyle=hexA(sOn?'#40D8FF':'#FF6060',0.55);ctx.lineWidth=1;ctx.stroke();
-    ctx.shadowBlur=0;ctx.font=`${iconSz*0.58|0}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.shadowBlur=0;ctx.font=`${iconSz*0.58|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle='rgba(255,255,255,0.92)';ctx.fillText(sOn?'🔊':'🔇',soundX+iconSz/2,btnY+iconSz/2);
     ctx.restore();
     // Theme name + combo — calé à gauche des deux boutons
     const rightEdge=pauseX-8;
-    ctx.font=`${fz*0.62}px Arial`;ctx.textAlign='right';ctx.fillStyle=th.ta;ctx.textBaseline='middle';
+    ctx.font=`${fz*0.62}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='right';ctx.fillStyle=th.ta;ctx.textBaseline='middle';
     ctx.fillText(THEMES[curTheme].name,rightEdge,bh*0.38);
-    if(combo>1){ctx.save();ctx.font=`bold ${fz*0.88}px Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;ctx.fillText(`×${combo}`,rightEdge,bh*0.72);ctx.restore();}
-    if(doublePointsUntil>Date.now()){const rem=Math.ceil((doublePointsUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${fz*0.65}px Arial`;ctx.fillStyle='#30FFAA';ctx.shadowColor='#00FFB0';ctx.shadowBlur=5;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(`×2 ${rem}s`,rightEdge,combo>1?bh*0.52:bh*0.72);ctx.shadowBlur=0;ctx.restore();}
+    if(combo>1){ctx.save();ctx.font=`bold ${fz*0.88}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;ctx.fillText(`×${combo}`,rightEdge,bh*0.72);ctx.restore();}
+    if(doublePointsUntil>Date.now()){const rem=Math.ceil((doublePointsUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${fz*0.65}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='#30FFAA';ctx.shadowColor='#00FFB0';ctx.shadowBlur=5;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(`×2 ${rem}s`,rightEdge,combo>1?bh*0.52:bh*0.72);ctx.shadowBlur=0;ctx.restore();}
     ctx.textAlign='left';ctx.textBaseline='alphabetic';
   }else{
     const hx=GRID_X+GW+8,hw=W-hx-5;
@@ -2083,12 +2172,12 @@ function drawHUD(th){
     hg3.addColorStop(0,hexA(th.gbg,0.72));hg3.addColorStop(1,hexA(th.bg,0.55));
     rrect(ctx,hx-3,GRID_Y,hw+3,GH,8,hg3,hexA(th.dc,0.45),1);
     let cy=GRID_Y+12;const fz=cl(hw*0.14|0,8,18);
-    ctx.font=`${fz*0.72}px Arial`;ctx.fillStyle=th.tg;ctx.textBaseline='top';ctx.fillText('SCORE',hx,cy);cy+=fz*0.85;
-    drawScore(ctx,`${displayScore}`,hx+hw/2,cy+fz*0.7,th,`bold ${fz*1.35}px Impact,Arial`);cy+=fz*1.65;
-    ctx.font=`${fz*0.72}px Arial`;ctx.fillStyle=th.tg;ctx.textBaseline='top';ctx.fillText(`REC: ${best}`,hx,cy);cy+=fz;
+    ctx.font=`${fz*0.72}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tg;ctx.textBaseline='top';ctx.fillText('SCORE',hx,cy);cy+=fz*0.85;
+    drawScore(ctx,`${displayScore}`,hx+hw/2,cy+fz*0.7,th,`bold ${fz*1.35}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);cy+=fz*1.65;
+    ctx.font=`${fz*0.72}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tg;ctx.textBaseline='top';ctx.fillText(`REC: ${best}`,hx,cy);cy+=fz;
     ctx.fillText(`Pièces: ${placed}`,hx,cy);cy+=fz*1.2;
-    if(combo>1){ctx.save();ctx.font=`bold ${fz}px Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;ctx.fillText(`★ ×${combo}`,hx,cy);ctx.restore();cy+=fz*1.2;}
-    ctx.font=`${fz*0.72}px Arial`;ctx.fillStyle=th.tg;ctx.fillText(THEMES[curTheme].name,hx,cy);ctx.textBaseline='alphabetic';
+    if(combo>1){ctx.save();ctx.font=`bold ${fz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;ctx.fillText(`★ ×${combo}`,hx,cy);ctx.restore();cy+=fz*1.2;}
+    ctx.font=`${fz*0.72}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tg;ctx.fillText(THEMES[curTheme].name,hx,cy);ctx.textBaseline='alphabetic';
   }
 }
 

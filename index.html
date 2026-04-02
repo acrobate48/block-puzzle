@@ -910,19 +910,13 @@ const MODE_KEYS=['survie','chrono','puzzle','choix','contraintes','histoire'];
 // Rotation allowed. Challenge = figuring out orientation + placement order.
 // All piece shapes are max 5 cells, fit within 10×10.
 const PUZZLE_LEVELS=(()=>{
-  // shapes library
-  const I2=[[1,1]],I3=[[1,1,1]],I4=[[1,1,1,1]],I5=[[1,1,1,1,1]];
+  // Piece shapes (all horizontal by default — player uses rotation buttons)
+  const I3=[[1,1,1]],I4=[[1,1,1,1]],I5=[[1,1,1,1,1]];
   const SQ=[[1,1],[1,1]];
-  const L3=[[1,0],[1,0],[1,1]];   // L-tromino
-  const J3=[[0,1],[0,1],[1,1]];   // J-tromino
-  const L4=[[1,0],[1,0],[1,0],[1,1]]; // L-tetromino
-  const J4=[[0,1],[0,1],[0,1],[1,1]]; // J-tetromino
-  const T4=[[1,1,1],[0,1,0]];     // T-tetromino
-  const S4=[[0,1,1],[1,1,0]];     // S-tetromino
-  const Z4=[[1,1,0],[0,1,1]];     // Z-tetromino
-  const L5=[[1,0],[1,0],[1,0],[1,0],[1,1]]; // L-pentomino
-  const T5=[[1,1,1],[0,1,0],[0,1,0]]; // T-pentomino
+  const L3=[[1,0],[1,0],[1,1]]; // L-tetromino (3 tall)
+  const J3=[[0,1],[0,1],[1,1]]; // J-tetromino (3 tall)
 
+  // G(str): parses ASCII grid — 'X' = pre-filled cell, '.' = empty
   function G(str){
     const f=[];str.trim().split('\n').forEach((row,r)=>{
       [...row.trim()].forEach((ch,c)=>{if(ch==='X')f.push({r,c});});
@@ -931,65 +925,51 @@ const PUZZLE_LEVELS=(()=>{
   return[
     // ── LVL 1 ── Coin brisé
     // Bottom-right quadrant: 3 gaps for I3, L3, J3 — need rotation
-    {title:'Coin Brisé',   hint:'Bouche le coin — tourne les L',
-     fills:G(`XXXXXXX...
-XXXXXXX...
-XXXXXXX...
-XXXXXXX...
-XXXXXXX...
-XXXXXXX...
-XXXXXXX...
-XXXXXXX.XX
-XXXXXXX...
-XXXXXXX...`),
-     pieces:[I3,L3,J3]},
+    // ── LVL 1 ── La Colonne (9 cells: col 0 rows 0-8)
+    // I3×3 — all pieces MUST rotate vertical, col is only 1 wide
+    {title:'La Colonne', hint:'3 barres à retourner — une seule orientation passe !',
+     fills:G(`.XXXXXXXXX
+.XXXXXXXXX
+.XXXXXXXXX
+.XXXXXXXXX
+.XXXXXXXXX
+.XXXXXXXXX
+.XXXXXXXXX
+.XXXXXXXXX
+.XXXXXXXXX
+XXXXXXXXXX`), pieces:[I3,I3,I3]},
 
-    // ── LVL 2 ── Le Couloir
-    // Vertical corridor top half + horizontal bottom — pieces must be rotated to fit
-    {title:'Le Couloir',  hint:'Horizontal ou vertical ? Tourne chaque pièce',
-     fills:G(`XXX.XXXXXX
-XXX.XXXXXX
-XXX.XXXXXX
-XXX.XXXXXX
-XXX.XXXXXX
+    // ── LVL 2 ── Les Rails (12 cells: 3 cols × 4 rows top-left)
+    // I4×3 — all pieces MUST rotate vertical (4 tall, 3 wide area)
+    {title:'Les Rails', hint:'4 de haut, 3 de large — retourne les barres !',
+     fills:G(`...XXXXXXX
+...XXXXXXX
+...XXXXXXX
+...XXXXXXX
 XXXXXXXXXX
 XXXXXXXXXX
-....XXXXXX
-....XXXXXX
-....XXXXXX`),
-     pieces:[I4,[...Array(5)].map((_,i)=>i===0?[1]:[1]),I3]},
-    // Replace with valid pieces:
-    {title:'Le Couloir',  hint:'Horizontal ou vertical ? Tourne chaque pièce',
-     fills:G(`XXX.XXXXXX
-XXX.XXXXXX
-XXX.XXXXXX
-XXX.XXXXXX
-XXX.XXXXXX
 XXXXXXXXXX
 XXXXXXXXXX
-....XXXXXX
-....XXXXXX
-....XXXXXX`),
-     pieces:[[[1],[1],[1],[1],[1]],[[1,1,1,1]],[[1,1,1]]]},
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[I4,I4,I4]},
 
-    // ── LVL 3 ── L'Escalier
-    // Staircase of 2×1 steps — each piece is an L that hooks on a step
-    {title:"L'Escalier",  hint:'Chaque marche a sa forme — 1 rotation = 1 solution',
-     fills:G(`XX........
-XX........
-XXXX......
-XXXX......
-XXXXXX....
-XXXXXX....
-XXXXXXXX..
-XXXXXXXX..
+    // ── LVL 3 ── La Travée (12 cells: 4 cols × 3 rows bottom-left)
+    // I4×3 — horizontal, no rotation needed (4 wide, 3 tall area)
+    {title:'La Travée', hint:'3 barres horizontales — quelle longueur dans quel couloir ?',
+     fills:G(`XXXXXXXXXX
 XXXXXXXXXX
-XXXXXXXXXX`),
-     pieces:[[[1,1,1,1]],[[1,1,1,1]],[[1,1,1,1]]]},
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+....XXXXXX
+....XXXXXX
+....XXXXXX`), pieces:[I4,I4,I4]},
 
-    // ── LVL 4 ── Le Tunnel
-    // Dense grid with a horizontal 3×2 gap + two 1×2 side gaps
-    {title:'Le Tunnel',   hint:'Un seul passage — quelle orientation ?',
+    // ── LVL 4 ── Le Tapis (12 cells: 6 cols × 2 rows center)
+    // SQ×3 — no rotation, but placement order requires planning
+    {title:'Le Tapis', hint:'3 carrés côte à côte — mais dans quel ordre ?',
      fills:G(`XXXXXXXXXX
 XXXXXXXXXX
 XXXXXXXXXX
@@ -999,128 +979,124 @@ XX......XX
 XXXXXXXXXX
 XXXXXXXXXX
 XXXXXXXXXX
-XXXXXXXXXX`),
-     pieces:[[[1,1],[1,1]],[[1,1,1,1]],[[1,1],[1,1]]]},
+XXXXXXXXXX`), pieces:[SQ,SQ,SQ]},
 
-    // ── LVL 5 ── La Croix
-    // Open cross shape — 4 arms of 2×2 squares, center open
-    {title:'La Croix',    hint:'Ferme les 4 bras de la croix',
+    // ── LVL 5 ── L'Escalier (12 cells: staircase top-left)
+    // I5+I4+I3 — all pieces MUST rotate vertical
+    // Solution: I5V col0 rows0-4, I4V col1 rows1-4, I3V col2 rows2-4
+    {title:"L'Escalier", hint:'Du plus long au plus court — et tourne-les tous !',
+     fills:G(`.XXXXXXXXX
+..XXXXXXXX
+...XXXXXXX
+...XXXXXXX
+...XXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[I5,I4,I3]},
+
+    // ── LVL 6 ── Le Puits (12 cells: 2 cols × 6 rows vertical corridor)
+    // SQ+I4+I4 — I4 MUST rotate vertical (corridor only 2 wide)
+    {title:'Le Puits', hint:'Le couloir est étroit — les barres doivent être verticales !',
      fills:G(`XXXX..XXXX
 XXXX..XXXX
-..........
-..........
-..XXXXXX..
-..XXXXXX..
-..........
-..........
 XXXX..XXXX
-XXXX..XXXX`),
-     pieces:[[[1,1,1,1,1,1,1,1,1,1]],[[1,1],[1,1],[1,1],[1,1]],[[1,1],[1,1],[1,1],[1,1]]]},
-
-    // ── LVL 6 ── L Imbriqués
-    // Rectangle frame 6×7 — fill interior with 3 L-pentominoes
-    {title:'L Imbriqués',  hint:'3 L-pièces s\'emboîtent — une seule façon',
-     fills:G(`XXXXXXXXXX
-X........X
-X........X
-X........X
-X........X
-X........X
-X........X
-X........X
+XXXX..XXXX
+XXXX..XXXX
+XXXX..XXXX
 XXXXXXXXXX
-XXXXXXXXXX`),
-     pieces:[[[1,1,1,1,1],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0]],[[1,1,1,1,1],[0,0,0,0,1],[0,0,0,0,1],[0,0,0,0,1]],[[1,1,1,1,1,1,1,1]]]},
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[SQ,I4,I4]},
 
-    // ── LVL 7 ── Le Pont
-    // Full grid except col 5 — must be filled top to bottom with a single vertical bar
-    {title:'Le Pont',     hint:'Relie les deux rives — pense vertical !',
-     fills:G(`XXXX.XXXXX
-XXXX.XXXXX
-XXXX.XXXXX
-XXXX.XXXXX
-XXXX.XXXXX
-XXXX.XXXXX
+    // ── LVL 7 ── Le Coin (12 cells: 6 cols × 2 rows bottom-right corner)
+    // SQ+I4+I4 — no rotation, but figuring out where SQ fits is the challenge
+    {title:'Le Coin', hint:'SQ dans le coin, les barres dans le reste !',
+     fills:G(`XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
 XXXX......
-XXXX......
-XXXX......
-XXXX......`),
-     pieces:[[[1],[1],[1],[1],[1],[1]],[[1,1,1,1]],[[1,1,1,1]]]},
+XXXX......`), pieces:[SQ,I4,I4]},
 
-    // ── LVL 8 ── Zigzag
-    // Diagonal zigzag strip — S and Z pieces needed, order matters
-    {title:'Zigzag',      hint:'S, Z et barre — une seule combinaison marche',
+    // ── LVL 8 ── La Rivière (12 cells: col0 rows0-3 + row3 cols1-8)
+    // I4×3 — one MUST rotate vertical (the vertical arm), two stay horizontal
+    // Solution: I4V col0 rows0-3, I4H row3 cols1-4, I4H row3 cols5-8
+    {title:'La Rivière', hint:'Une barre verticale, puis deux horizontales !',
+     fills:G(`.XXXXXXXXX
+.XXXXXXXXX
+.XXXXXXXXX
+.........X
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[I4,I4,I4]},
+
+    // ── LVL 9 ── La Strate (12 cells: horizontal staircase bottom-right)
+    // I5+I4+I3 — no rotation needed (mirror of L'Escalier)
+    {title:'La Strate', hint:'Du plus long au plus court — cette fois horizontal !',
+     fills:G(`XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXX.....
+XXXXXX....
+XXXXXXX...
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[I5,I4,I3]},
+
+    // ── LVL 10 ── Le Cadre (12 cells: 4×4 frame, 2×2 center pre-filled)
+    // I4+L3+J3 — no rotation, but tricky placement (I4 top, L3 left, J3 right)
+    // False path: trying L3+J3 first leaves 2×2 gap that I4 can't fill
+    {title:'Le Cadre', hint:'La barre en haut, les flancs sur les côtés !',
      fills:G(`....XXXXXX
+.XX.XXXXXX
+.XX.XXXXXX
 ....XXXXXX
-..XXXXXXXX
-..XXXXXXXX
 XXXXXXXXXX
-XXXXXXXX..
-XXXXXXXX..
-XXXXXX....
-XXXXXX....
-XXXXXXXXXX`),
-     pieces:[S4,Z4,[[1,1,1,1]]]},
-
-    // ── LVL 9 ── Triple T
-    // Three T-shaped gaps in a mostly filled grid
-    {title:'Triple T',   hint:'3 pièces en T cachées — essaie toutes rotations',
-     fills:G(`XXXXXXXXXX
 XXXXXXXXXX
-XX.XXXXX.X
-X...XXXX.X
-XX.XXXXX.X
 XXXXXXXXXX
-XX.X.XXXXX
-X...XXXXXX
-XX.X.XXXXX
-XXXXXXXXXX`),
-     pieces:[T4,T4,T4]},
-
-    // ── LVL 10 ── Spirale
-    // Concentric rings, inner ring has gaps
-    {title:'La Spirale',  hint:'3 brèches dans la spirale — trouve leur forme',
-     fills:G(`XXXXXXXXXX
-X........X
-X.XXXXXX.X
-X.X....X.X
-X.X.XX.X.X
-X.X....X.X
-X.XXXXXX.X
-X........X
 XXXXXXXXXX
-XXXXXXXXXX`),
-     pieces:[[[1,1,1,1],[1,0,0,0],[1,0,0,0],[1,0,0,0]],[[1,1,1,1],[0,0,0,1],[0,0,0,1],[0,0,0,1]],[[1,1],[1,1]]]},
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[I4,L3,J3]},
 
-    // ── LVL 11 ── Mosaïque
-    // Checkerboard with isolated gaps — pieces must match the exact empty pattern
-    {title:'Mosaïque',   hint:'Chaque île a une forme précise',
-     fills:G(`X.X.X.X.X.
-.X.X.X.X.X
-X.X.X.X.X.
-.X.X.X.X.X
-X.X...X.X.
-.X...X.X.X
-X.X.X.X.X.
-.X.X.X.X.X
-X.X.X.X.X.
-.X.X.X.X.X`),
-     pieces:[S4,Z4,I3]},
+    // ── LVL 11 ── Le T (12 cells: T-shape, 8-wide top bar + 4-tall stem)
+    // I4×3 — one MUST rotate vertical (the stem), two stay horizontal
+    {title:'Le T', hint:'Deux barres en haut, une verticale pour le pied !',
+     fills:G(`........XX
+XXXX.XXXXX
+XXXX.XXXXX
+XXXX.XXXXX
+XXXX.XXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[I4,I4,I4]},
 
-    // ── LVL 12 ── BOSS: Z Final
-    // Near-full grid with two mirrored Z-gaps + a 4-bar gap
-    {title:'★ BOSS — Z Final',hint:'Grille quasi-pleine. Trouve les 3 pièces exactes.',
+    // ── LVL 12 ── BOSS: Le Centre (12 cells: 3×4 center block)
+    // L3+J3+SQ — complex decomposition, must figure out L/J/SQ arrangement
+    // Solution: L3 left col+bottom-L, SQ center 2×2, J3 right col+bottom-J
+    {title:'★ BOSS — Le Centre', hint:'Comment décomposer ce rectangle ?',
      fills:G(`XXXXXXXXXX
 XXXXXXXXXX
 XXXXXXXXXX
 XXXXXXXXXX
-XXXX..XXXX
-XXX..XXXXX
-XXXX..XXXX
-XXX..XXXXX
+XXX....XXX
+XXX....XXX
+XXX....XXX
 XXXXXXXXXX
-XXXXXXXXXX`),
-     pieces:[S4,Z4,I4]},
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[L3,J3,SQ]},
+
   ].filter(lvl=>lvl&&lvl.pieces&&lvl.pieces.every(p=>Array.isArray(p)&&p.length>0&&Array.isArray(p[0])&&p[0].length>0&&p.flat().some(v=>v))
               &&Array.isArray(lvl.fills));
 })();
@@ -2401,7 +2377,9 @@ function onUp(e){
       tray[drag.idx]=null;placed++;
       showAddCellsBonus=false;addCellsBonusTimer--;
       if(addCellsBonusTimer<=0){showAddCellsBonus=true;addCellsBonusTimer=Math.floor(rnd(8,15));}
-      const ti=getCurTheme(),{n,cells,colors}=clearLines(grid);
+      // Puzzle mode: no line clearing (would destroy pre-filled puzzle cells)
+      const _eM_now=currentMode==='histoire'?_getHistoireSubMode():currentMode;
+      const ti=getCurTheme(),{n,cells,colors}=_eM_now==='puzzle'?{n:0,cells:[],colors:[]}:clearLines(grid);
       if(n>0){
         sndClear(n);
         totalLinesCleared+=n;

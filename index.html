@@ -170,6 +170,107 @@ function labelText(ctx,text,x,y,col,font,align='center',glow=false){
   ctx.shadowBlur=0;ctx.restore();
 }
 
+// ─── BONUS ICONS ─────────────────────────────────────────────────────────────
+function drawBombIcon(ctx,cx,cy,sz){
+  ctx.save();
+  // Shadow under bomb
+  ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=sz*0.3;ctx.shadowOffsetY=sz*0.08;
+  // Bomb body – dark sphere
+  const bg=ctx.createRadialGradient(cx-sz*0.12,cy-sz*0.1,sz*0.04,cx,cy+sz*0.05,sz*0.38);
+  bg.addColorStop(0,'#555');bg.addColorStop(0.45,'#1A1A1A');bg.addColorStop(1,'#000');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.arc(cx,cy+sz*0.05,sz*0.38,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  // Shine spot
+  ctx.fillStyle='rgba(255,255,255,0.28)';
+  ctx.beginPath();ctx.ellipse(cx-sz*0.12,cy-sz*0.08,sz*0.13,sz*0.09,-0.4,0,Math.PI*2);ctx.fill();
+  // Fuse cord (brown bezier)
+  ctx.strokeStyle='#7B4F12';ctx.lineWidth=sz*0.09;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(cx+sz*0.26,cy-sz*0.28);
+  ctx.quadraticCurveTo(cx+sz*0.48,cy-sz*0.52,cx+sz*0.32,cy-sz*0.68);ctx.stroke();
+  // Fuse metal cap (small rect at top of body)
+  ctx.fillStyle='#888';ctx.strokeStyle='#555';ctx.lineWidth=sz*0.04;
+  ctx.beginPath();ctx.arc(cx+sz*0.26,cy-sz*0.25,sz*0.06,0,Math.PI*2);ctx.fill();ctx.stroke();
+  // Spark / ember at fuse tip
+  ctx.shadowColor='#FF8800';ctx.shadowBlur=sz*0.5;
+  ctx.fillStyle='#FFE040';ctx.beginPath();ctx.arc(cx+sz*0.32,cy-sz*0.68,sz*0.09,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#FFFFFF';ctx.beginPath();ctx.arc(cx+sz*0.32,cy-sz*0.68,sz*0.04,0,Math.PI*2);ctx.fill();
+  // Spark rays
+  ctx.strokeStyle='#FFA020';ctx.lineWidth=sz*0.06;ctx.lineCap='round';ctx.shadowBlur=sz*0.3;
+  const rays=[[0,-1],[0.7,-0.7],[-0.6,-0.8],[0.85,0.1]];
+  rays.forEach(([dx,dy])=>{const base=sz*0.1;ctx.beginPath();ctx.moveTo(cx+sz*0.32+dx*base,cy-sz*0.68+dy*base);ctx.lineTo(cx+sz*0.32+dx*(base+sz*0.14),cy-sz*0.68+dy*(base+sz*0.14));ctx.stroke();});
+  ctx.shadowBlur=0;ctx.restore();
+}
+function drawX2Icon(ctx,cx,cy,sz){
+  ctx.save();
+  const fsz=sz*0.72;
+  ctx.font=`bold ${fsz|0}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+  // Dark outline + shadow
+  ctx.shadowColor='rgba(0,0,0,0.7)';ctx.shadowBlur=sz*0.25;
+  ctx.strokeStyle='#4A2000';ctx.lineWidth=fsz*0.16;ctx.lineJoin='round';ctx.strokeText('×2',cx,cy);
+  ctx.shadowBlur=0;
+  // Gold gradient fill
+  const g=ctx.createLinearGradient(cx,cy-fsz*0.5,cx,cy+fsz*0.5);
+  g.addColorStop(0,'#FFF0A0');g.addColorStop(0.2,'#FFD700');g.addColorStop(0.6,'#FFA000');g.addColorStop(1,'#D46000');
+  ctx.fillStyle=g;ctx.fillText('×2',cx,cy);
+  // Shine pass
+  ctx.globalAlpha=0.35;
+  const sg=ctx.createLinearGradient(cx,cy-fsz*0.5,cx,cy+fsz*0.05);
+  sg.addColorStop(0,'#fff');sg.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=sg;ctx.fillText('×2',cx,cy);
+  ctx.globalAlpha=1;ctx.restore();
+}
+
+// Parasite cell skin (replaces normal skin for parasite pieces/overlay)
+function drawParasiteCell(ctx,x,y,sz,t,phase){
+  rclip(ctx,x,y,sz,sz/4,()=>{
+    // Dark corrupted base
+    const bg=ctx.createRadialGradient(x+sz*0.4,y+sz*0.35,0,x+sz/2,y+sz/2,sz*0.7);
+    bg.addColorStop(0,'#2A0A4E');bg.addColorStop(0.5,'#120228');bg.addColorStop(1,'#050010');
+    ctx.fillStyle=bg;ctx.fillRect(x,y,sz,sz);
+    // Pulsing green veins
+    const pulse=0.5+0.5*Math.sin(t*0.006+phase);
+    ctx.strokeStyle=`rgba(0,${(180+60*pulse)|0},${(40+20*pulse)|0},${(0.55+0.35*pulse).toFixed(2)})`;
+    ctx.lineWidth=Math.max(1,sz*0.06);ctx.lineCap='round';
+    // Vein pattern (seeded by position)
+    const vr=seeded((x*31+y*17)&0xffff);
+    for(let i=0;i<3;i++){
+      const sx2=x+vr()*sz,sy2=y+vr()*sz,ex=x+vr()*sz,ey=y+vr()*sz;
+      const mx=sx2+(ex-sx2)*0.5+Math.sin(t*0.004+i)*sz*0.12,my=sy2+(ey-sy2)*0.5+Math.cos(t*0.003+i)*sz*0.12;
+      ctx.beginPath();ctx.moveTo(sx2,sy2);ctx.quadraticCurveTo(mx,my,ex,ey);ctx.stroke();
+    }
+    // Toxic glow dots
+    ctx.shadowColor=`rgba(0,255,80,${0.6+0.4*pulse})`;ctx.shadowBlur=sz*0.4;
+    const dr=seeded((x*13+y*29)&0xffff);
+    for(let i=0;i<2;i++){
+      ctx.fillStyle=`rgba(40,${(200+55*pulse)|0},60,${(0.7+0.3*pulse).toFixed(2)})`;
+      ctx.beginPath();ctx.arc(x+dr()*sz,y+dr()*sz,sz*0.07,0,Math.PI*2);ctx.fill();
+    }
+    ctx.shadowBlur=0;
+    // Top shine
+    const sh=ctx.createLinearGradient(x,y,x,y+sz*0.4);
+    sh.addColorStop(0,'rgba(120,40,255,0.15)');sh.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=sh;ctx.fillRect(x,y,sz,sz);
+  });
+}
+// Parasite grid overlay (pulsing corrupt aura drawn on top of the host cell)
+function drawParasiteOverlay(ctx,x,y,sz,t,phase){
+  const pulse=0.5+0.5*Math.sin(t*0.007+phase);
+  // Dark vignette border
+  const bg=ctx.createRadialGradient(x+sz/2,y+sz/2,sz*0.18,x+sz/2,y+sz/2,sz*0.72);
+  bg.addColorStop(0,'rgba(0,200,50,0)');bg.addColorStop(0.6,`rgba(0,80,20,${(0.18+0.12*pulse).toFixed(2)})`);bg.addColorStop(1,`rgba(0,180,40,${(0.38+0.22*pulse).toFixed(2)})`);
+  ctx.fillStyle=bg;ctx.fillRect(x,y,sz,sz);
+  // Scanning line
+  const scanY=y+((t*0.06+phase*sz)%sz);
+  const sg=ctx.createLinearGradient(x,scanY-2,x,scanY+3);
+  sg.addColorStop(0,'rgba(0,255,80,0)');sg.addColorStop(0.5,`rgba(0,255,80,${(0.28*pulse).toFixed(2)})`);sg.addColorStop(1,'rgba(0,255,80,0)');
+  ctx.fillStyle=sg;ctx.fillRect(x,scanY-2,sz,5);
+  // Skull emoji hint (small, pulsing)
+  const esz=Math.max(8,sz*0.36)|0;
+  ctx.save();ctx.font=`${esz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.globalAlpha=0.55+0.35*pulse;ctx.shadowColor='#00FF50';ctx.shadowBlur=sz*0.3;
+  ctx.fillText('☠',x+sz/2,y+sz/2);ctx.shadowBlur=0;ctx.restore();
+}
+
 // Score number with digit gradient
 function drawScore(ctx,text,x,y,th,font){
   ctx.save();ctx.font=font;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -527,7 +628,13 @@ function drawFx(ctx,fx,t){
 
 // ─── GAME LOGIC ───────────────────────────────────────────────────────────────
 function newPiece(){return{shape:rndc(SHAPES),color:rndc(COLORS)};}
-function newTray(){return[newPiece(),newPiece(),newPiece()];}
+function newParasitePiece(){return{shape:rndc(SHAPES.filter(s=>s.flat().reduce((a,v)=>a+v,0)<=4)),color:'#1A0A2E',isParasite:true};}
+function newTray(){
+  const pieces=[newPiece(),newPiece(),newPiece()];
+  // ~8% chance one slot becomes a parasite piece (only if none active on grid)
+  if(parasites.length===0&&Math.random()<0.08){pieces[rndI(0,2)]=newParasitePiece();}
+  return pieces;
+}
 function canPlace(grid,shape,row,col){for(let r=0;r<shape.length;r++)for(let c=0;c<shape[r].length;c++)if(shape[r][c]){const gr=row+r,gc=col+c;if(gr<0||gr>=ROWS||gc<0||gc>=COLS||grid[gr][gc])return false;}return true;}
 function placePiece(grid,shape,color,row,col){for(let r=0;r<shape.length;r++)for(let c=0;c<shape[r].length;c++)if(shape[r][c])grid[row+r][col+c]=color;}
 function clearLines(grid){const rf=[],cf=[];for(let r=0;r<ROWS;r++)if(grid[r].every(v=>v))rf.push(r);for(let c=0;c<COLS;c++){let f=true;for(let r=0;r<ROWS;r++)if(!grid[r][c]){f=false;break;}if(f)cf.push(c);}const cl2=new Set(),clC={};rf.forEach(r=>{for(let c=0;c<COLS;c++){const k=r*100+c;cl2.add(k);clC[k]=grid[r][c];}});cf.forEach(c=>{for(let r=0;r<ROWS;r++){const k=r*100+c;cl2.add(k);clC[k]=grid[r][c];}});cl2.forEach(k=>{grid[Math.floor(k/100)][k%100]=null;});return{n:rf.length+cf.length,cells:[...cl2].map(k=>({r:Math.floor(k/100),c:k%100})),colors:clC};}
@@ -568,10 +675,20 @@ let fadeAlpha=0; // screen fade in on game start
 let gridStars=Array.from({length:ROWS},()=>Array(COLS).fill(false));
 let gridBonus=Array.from({length:ROWS},()=>Array(COLS).fill(null));
 let secondChanceUsed=false,showSecondChance=false;
-let savedGrid=null,savedScore=0,savedTray=null,savedPlaced=0,savedStars=null,savedBonus=null;
 let secondChanceBtns={oui:null,non:null};
 let doublePointsUntil=0;
 let showAddCellsBonus=false,addCellsBonusRect=null,addCellsBonusTimer=10;
+let showBonusPicker=false,bonusPickerPieces=[],bonusPickerRects=[];
+// Speed mechanic
+let lastPickTime=0; // ms timestamp when drag started
+// thinkTime tiers (ms): <1500 TURBO, <4000 FAST, <8000 NORMAL, >=8000 SLOW
+const SPEED_TURBO=1500,SPEED_FAST=4000,SPEED_SLOW=8000;
+// Place history for second-chance undo (stores last 5 placements)
+let placeHistory=[]; // [{cells:[{r,c,color}]}] max 5 entries
+// Parasite system
+let parasites=[]; // {r,c,born,lastTick} — active parasite source cells on grid
+const PARASITE_TICK=3000; // ms between each eat
+const PARASITE_LIFE=5000; // ms total lifespan
 
 function resetGame(){
   grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));
@@ -580,7 +697,7 @@ function resetGame(){
   gridStars=Array.from({length:ROWS},()=>Array(COLS).fill(false));
   gridBonus=Array.from({length:ROWS},()=>Array(COLS).fill(null));
   secondChanceUsed=false;showSecondChance=false;doublePointsUntil=0;
-  showAddCellsBonus=false;addCellsBonusTimer=Math.floor(rnd(8,15));
+  showAddCellsBonus=false;addCellsBonusTimer=Math.floor(rnd(8,15));showBonusPicker=false;bonusPickerPieces=[];bonusPickerRects=[];parasites=[];lastPickTime=0;placeHistory=[];
   curTheme=selTheme;gameFx=initFx(selTheme);gameBg=buildBg(selTheme);fadeAlpha=1;
 }
 function getCurTheme(){return(selTheme+Math.floor(score/500))%THEMES.length;}
@@ -719,6 +836,41 @@ function drawGame(t){
   const gig=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X,GRID_Y+GH);
   gig.addColorStop(0,hexA(th.gbg,0.88));gig.addColorStop(1,hexA(th.ge,0.88));
   ctx.fillStyle=gig;ctx.fillRect(GRID_X,GRID_Y,GW,GH);
+  // ── Parasite tick (eat adjacent cells every PARASITE_TICK ms) ────────────
+  if(parasites.length>0&&!over){
+    const now=Date.now();
+    const dead=[];
+    parasites.forEach(p=>{
+      if(now-p.born>=PARASITE_LIFE){dead.push(p);return;}
+      if(now-p.lastTick>=PARASITE_TICK){
+        p.lastTick=now;
+        const dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+        shuffleArr(dirs);
+        for(const[dr,dc] of dirs){
+          const nr=p.r+dr,nc=p.c+dc;
+          if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&grid[nr][nc]){
+            // Eat the adjacent cell
+            grid[nr][nc]=null;
+            gridStars[nr][nc]=false;gridBonus[nr][nc]=null;
+            spawnParticles([{r:nr,c:nc}],5,1,['#00FF60','#40FF90','#1A0A3E']);
+            shake=Math.max(shake,4);shakePow=Math.max(shakePow,2);
+            floats.push(new FloatText('☠ PARASITE',GRID_X+nc*CELL+CELL/2,GRID_Y+nr*CELL,'#00FF60',0.8,55));
+            // Check if grid is now losing validity
+            if(tray.every(p2=>p2===null)){}  // tray refill happens after placement
+            break; // only eat one cell per tick per source
+          }
+        }
+      }
+    });
+    // Remove expired parasites
+    parasites=parasites.filter(p=>now-p.born<PARASITE_LIFE);
+    // Check game-over after eating
+    const liveTray=tray.filter(Boolean);
+    if(liveTray.length>0&&!anyValid(grid,liveTray)&&!showSecondChance){
+      if(!secondChanceUsed)showSecondChance=true;
+      else{over=true;overT=Date.now();setTimeout(()=>{gameState='gameover';},2000);}
+    }
+  }
   // Cells
   for(let r=0;r<ROWS;r++){for(let c=0;c<COLS;c++){
     const x=GRID_X+c*CELL,y=GRID_Y+r*CELL,color=grid[r][c];
@@ -730,7 +882,9 @@ function drawGame(t){
       // Star overlay
       if(gridStars[r][c]){const sfsz=Math.max(8,CELL*0.38)|0;ctx.save();ctx.font=`${sfsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalAlpha=0.9;ctx.fillStyle='#FFE030';ctx.shadowColor='#FFD700';ctx.shadowBlur=7;ctx.fillText('★',x+CELL/2,y+CELL/2);ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();}
       // Bonus overlay
-      if(gridBonus[r][c]){const bfsz=Math.max(7,CELL*0.28)|0;const isB=gridBonus[r][c]==='bomb';ctx.save();ctx.font=`bold ${bfsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalAlpha=0.92;ctx.fillStyle=isB?'#FF5010':'#30FFAA';ctx.shadowColor=isB?'#FF7030':'#00FFB0';ctx.shadowBlur=7;ctx.fillText(isB?'✦×':'×2',x+CELL/2,y+CELL/2);ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();}
+      if(gridBonus[r][c]){const bsz=Math.max(10,CELL*0.72)|0;ctx.globalAlpha=0.93;if(gridBonus[r][c]==='bomb')drawBombIcon(ctx,x+CELL/2,y+CELL/2,bsz);else drawX2Icon(ctx,x+CELL/2,y+CELL/2,bsz);ctx.globalAlpha=1;}
+      // Parasite overlay (if this cell is an active parasite source)
+      if(parasites.some(p=>p.r===r&&p.c===c)){drawParasiteOverlay(ctx,x,y,CELL,t,r*17+c*31);}
     }else{
       ctx.fillStyle=hexA(th.ge,0.6);ctx.fillRect(x+1,y+1,CELL-2,CELL-2);
       ctx.strokeStyle=hexA(th.sl,0.18);ctx.lineWidth=1;ctx.strokeRect(x+1,y+1,CELL-2,CELL-2);
@@ -764,13 +918,52 @@ function drawGame(t){
     const sh=piece.shape,pcw=sh[0].length*PIECE_CELL,pch=sh.length*PIECE_CELL;
     const ox=(GRID_X+i*pw+pw/2-pcw/2)|0,oy=(TRAY_Y+(TRAY_H-pch)/2)|0;
     const dim=drag&&drag.idx===i;
-    sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox+cc*PIECE_CELL,oy+rr*PIECE_CELL,PIECE_CELL,selSkin,t,dim?0.3:1);}));
+    if(piece.isParasite){
+      // Parasite piece: draw with special corrupted skin + glow border
+      const pulse=0.5+0.5*Math.sin(t*0.006+i*2.1);
+      ctx.save();ctx.shadowColor=`rgba(0,255,80,${0.5+0.4*pulse})`;ctx.shadowBlur=PIECE_CELL*0.6;
+      sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawParasiteCell(ctx,ox+cc*PIECE_CELL,oy+rr*PIECE_CELL,PIECE_CELL,t,rr*17+cc*31);}));
+      ctx.shadowBlur=0;ctx.restore();
+      // Label "☠ PARASITE"
+      const lsz=cl(Math.floor(TRAY_H*0.16),7,12);
+      ctx.save();ctx.font=`bold ${lsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle=`rgba(0,${(200+55*pulse)|0},60,0.95)`;ctx.shadowColor='#00FF60';ctx.shadowBlur=6;
+      ctx.fillText('☠ PARASITE',GRID_X+i*pw+pw/2,TRAY_Y+TRAY_H-lsz*0.75);ctx.shadowBlur=0;ctx.restore();
+    }else{
+      sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox+cc*PIECE_CELL,oy+rr*PIECE_CELL,PIECE_CELL,selSkin,t,dim?0.3:1);}));
+    }
   }
   ctx.restore();
-  // Dragged piece (on top, no shake)
+  // Dragged piece (on top, no shake) + speed timer indicator
   if(drag&&!over){
     const piece=tray[drag.idx];
-    if(piece){const sh=piece.shape,ox=(mouseX-sh[0].length*CELL/2)|0,oy=(mouseY-sh.length*CELL/2)|0;sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox+cc*CELL,oy+rr*CELL,CELL,selSkin,t);}));}
+    if(piece){
+      const sh=piece.shape,ox=(mouseX-sh[0].length*CELL/2)|0,oy=(mouseY-sh.length*CELL/2)|0;
+      sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){if(piece.isParasite)drawParasiteCell(ctx,ox+cc*CELL,oy+rr*CELL,CELL,t,rr*17+cc*31);else drawCell(ctx,piece.color,ox+cc*CELL,oy+rr*CELL,CELL,selSkin,t);}}));
+      // Speed ring indicator (arc showing elapsed think time)
+      if(lastPickTime>0){
+        const elapsed=Date.now()-lastPickTime;
+        const maxT=SPEED_SLOW; // full ring at SLOW threshold
+        const frac=Math.min(1,elapsed/maxT);
+        // Color: green → yellow → orange → red
+        let rc,gc2,bc2;
+        if(frac<0.25){rc=lerp(40,255,frac/0.25)|0;gc2=220;bc2=40;}
+        else if(frac<0.55){rc=255;gc2=lerp(220,140,(frac-0.25)/0.3)|0;bc2=40;}
+        else{rc=255;gc2=lerp(140,40,(frac-0.55)/0.45)|0;bc2=40;}
+        const pcx=ox+sh[0].length*CELL/2,pcy=oy+sh.length*CELL/2;
+        const ringR=sh[0].length*CELL*0.6;
+        ctx.save();
+        ctx.strokeStyle=`rgba(${rc},${gc2},${bc2},0.82)`;ctx.lineWidth=4;ctx.lineCap='round';
+        ctx.shadowColor=`rgba(${rc},${gc2},${bc2},0.6)`;ctx.shadowBlur=8;
+        ctx.beginPath();ctx.arc(pcx,pcy,ringR,-Math.PI/2,-Math.PI/2+frac*Math.PI*2);ctx.stroke();
+        // Label near ring
+        const lsz=Math.max(8,CELL*0.28)|0;
+        ctx.font=`bold ${lsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowBlur=0;
+        const label=elapsed<SPEED_TURBO?'⚡ TURBO':elapsed<SPEED_FAST?'⚡ RAPIDE':elapsed>=SPEED_SLOW?'🐢 LENT':'';
+        if(label){ctx.fillStyle=`rgba(${rc},${gc2},${bc2},0.9)`;ctx.fillText(label,pcx,pcy-ringR-lsz);}
+        ctx.restore();
+      }
+    }
   }
   // Particles + Debris
   particles=particles.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.13;p.life--;if(p.life<=0)return false;const ratio=p.life/p.ml,sz=Math.max(1,p.size*ratio);ctx.fillStyle=hexA(p.color,0.82*ratio);if(p.circle){ctx.beginPath();ctx.arc(p.x,p.y,sz,0,Math.PI*2);ctx.fill();}else ctx.fillRect(p.x-sz,p.y-sz,sz*2,sz*2);return true;});
@@ -786,22 +979,84 @@ function drawGame(t){
   const vig=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.28,W/2,H/2,Math.max(W,H)*0.68);
   vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,0,0.38)');
   ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
-  // Add 2 cells bonus banner
-  if(showAddCellsBonus&&!over&&!showSecondChance){
-    const bw2=Math.min(W-20,340),bh2=Math.round(H*0.082)+2;
+  // Bonus banner (piece picker)
+  if(showAddCellsBonus&&!over&&!showSecondChance&&!showBonusPicker){
+    const bw2=Math.min(W-20,360),bh2=Math.round(H*0.092)+2;
     const bx2=(W-bw2)/2,by2=H-bh2-8;
     const pulse2=0.5+0.5*Math.sin(Date.now()*0.005);
+    // Background
     const bbg=ctx.createLinearGradient(bx2,by2,bx2,by2+bh2);
-    bbg.addColorStop(0,hexA(th.sl,0.96));bbg.addColorStop(1,hexA(th.dc,0.92));
+    bbg.addColorStop(0,'rgba(20,0,60,0.97)');bbg.addColorStop(1,'rgba(60,20,120,0.95)');
     rrect(ctx,bx2,by2,bw2,bh2,bh2/2,bbg,null);
-    rp(ctx,bx2,by2,bw2,bh2,bh2/2);ctx.strokeStyle=hexA(th.tm,0.7+pulse2*0.3);ctx.lineWidth=1.5;ctx.stroke();
-    const bfsz2=cl(Math.floor(bh2*0.27),7,13);
+    // Gold border pulse
+    rp(ctx,bx2,by2,bw2,bh2,bh2/2);
+    const bord=ctx.createLinearGradient(bx2,by2,bx2+bw2,by2+bh2);
+    bord.addColorStop(0,'#FFE040');bord.addColorStop(0.5,'#FFA000');bord.addColorStop(1,'#FFE040');
+    ctx.strokeStyle=bord;ctx.lineWidth=1.5+pulse2;ctx.stroke();
+    // Star icon left
+    const ico=bh2*0.45;
+    ctx.save();ctx.font=`${ico|0}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#FFD700';ctx.shadowBlur=10;ctx.fillStyle='#FFD700';ctx.fillText('🎁',bx2+bh2*0.62,by2+bh2/2);ctx.shadowBlur=0;ctx.restore();
+    // Text
+    const bfsz2=cl(Math.floor(bh2*0.29),8,14);
     ctx.save();ctx.font=`bold ${bfsz2}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle=th.hi||th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;
-    ctx.fillText('BONUS : touchez pour +2 cases à un bloc',bx2+bw2/2,by2+bh2/2);
+    const tg2=ctx.createLinearGradient(0,by2+bh2*0.15,0,by2+bh2*0.85);
+    tg2.addColorStop(0,'#FFF0A0');tg2.addColorStop(0.5,'#FFD700');tg2.addColorStop(1,'#FFA020');
+    ctx.fillStyle=tg2;ctx.shadowColor='rgba(255,200,0,0.6)';ctx.shadowBlur=8;
+    ctx.fillText('BONUS  —  Touchez pour choisir une pièce !',bx2+bw2/2+bh2*0.2,by2+bh2/2);
     ctx.shadowBlur=0;ctx.restore();
     addCellsBonusRect={x:bx2,y:by2,w:bw2,h:bh2};
-  }else if(!showAddCellsBonus){addCellsBonusRect=null;}
+  }else if(!showAddCellsBonus&&!showBonusPicker){addCellsBonusRect=null;}
+  // Bonus piece picker overlay
+  if(showBonusPicker&&!over&&!showSecondChance){
+    bonusPickerRects=[];
+    ctx.fillStyle='rgba(0,0,0,0.72)';ctx.fillRect(0,0,W,H);
+    const pw3=Math.min(W-20,400),ph3=Math.round(H*0.38);
+    const px3=(W-pw3)/2,py3=(H-ph3)/2;
+    // Panel
+    const ppg=ctx.createLinearGradient(px3,py3,px3,py3+ph3);
+    ppg.addColorStop(0,'rgba(20,0,60,0.98)');ppg.addColorStop(1,'rgba(5,0,20,0.97)');
+    rrect(ctx,px3,py3,pw3,ph3,16,ppg,null);
+    // Gold border
+    const pbord=ctx.createLinearGradient(px3,py3,px3+pw3,py3+ph3);
+    pbord.addColorStop(0,'#FFE040');pbord.addColorStop(0.5,'#FFA000');pbord.addColorStop(1,'#FFE040');
+    rp(ctx,px3,py3,pw3,ph3,16);ctx.strokeStyle=pbord;ctx.lineWidth=2;ctx.stroke();
+    // Shine top
+    const psh=ctx.createLinearGradient(px3,py3,px3,py3+ph3*0.35);
+    psh.addColorStop(0,'rgba(255,255,255,0.1)');psh.addColorStop(1,'rgba(255,255,255,0)');
+    rp(ctx,px3,py3,pw3,ph3*0.35,16);ctx.fillStyle=psh;ctx.fill();
+    // Title
+    const tsz=cl(pw3*0.062|0,10,19);
+    ctx.save();ctx.font=`bold ${tsz}px Impact,Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    const ttg=ctx.createLinearGradient(0,py3+ph3*0.06,0,py3+ph3*0.2);
+    ttg.addColorStop(0,'#FFF0A0');ttg.addColorStop(1,'#FFA000');
+    ctx.fillStyle=ttg;ctx.shadowColor='rgba(255,200,0,0.7)';ctx.shadowBlur=12;
+    ctx.fillText('✦  BONUS — Choisissez une pièce !  ✦',px3+pw3/2,py3+ph3*0.13);
+    ctx.shadowBlur=0;ctx.restore();
+    // 5 pieces grid
+    const N=bonusPickerPieces.length;
+    const slotW=pw3/N;const slotH=ph3*0.72;const slotY=py3+ph3*0.23;
+    bonusPickerPieces.forEach((piece,i)=>{
+      const sx=px3+i*slotW,sy=slotY;
+      // Slot background
+      const ishov=(mouseX>=sx&&mouseX<sx+slotW&&mouseY>=sy&&mouseY<sy+slotH);
+      const slBg=ctx.createLinearGradient(sx,sy,sx,sy+slotH);
+      slBg.addColorStop(0,ishov?'rgba(255,200,0,0.22)':'rgba(255,255,255,0.06)');
+      slBg.addColorStop(1,ishov?'rgba(255,140,0,0.12)':'rgba(255,255,255,0.02)');
+      rrect(ctx,sx+3,sy+3,slotW-6,slotH-6,10,slBg,ishov?hexA('#FFD700',0.6):hexA('#FFFFFF',0.15),ishov?1.5:0.8);
+      // Draw piece centered in slot
+      const sh=piece.shape;
+      const pcol=sh[0].length,prow=sh.length;
+      const maxDim=Math.max(pcol,prow);
+      const pc2=Math.floor((slotW-16)/maxDim);
+      const ox=sx+(slotW-pcol*pc2)/2,oy=sy+(slotH-prow*pc2)/2;
+      sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox+cc*pc2|0,oy+rr*pc2|0,pc2,selSkin,t);}));
+      bonusPickerRects.push({x:sx,y:sy,w:slotW,h:slotH,idx:i});
+    });
+    // Dismiss hint
+    const hsz=cl(pw3*0.038|0,8,12);
+    ctx.save();ctx.font=`${hsz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(180,180,200,0.7)';
+    ctx.fillText('(appuyez en dehors pour ignorer)',px3+pw3/2,py3+ph3*0.93);ctx.restore();
+  }
   // Second Chance Panel
   if(showSecondChance){
     const scpW=Math.min(W-24,360),scpH=Math.round(H*0.4);
@@ -817,8 +1072,12 @@ function drawGame(t){
     const qSz=cl(scpW*0.068|0,10,20);
     ctx.save();ctx.font=`bold ${qSz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle=th.hi||th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=12;
-    ctx.fillText('Voulez-vous une',scpX+scpW/2,scpY+scpH*0.22);
-    ctx.fillText('seconde chance ?',scpX+scpW/2,scpY+scpH*0.37);
+    ctx.fillText('SECONDE CHANCE ?',scpX+scpW/2,scpY+scpH*0.18);
+    ctx.shadowBlur=0;
+    const scSub=cl(qSz*0.72|0,8,14);
+    ctx.font=`${scSub}px Arial`;ctx.fillStyle=hexA(th.tg,0.9);ctx.shadowBlur=0;
+    ctx.fillText('OUI : retire les 5 derniers blocs posés',scpX+scpW/2,scpY+scpH*0.33);
+    ctx.fillText('et remplace le plateau par 3 à 5 nouvelles pièces',scpX+scpW/2,scpY+scpH*0.44);
     ctx.shadowBlur=0;ctx.restore();
     const btnW=Math.floor(scpW*0.32),btnH=Math.floor(scpH*0.2);
     const ouiX=scpX+scpW*0.12,ouiY=scpY+scpH*0.55;
@@ -909,29 +1168,32 @@ function drawHUD(th){
 
 // ─── INPUT ───────────────────────────────────────────────────────────────────
 function getPos(e){if(e.touches&&e.touches.length>0)return{x:e.touches[0].clientX,y:e.touches[0].clientY};if(e.changedTouches&&e.changedTouches.length>0)return{x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};return{x:e.clientX,y:e.clientY};}
-function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;if(gameState==='menu'){handleMenuTap(x,y);return;}if(gameState==='gameover'){if(Date.now()-overT>1200)gameState='menu';return;}if(gameState==='playing'&&!over&&!showSecondChance){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};break;}}}}
+function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;if(gameState==='menu'){handleMenuTap(x,y);return;}if(gameState==='gameover'){if(Date.now()-overT>1200)gameState='menu';return;}if(gameState==='playing'&&!over&&!showSecondChance&&!showBonusPicker){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};lastPickTime=Date.now();break;}}}}
 function onMove(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;}
 function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
-function addCellsToShape(shape){
-  const cells=[];for(let r=0;r<shape.length;r++)for(let c=0;c<shape[r].length;c++)if(shape[r][c])cells.push([r,c]);
-  const occ=new Set(cells.map(([r,c])=>r+','+c));const adj=[];const dirs=[[-1,0],[1,0],[0,-1],[0,1]];
-  cells.forEach(([r,c])=>{dirs.forEach(([dr,dc])=>{const nr=r+dr,nc=c+dc;if(nr>=0&&nc>=0&&!occ.has(nr+','+nc)){adj.push([nr,nc]);occ.add(nr+','+nc);}});});
-  shuffleArr(adj);const toAdd=adj.slice(0,Math.min(2,adj.length));
-  const all=[...cells,...toAdd];
-  const minR=Math.min(...all.map(([r])=>r)),minC=Math.min(...all.map(([,c])=>c));
-  const maxR=Math.max(...all.map(([r])=>r)),maxC=Math.max(...all.map(([,c])=>c));
-  const ns=Array.from({length:maxR-minR+1},()=>Array(maxC-minC+1).fill(0));
-  all.forEach(([r,c])=>{ns[r-minR][c-minC]=1;});return ns;
-}
+
 function onUp(e){
   e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;
   // Second chance buttons
   if(showSecondChance){
     const ob=secondChanceBtns.oui,nb=secondChanceBtns.non;
     if(ob&&x>=ob.x&&x<ob.x+ob.w&&y>=ob.y&&y<ob.y+ob.h){
-      grid=savedGrid;tray=savedTray;score=savedScore;placed=savedPlaced;
-      gridStars=savedStars;gridBonus=savedBonus;
-      showSecondChance=false;secondChanceUsed=true;combo=0;drag=null;return;
+      // Remove last up to 5 placed cells still on the grid
+      const toUndo=placeHistory.splice(-5);
+      toUndo.reverse().forEach(entry=>{
+        entry.cells.forEach(({r,c})=>{
+          grid[r][c]=null;gridStars[r][c]=false;gridBonus[r][c]=null;
+        });
+        // remove any parasites from those cells
+        parasites=parasites.filter(p=>!entry.cells.some(cl=>cl.r===p.r&&cl.c===p.c));
+      });
+      // Refresh tray with 3–5 new pieces
+      const newCount=rndI(3,5);
+      tray=Array.from({length:newCount},()=>newPiece());
+      showSecondChance=false;secondChanceUsed=true;combo=0;drag=null;
+      screenFlash=160;screenFlashCol='#40FF80';
+      floats.push(new FloatText('SECONDE CHANCE !',W/2,H/2,'#40FF80',1.4,120));
+      return;
     }
     if(nb&&x>=nb.x&&x<nb.x+nb.w&&y>=nb.y&&y<nb.y+nb.h){
       showSecondChance=false;secondChanceUsed=true;
@@ -941,33 +1203,101 @@ function onUp(e){
     }
     drag=null;return;
   }
-  // Add 2 cells bonus click
+  // Bonus picker overlay
+  if(showBonusPicker){
+    // Check if a piece was picked
+    let picked=false;
+    for(let i=0;i<bonusPickerRects.length;i++){
+      const br2=bonusPickerRects[i];
+      if(x>=br2.x&&x<br2.x+br2.w&&y>=br2.y&&y<br2.y+br2.h){
+        const chosen=bonusPickerPieces[br2.idx];
+        // Fill first empty slot (there is always one since bonus triggers right after placing)
+        let placed2=false;
+        for(let s=0;s<tray.length;s++){if(!tray[s]){tray[s]=chosen;placed2=true;break;}}
+        if(!placed2){tray[0]=chosen;}
+        showBonusPicker=false;bonusPickerPieces=[];bonusPickerRects=[];
+        drag=null;picked=true;break;
+      }
+    }
+    if(!picked){
+      // Tapped outside panel — dismiss
+      const pw3=Math.min(W-20,400),ph3=Math.round(H*0.38);
+      const px3=(W-pw3)/2,py3=(H-ph3)/2;
+      if(x<px3||x>px3+pw3||y<py3||y>py3+ph3){
+        showBonusPicker=false;bonusPickerPieces=[];bonusPickerRects=[];
+      }
+    }
+    drag=null;return;
+  }
+  // Bonus banner click — open picker
   if(showAddCellsBonus&&addCellsBonusRect){
     const br=addCellsBonusRect;
     if(x>=br.x&&x<br.x+br.w&&y>=br.y&&y<br.y+br.h){
-      const avail=tray.map((p,i)=>p?i:-1).filter(i=>i>=0);
-      if(avail.length>0){const idx=avail[Math.floor(Math.random()*avail.length)];tray[idx]={...tray[idx],shape:addCellsToShape(tray[idx].shape)};}
-      showAddCellsBonus=false;drag=null;return;
+      bonusPickerPieces=Array.from({length:5},()=>newPiece());
+      showBonusPicker=true;showAddCellsBonus=false;addCellsBonusRect=null;drag=null;return;
     }
   }
   if(drag&&gameState==='playing'&&!over&&!showSecondChance){
     const piece=tray[drag.idx];
     if(piece){const{gr,gc}=snapPos(x,y,piece.shape);if(canPlace(grid,piece.shape,gr,gc)){
-      // Save pre-move state for second chance
-      if(!secondChanceUsed){
-        savedGrid=grid.map(r=>[...r]);savedScore=score;
-        savedTray=tray.map(p=>p?{...p,shape:p.shape.map(row=>[...row])}:null);
-        savedPlaced=placed;savedStars=gridStars.map(r=>[...r]);savedBonus=gridBonus.map(r=>[...r]);
-      }
       placePiece(grid,piece.shape,piece.color,gr,gc);
-      // Pop anim + stars/bonus assignment per cell
-      piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const ri=gr+rr,ci=gc+cc;placedCells.push({r:ri,c:ci,f:0});const rn=Math.random();gridStars[ri][ci]=rn<0.15;if(!gridStars[ri][ci]){const rn2=Math.random();gridBonus[ri][ci]=rn2<0.05?'bomb':rn2<0.09?'x2':null;}else gridBonus[ri][ci]=null;}}));
+      // ── Speed mechanic ───────────────────────────────────────────────────
+      const now2=Date.now();
+      const thinkMs=lastPickTime>0?now2-lastPickTime:4000;
+      let speedMul=1.0,speedLabel=null,speedCol='#FFFFFF',speedError=false;
+      if(thinkMs<SPEED_TURBO){
+        speedMul=1.8;speedLabel='⚡ TURBO ×1.8';speedCol='#FF4020';
+        // Error chance: 60% — fill one random empty cell
+        speedError=Math.random()<0.6;
+      }else if(thinkMs<SPEED_FAST){
+        speedMul=1.3;speedLabel='⚡ RAPIDE ×1.3';speedCol='#FFA020';
+        speedError=Math.random()<0.25;
+      }else if(thinkMs>=SPEED_SLOW){
+        speedMul=0.8;speedLabel='🐢 LENT ×0.8';speedCol='#88AAFF';
+      }
+      if(speedError){
+        // Random error: fill a random empty cell near placed piece
+        const emptyCells=[];
+        const cr2=gr+Math.floor(piece.shape.length/2),cc2=gc+Math.floor(piece.shape[0].length/2);
+        for(let dr=-3;dr<=3;dr++)for(let dc=-3;dc<=3;dc++){const er=cr2+dr,ec=cc2+dc;if(er>=0&&er<ROWS&&ec>=0&&ec<COLS&&!grid[er][ec])emptyCells.push({r:er,c:ec});}
+        shuffleArr(emptyCells);
+        if(emptyCells.length>0){
+          const{r:er,c:ec}=emptyCells[0];
+          grid[er][ec]=rndc(COLORS);
+          placedCells.push({r:er,c:ec,f:0});
+          floats.push(new FloatText('ERREUR !',GRID_X+ec*CELL+CELL/2,GRID_Y+er*CELL,'#FF4020',0.9,65));
+          shake=Math.max(shake,6);shakePow=Math.max(shakePow,2);
+          screenFlash=Math.min(255,screenFlash+60);screenFlashCol='#FF3010';
+        }
+      }
+      // ── Pop anim + stars/bonus assignment per cell ────────────────────────
+      piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const ri=gr+rr,ci=gc+cc;placedCells.push({r:ri,c:ci,f:0});
+        if(piece.isParasite){
+          parasites.push({r:ri,c:ci,born:now2,lastTick:now2});
+          gridStars[ri][ci]=false;gridBonus[ri][ci]=null;
+        }else{
+          const rn=Math.random();gridStars[ri][ci]=rn<0.15;
+          if(!gridStars[ri][ci]){const rn2=Math.random();gridBonus[ri][ci]=rn2<0.05?'bomb':rn2<0.09?'x2':null;}else gridBonus[ri][ci]=null;
+        }
+      }}));
+      // ── Record in place history (for second chance undo) ─────────────────
+      {
+        const hCells=[];
+        piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)hCells.push({r:gr+rr,c:gc+cc,color:piece.color});}));
+        placeHistory.push({cells:hCells});
+        if(placeHistory.length>5)placeHistory.shift();
+      }
       tray[drag.idx]=null;placed++;
       showAddCellsBonus=false;addCellsBonusTimer--;
       if(addCellsBonusTimer<=0){showAddCellsBonus=true;addCellsBonusTimer=Math.floor(rnd(8,15));}
       const ti=getCurTheme(),{n,cells,colors}=clearLines(grid);
       if(n>0){
         let starPts=0;const bombList=[];let hasX2=false;
+        // Kill parasites in cleared lines
+        const clearedSet=new Set(cells.map(({r,c})=>r*100+c));
+        const pBefore=parasites.length;
+        parasites=parasites.filter(p=>!clearedSet.has(p.r*100+p.c));
+        if(parasites.length<pBefore)floats.push(new FloatText('☠ PARASITE ÉLIMINÉ',GRID_X+GW/2,GRID_Y+GH*0.4,'#00FF80',1.0,90));
         cells.forEach(({r,c})=>{if(gridStars[r][c])starPts+=25;if(gridBonus[r][c]==='bomb')bombList.push({r,c});if(gridBonus[r][c]==='x2')hasX2=true;gridStars[r][c]=false;gridBonus[r][c]=null;});
         const bombKilled=[];
         bombList.forEach(({r,c})=>{for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const br=r+dr,bc=c+dc;if(br>=0&&br<ROWS&&bc>=0&&bc<COLS&&grid[br][bc]){bombKilled.push({r:br,c:bc});grid[br][bc]=null;gridStars[br][bc]=false;gridBonus[br][bc]=null;}}});
@@ -976,6 +1306,7 @@ function onUp(e){
         combo++;
         let pts=Math.round(n===1?100*(1+(combo-1)*0.5):n===2?350*(1+(combo-1)*0.5):n*165*(1+(combo-1)*0.5));
         pts+=starPts;
+        pts=Math.round(pts*speedMul);
         if(Date.now()<doublePointsUntil)pts=pts*2;
         score+=pts;
         spawnParticles(cells,6,1.2,THEMES[ti].pc);spawnDebris(colors,ti,8);
@@ -988,6 +1319,8 @@ function onUp(e){
         if(hasX2)floats.push(new FloatText('×2 POINTS 60s',GRID_X+GW/2,GRID_Y+GH*0.35,'#30FFAA',1.1,100));
         const newTh=getCurTheme();if(newTh!==curTheme){curTheme=newTh;gameBg=buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=200;screenFlashCol=THEMES[newTh].tm;}
       }else combo=0;
+      // Speed float (show regardless of line clear)
+      if(speedLabel)floats.push(new FloatText(speedLabel,GRID_X+GW/2,GRID_Y+GH*0.25,speedCol,0.85,70));
       if(tray.every(p=>p===null))tray=newTray();
       if(!anyValid(grid,tray)){
         if(score>best){best=score;try{localStorage.setItem('blockpuzzle_best',String(best));}catch(e2){}}

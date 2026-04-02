@@ -849,8 +849,10 @@ function tickParasites(){
     }
   });
   parasites=parasites.filter(p=>now-p.born<PARASITE_LIFE);
-  const liveTray=tray.filter(Boolean);
-  if(liveTray.length>0&&!anyValid(grid,liveTray)&&!showSecondChance){
+  // Determine which pieces are "playable" for the current mode
+  const _tkEM=currentMode==='histoire'?_getHistoireSubMode():currentMode;
+  const _tkCheck=_tkEM==='choix'?choixOptions:_tkEM==='puzzle'?[]:tray.filter(Boolean);
+  if(_tkCheck.length>0&&!anyValid(grid,_tkCheck)&&!showSecondChance){
     if(!secondChanceUsed)showSecondChance=true;
     else{over=true;overT=Date.now();setTimeout(()=>{gameState='gameover';},2000);}
   }
@@ -919,13 +921,14 @@ const HISTOIRE_LEVELS=[
 ];
 
 function _modeCanPlace(grid,shape,row,col){
+  // Compute effective mode once, outside loop
+  const _eM=currentMode==='histoire'?_getHistoireSubMode():currentMode;
   for(let r=0;r<shape.length;r++)for(let c=0;c<shape[r].length;c++)if(shape[r][c]){
     const gr=row+r,gc=col+c;
     if(gr<0||gr>=ROWS||gc<0||gc>=COLS)return false;
-    if(grid[gr][gc])return false; // includes '__BLOCKED__'
-    const subM=_getHistoireSubMode();
-    const eM=currentMode==='histoire'?subM:currentMode;
-    if(eM==='contraintes'&&contraBlocked.some(b=>b.r===gr&&b.c===gc))return false;
+    if(grid[gr][gc])return false; // null=empty, any string=blocked (includes '__BLOCKED__')
+    // Extra contraintes check: blocked cells are already set in grid, this covers visual-only case
+    if(_eM==='contraintes'&&contraBlocked.some(b=>b.r===gr&&b.c===gc))return false;
   }
   return true;
 }
@@ -1969,7 +1972,9 @@ function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;
   if(gameState==='modeselect'){handleModeSelectTap(x,y);return;}
   if(gameState==='leaderboard'){if(_backLbRect&&x>=_backLbRect.x&&x<_backLbRect.x+_backLbRect.w&&y>=_backLbRect.y&&y<_backLbRect.y+_backLbRect.h){gameState='menu';}return;}
   if(gameState==='gameover'){if(Date.now()-overT>1200)gameState='menu';return;}
-  if(gameState==='playing'&&!over&&!showSecondChance&&!showBonusPicker&&choixState!=='picking'){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};break;}}}}
+  // Block tray drag only when in choix PICKING phase; all other modes allow normal drag
+  const _inChoixPick=(currentMode==='choix'||_getHistoireSubMode()==='choix')&&choixState==='picking';
+  if(gameState==='playing'&&!over&&!showSecondChance&&!showBonusPicker&&!_inChoixPick){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};break;}}}}
 function onMove(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;}
 function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
 
@@ -1992,10 +1997,7 @@ function onUp(e){
       }
       return; // tap outside overlay → ignore
     }
-    // Choix: after placing the chosen piece, generate next options
-    if(eMode==='choix'&&choixState==='placing'&&tray.every(p=>p===null)){
-      _generateChoixOptions();return;
-    }
+    // (Choix tray refresh is handled in the placement block below)
     // Puzzle: tap on success panel → next puzzle
     if(eMode==='puzzle'&&puzzleSuccess){
       resetGame();return;
@@ -2166,7 +2168,10 @@ function onUp(e){
       // Sauvegarde automatique
       try{localStorage.setItem('bp_save',JSON.stringify({v:1,grid,score,placed,combo,curTheme,gridStars,gridBonus,tray:tray.map(p=>p?{shape:p.shape,color:p.color,isParasite:!!p.isParasite}:null),ntp:nextTrayPreview?nextTrayPreview.map(p=>p?{shape:p.shape,color:p.color}:null):null,gameStartTime,totalLinesCleared,maxComboGame}));}catch(e2){}
       hasSave=true;
-      if(!anyValid(grid,tray)){
+      // For choix mode use choixOptions as the validity check (tray is empty between picks)
+      // For puzzle mode skip the validity check (puzzle has its own success/fail logic)
+      const _validCheck=eM==='choix'?choixOptions:eM==='puzzle'?[]:tray;
+      if(_validCheck.length>0&&!anyValid(grid,_validCheck)){
         if(score>best){best=score;try{localStorage.setItem('blockpuzzle_best',String(best));}catch(e2){}}
         scoreHistory.push(score);scoreHistory.sort((a,b)=>b-a);scoreHistory=scoreHistory.slice(0,5);
         try{localStorage.setItem('bp_scores',JSON.stringify(scoreHistory));}catch(e2){}

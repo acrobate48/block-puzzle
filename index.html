@@ -57,7 +57,7 @@ function sndClear(n){_tone(440,0.10,'sine',0.20);_tone(660,0.12,'sine',0.16,0.08
 function sndCombo(c){const b=400+c*60;_tone(b,0.09,'sine',0.22);_tone(b*1.5,0.09,'sine',0.18,0.09);_tone(b*2,0.16,'sine',0.22,0.18);}
 function sndGameOver(){_tone(220,0.35,'sawtooth',0.22);_tone(165,0.45,'sawtooth',0.18,0.32);_tone(110,0.55,'sawtooth',0.15,0.65);}
 function sndBonus(){_tone(660,0.07,'sine',0.18);_tone(880,0.07,'sine',0.18,0.09);_tone(1100,0.11,'sine',0.22,0.18);}
-let _soundRect=null,_fsRect=null;
+let _soundRect=null;
 const CELL_CACHE=new Map();
 // ─── SHAPES ──────────────────────────────────────────────────────────────────
 const SHAPES=[
@@ -872,6 +872,8 @@ function layoutMenu(){
   playRect={x:(W-PW)/2,y:py0,w:PW,h:PH};
   resumeRect={x:(W-PW)/2,y:py0+PH+7,w:PW,h:PH};
   _lbRect={x:(W-PW)/2,y:py0+PH*2+14,w:PW,h:PH};
+  const SBW=cl(Math.round(PW*0.52),90,160),SBH=cl(Math.round(PH*0.72),28,42);
+  _soundRect={x:(W-SBW)/2,y:py0+PH*3+22,w:SBW,h:SBH};
 }
 
 function drawMenu(t){
@@ -993,12 +995,31 @@ function drawMenu(t){
     drawPremText(ctx,'🏆  CLASSEMENT',x+w/2,y+h/2,`bold ${lfz}px Arial`,'#FFD700','#B8860B','rgba(0,0,0,0.5)','#FFD700',8,2);
     ctx.restore();
   }
+  // ── BOUTON SON (centré, sous le classement) ──
+  if(_soundRect){
+    const{x,y,w,h}=_soundRect;const on=_soundEnabled;
+    ctx.save();
+    ctx.shadowColor=on?'#40D8FF':'#FF6060';ctx.shadowBlur=8+4*Math.abs(Math.sin(Date.now()*0.003));
+    const sbg=ctx.createLinearGradient(x,y,x,y+h);
+    sbg.addColorStop(0,on?'#1A3A50':'#3A1010');sbg.addColorStop(1,on?'#0A1A26':'#1E0808');
+    rrect(ctx,x,y,w,h,h/2,sbg,null);
+    const ssh=ctx.createLinearGradient(x,y,x,y+h*0.5);
+    ssh.addColorStop(0,'rgba(255,255,255,0.15)');ssh.addColorStop(1,'rgba(255,255,255,0)');
+    rp(ctx,x+2,y+2,w-4,h*0.5,h/2);ctx.fillStyle=ssh;ctx.fill();
+    rp(ctx,x,y,w,h,h/2);ctx.strokeStyle=hexA(on?'#40D8FF':'#FF6060',0.55);ctx.lineWidth=1.5;ctx.stroke();
+    ctx.shadowBlur=0;
+    const sfz=cl(Math.floor(h*0.52),10,18);
+    ctx.font=`bold ${sfz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=on?'#40D8FF':'#FF6060';
+    ctx.fillText(on?'🔊  SON ON':'🔇  SON OFF',x+w/2,y+h/2);
+    ctx.restore();
+  }
   // Best personal score
-  const bsz=cl(Math.floor(H*0.022),8,15);
-  const btmY=_lbRect?_lbRect.y+_lbRect.h+bsz*1.5:H-30;
+  const bsz=cl(Math.floor(H*0.020),8,14);
+  const btmY=_soundRect?_soundRect.y+_soundRect.h+bsz*1.4:H-24;
   ctx.textAlign='center';ctx.textBaseline='alphabetic';
-  if(best>0){ctx.save();ctx.font=`bold ${bsz}px Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=6;ctx.fillText(`RECORD : ${best}`,W/2,btmY);ctx.restore();}
-  ctx.font=`${bsz*0.78}px Arial`;ctx.fillStyle=hexA(th.tg,0.55);ctx.fillText('Toucher JOUER pour commencer',W/2,H-6);
+  if(best>0){ctx.save();ctx.font=`bold ${bsz}px Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=5;ctx.fillText(`RECORD : ${best}`,W/2,btmY);ctx.restore();}
+  ctx.font=`${bsz*0.76}px Arial`;ctx.fillStyle=hexA(th.tg,0.45);ctx.fillText('Toucher JOUER pour commencer',W/2,H-4);
   ctx.textAlign='left';ctx.textBaseline='alphabetic';
 }
 
@@ -1435,17 +1456,24 @@ function drawHUD(th){
     drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,Arial`);
     // Left: record
     ctx.font=`${fz*0.7}px Arial`;ctx.fillStyle=th.tg;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(`REC: ${best}`,8,bh/2);
-    // Right: boutons son + fullscreen, puis theme + combo
-    _soundRect={x:W-38,y:2,w:32,h:bh-4};
-    _fsRect={x:W-72,y:2,w:30,h:bh-4};
-    ctx.save();ctx.font=`${bh*0.55|0}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle='rgba(255,255,255,0.85)';
-    ctx.fillText(_soundEnabled?'🔊':'🔇',W-38+16,bh/2);
-    ctx.fillText('⛶',W-72+15,bh/2);
+    // Right: bouton son uniquement
+    const sbW=Math.max(28,bh-4),sbH=bh-4;
+    _soundRect={x:W-sbW-4,y:2,w:sbW,h:sbH};
+    // Son button pill
+    ctx.save();
+    const sOn=_soundEnabled;
+    ctx.shadowColor=sOn?'#40D8FF':'#FF6060';ctx.shadowBlur=6;
+    const sbg2=ctx.createLinearGradient(W-sbW-4,2,W-sbW-4,2+sbH);
+    sbg2.addColorStop(0,sOn?'#1A3A50':'#3A1010');sbg2.addColorStop(1,sOn?'#0A1A26':'#1E0808');
+    rrect(ctx,W-sbW-4,2,sbW,sbH,sbH/2,sbg2,null);
+    rp(ctx,W-sbW-4,2,sbW,sbH,sbH/2);ctx.strokeStyle=hexA(sOn?'#40D8FF':'#FF6060',0.5);ctx.lineWidth=1;ctx.stroke();
+    ctx.shadowBlur=0;ctx.font=`${bh*0.52|0}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fillText(sOn?'🔊':'🔇',W-sbW/2-4,bh/2);
     ctx.restore();
-    ctx.textAlign='right';ctx.fillStyle=th.ta;ctx.fillText(THEMES[curTheme].name,W-80,bh*0.38);
-    if(combo>1){ctx.save();ctx.font=`bold ${fz*0.88}px Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;ctx.fillText(`×${combo}`,W-80,bh*0.72);ctx.restore();}
-    if(doublePointsUntil>Date.now()){const rem=Math.ceil((doublePointsUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${fz*0.65}px Arial`;ctx.fillStyle='#30FFAA';ctx.shadowColor='#00FFB0';ctx.shadowBlur=5;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(`×2 ${rem}s`,W-80,combo>1?bh*0.52:bh*0.72);ctx.shadowBlur=0;ctx.restore();}
+    // Theme + combo (décalés à gauche du son)
+    ctx.textAlign='right';ctx.fillStyle=th.ta;ctx.fillText(THEMES[curTheme].name,W-sbW-10,bh*0.38);
+    if(combo>1){ctx.save();ctx.font=`bold ${fz*0.88}px Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;ctx.fillText(`×${combo}`,W-sbW-10,bh*0.72);ctx.restore();}
+    if(doublePointsUntil>Date.now()){const rem=Math.ceil((doublePointsUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${fz*0.65}px Arial`;ctx.fillStyle='#30FFAA';ctx.shadowColor='#00FFB0';ctx.shadowBlur=5;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(`×2 ${rem}s`,W-sbW-10,combo>1?bh*0.52:bh*0.72);ctx.shadowBlur=0;ctx.restore();}
     ctx.textAlign='left';ctx.textBaseline='alphabetic';
   }else{
     const hx=GRID_X+GW+8,hw=W-hx-5;
@@ -1474,10 +1502,8 @@ function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.ran
 
 function onUp(e){
   e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;
-  // Sound toggle
-  if(_soundRect&&x>=_soundRect.x&&x<_soundRect.x+_soundRect.w&&y>=_soundRect.y&&y<_soundRect.y+_soundRect.h){_soundEnabled=!_soundEnabled;return;}
-  // Fullscreen toggle
-  if(_fsRect&&x>=_fsRect.x&&x<_fsRect.x+_fsRect.w&&y>=_fsRect.y&&y<_fsRect.y+_fsRect.h){if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen();return;}
+  // Sound toggle (in-game bar only — menu has its own handler in handleMenuTap)
+  if(gameState==='playing'&&_soundRect&&x>=_soundRect.x&&x<_soundRect.x+_soundRect.w&&y>=_soundRect.y&&y<_soundRect.y+_soundRect.h){_soundEnabled=!_soundEnabled;return;}
   // Second chance buttons
   if(showSecondChance){
     const ob=secondChanceBtns.oui,nb=secondChanceBtns.non;
@@ -1648,6 +1674,7 @@ function handleMenuTap(x,y){
   if(playRect){const{x:rx,y:ry,w,h}=playRect;if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){try{localStorage.removeItem('bp_save');}catch(e2){}hasSave=false;resize();resetGame();gameState='playing';return;}}
   if(hasSave&&resumeRect){const{x:rx,y:ry,w,h}=resumeRect;if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){if(loadSave())return;}}
   if(_lbRect){const{x:rx,y:ry,w,h}=_lbRect;if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){gameState='leaderboard';return;}}
+  if(_soundRect){const{x:rx,y:ry,w,h}=_soundRect;if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){_soundEnabled=!_soundEnabled;return;}}
 }
 window.addEventListener('keydown',e=>{
   if(gameState==='gameover'){gameState='menu';return;}

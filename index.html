@@ -58,7 +58,7 @@ function sndClear(n){_tone(440,0.10,'sine',0.20);_tone(660,0.12,'sine',0.16,0.08
 function sndCombo(c){const b=400+c*60;_tone(b,0.09,'sine',0.22);_tone(b*1.5,0.09,'sine',0.18,0.09);_tone(b*2,0.16,'sine',0.22,0.18);}
 function sndGameOver(){_tone(220,0.35,'sawtooth',0.22);_tone(165,0.45,'sawtooth',0.18,0.32);_tone(110,0.55,'sawtooth',0.15,0.65);}
 function sndBonus(){_tone(660,0.07,'sine',0.18);_tone(880,0.07,'sine',0.18,0.09);_tone(1100,0.11,'sine',0.22,0.18);}
-let _soundRect=null;
+let _soundRect=null,_pauseHudRect=null,_pauseBtns={},_pauseStartTime=0;
 const CELL_CACHE=new Map();
 // ─── SHAPES ──────────────────────────────────────────────────────────────────
 const SHAPES=[
@@ -911,192 +911,177 @@ const MODE_KEYS=['survie','chrono','puzzle','choix','contraintes','histoire'];
 // Rotation allowed. Challenge = figuring out orientation + placement order.
 // All piece shapes are max 5 cells, fit within 10×10.
 const PUZZLE_LEVELS=(()=>{
-  // Piece shapes (all horizontal by default — player uses rotation buttons)
-  const I3=[[1,1,1]],I4=[[1,1,1,1]],I5=[[1,1,1,1,1]];
+  // Piece shapes — player uses rotation buttons to orient them
+  const I3=[[1,1,1]],I4=[[1,1,1,1]];
   const SQ=[[1,1],[1,1]];
-  const L3=[[1,0],[1,0],[1,1]]; // L-tetromino (3 tall)
-  const J3=[[0,1],[0,1],[1,1]]; // J-tetromino (3 tall)
+  const L3=[[1,0],[1,0],[1,1]]; // L-tetromino
+  const J3=[[0,1],[0,1],[1,1]]; // J-tetromino
+  const T4=[[1,1,1],[0,1,0]];   // T-tetromino
+  const S4=[[0,1,1],[1,1,0]];   // S-tetromino
+  const Z4=[[1,1,0],[0,1,1]];   // Z-tetromino
 
-  // G(str): parses ASCII grid — 'X' = pre-filled cell, '.' = empty
+  // G(str): 'X'=pre-filled obstacle, '.'=empty (player zone)
   function G(str){
     const f=[];str.trim().split('\n').forEach((row,r)=>{
       [...row.trim()].forEach((ch,c)=>{if(ch==='X')f.push({r,c});});
     });return f;
   }
   return[
-    // ── LVL 1 ── Coin brisé
-    // Bottom-right quadrant: 3 gaps for I3, L3, J3 — need rotation
-    // ── LVL 1 ── La Colonne (9 cells: col 0 rows 0-8)
-    // I3×3 — all pieces MUST rotate vertical, col is only 1 wide
-    {title:'La Colonne', hint:'3 barres à retourner — une seule orientation passe !',
-     fills:G(`.XXXXXXXXX
-.XXXXXXXXX
-.XXXXXXXXX
-.XXXXXXXXX
-.XXXXXXXXX
-.XXXXXXXXX
-.XXXXXXXXX
-.XXXXXXXXX
-.XXXXXXXXX
-XXXXXXXXXX`), pieces:[I3,I3,I3]},
-
-    // ── LVL 2 ── Les Rails (12 cells: 3 cols × 4 rows top-left)
-    // I4×3 — all pieces MUST rotate vertical (4 tall, 3 wide area)
-    {title:'Les Rails', hint:'4 de haut, 3 de large — retourne les barres !',
-     fills:G(`...XXXXXXX
-...XXXXXXX
-...XXXXXXX
-...XXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[I4,I4,I4]},
-
-    // ── LVL 3 ── La Travée (12 cells: 4 cols × 3 rows bottom-left)
-    // I4×3 — horizontal, no rotation needed (4 wide, 3 tall area)
-    {title:'La Travée', hint:'3 barres horizontales — quelle longueur dans quel couloir ?',
-     fills:G(`XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-....XXXXXX
-....XXXXXX
-....XXXXXX`), pieces:[I4,I4,I4]},
-
-    // ── LVL 4 ── Le Tapis (12 cells: 6 cols × 2 rows center)
-    // SQ×3 — no rotation, but placement order requires planning
-    {title:'Le Tapis', hint:'3 carrés côte à côte — mais dans quel ordre ?',
-     fills:G(`XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XX......XX
-XX......XX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[SQ,SQ,SQ]},
-
-    // ── LVL 5 ── L'Escalier (12 cells: staircase top-left)
-    // I5+I4+I3 — all pieces MUST rotate vertical
-    // Solution: I5V col0 rows0-4, I4V col1 rows1-4, I3V col2 rows2-4
-    {title:"L'Escalier", hint:'Du plus long au plus court — et tourne-les tous !',
-     fills:G(`.XXXXXXXXX
-..XXXXXXXX
-...XXXXXXX
-...XXXXXXX
-...XXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[I5,I4,I3]},
-
-    // ── LVL 6 ── Le Puits (12 cells: 2 cols × 6 rows vertical corridor)
-    // SQ+I4+I4 — I4 MUST rotate vertical (corridor only 2 wide)
-    {title:'Le Puits', hint:'Le couloir est étroit — les barres doivent être verticales !',
-     fills:G(`XXXX..XXXX
-XXXX..XXXX
-XXXX..XXXX
-XXXX..XXXX
-XXXX..XXXX
-XXXX..XXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[SQ,I4,I4]},
-
-    // ── LVL 7 ── Le Coin (12 cells: 6 cols × 2 rows bottom-right corner)
-    // SQ+I4+I4 — no rotation, but figuring out where SQ fits is the challenge
-    {title:'Le Coin', hint:'SQ dans le coin, les barres dans le reste !',
-     fills:G(`XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXX......
-XXXX......`), pieces:[SQ,I4,I4]},
-
-    // ── LVL 8 ── La Rivière (12 cells: col0 rows0-3 + row3 cols1-8)
-    // I4×3 — one MUST rotate vertical (the vertical arm), two stay horizontal
-    // Solution: I4V col0 rows0-3, I4H row3 cols1-4, I4H row3 cols5-8
-    {title:'La Rivière', hint:'Une barre verticale, puis deux horizontales !',
-     fills:G(`.XXXXXXXXX
-.XXXXXXXXX
-.XXXXXXXXX
-.........X
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[I4,I4,I4]},
-
-    // ── LVL 9 ── La Strate (12 cells: horizontal staircase bottom-right)
-    // I5+I4+I3 — no rotation needed (mirror of L'Escalier)
-    {title:'La Strate', hint:'Du plus long au plus court — cette fois horizontal !',
-     fills:G(`XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
+    // LVL 1 — L'Aube : grande zone 5×5 (25 vides), pièces simples
+    {title:"L'Aube", hint:'Beaucoup d\'espace — explore et retourne les pièces !',
+     fills:G(`XXXXX.....
 XXXXX.....
-XXXXXX....
-XXXXXXX...
+XXXXX.....
+XXXXX.....
+XXXXX.....
 XXXXXXXXXX
 XXXXXXXXXX
-XXXXXXXXXX`), pieces:[I5,I4,I3]},
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[I3,I4,SQ]},
 
-    // ── LVL 10 ── Le Cadre (12 cells: 4×4 frame, 2×2 center pre-filled)
-    // I4+L3+J3 — no rotation, but tricky placement (I4 top, L3 left, J3 right)
-    // False path: trying L3+J3 first leaves 2×2 gap that I4 can't fill
-    {title:'Le Cadre', hint:'La barre en haut, les flancs sur les côtés !',
-     fills:G(`....XXXXXX
-.XX.XXXXXX
-.XX.XXXXXX
-....XXXXXX
+    // LVL 2 — Le Plateau : zone 6×6 (36 vides), intro au T
+    {title:'Le Plateau', hint:'Le T a 4 orientations — laquelle rentrera le mieux ?',
+     fills:G(`......XXXX
+......XXXX
+......XXXX
+......XXXX
+......XXXX
+......XXXX
 XXXXXXXXXX
 XXXXXXXXXX
 XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[I4,L3,J3]},
+XXXXXXXXXX`), pieces:[T4,I4,SQ]},
 
-    // ── LVL 11 ── Le T (12 cells: T-shape, 8-wide top bar + 4-tall stem)
-    // I4×3 — one MUST rotate vertical (the stem), two stay horizontal
-    {title:'Le T', hint:'Deux barres en haut, une verticale pour le pied !',
-     fills:G(`........XX
-XXXX.XXXXX
-XXXX.XXXXX
-XXXX.XXXXX
-XXXX.XXXXX
+    // LVL 3 — La Clairière : 6 lignes × 6 cols + 2 rochers (28 vides)
+    {title:'La Clairière', hint:'Contourne les rochers — le T passe si tu le retournes !',
+     fills:G(`XXXXXXXXXX
+XX......XX
+XX.X....XX
+XX......XX
+XX......XX
+XX....X.XX
 XXXXXXXXXX
 XXXXXXXXXX
 XXXXXXXXXX
-XXXXXXXXXX
-XXXXXXXXXX`), pieces:[I4,I4,I4]},
+XXXXXXXXXX`), pieces:[T4,L3,J3]},
 
-    // ── LVL 12 ── BOSS: Le Centre (12 cells: 3×4 center block)
-    // L3+J3+SQ — complex decomposition, must figure out L/J/SQ arrangement
-    // Solution: L3 left col+bottom-L, SQ center 2×2, J3 right col+bottom-J
-    {title:'★ BOSS — Le Centre', hint:'Comment décomposer ce rectangle ?',
+    // LVL 4 — Les Marécages : grande zone 8×5 + 2 obstacles (38 vides)
+    {title:'Les Marécages', hint:'S et Z sont miroirs l\'un de l\'autre — tourne-les bien !',
+     fills:G(`XXXXXXXXXX
+X........X
+X..X.....X
+X........X
+X.....X..X
+X........X
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[S4,Z4,T4]},
+
+    // LVL 5 — La Forêt : 6 lignes × 6 cols + 3 arbres (28 vides)
+    {title:'La Forêt', hint:'3 obstacles intérieurs — cherche l\'espace libre !',
      fills:G(`XXXXXXXXXX
 XXXXXXXXXX
+XX......XX
+XX.X....XX
+XX......XX
+XX....X.XX
+XX......XX
 XXXXXXXXXX
 XXXXXXXXXX
-XXX....XXX
-XXX....XXX
-XXX....XXX
+XXXXXXXXXX`), pieces:[T4,J3,SQ]},
+
+    // LVL 6 — Les Falaises : couloir vertical + piliers (28 vides)
+    {title:'Les Falaises', hint:'Les piliers réduisent l\'espace — adapte ton orientation !',
+     fills:G(`XXXXXXXXXX
+XXXXXXXXXX
+X.....XXXX
+X..X..XXXX
+X.....XXXX
+X..X..XXXX
+X.....XXXX
+X.....XXXX
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[T4,S4,I4]},
+
+    // LVL 7 — L'Oasis : carré 7×7 + obstacle 2×2 central (38 vides)
+    {title:"L'Oasis", hint:'Grande zone mais un bloc au cœur — contourne-le !',
+     fills:G(`XXXXXXXXXX
+X.......XX
+X.......XX
+X...XX..XX
+X...XX..XX
+X.......XX
+X.......XX
 XXXXXXXXXX
 XXXXXXXXXX
-XXXXXXXXXX`), pieces:[L3,J3,SQ]},
+XXXXXXXXXX`), pieces:[T4,Z4,L3]},
+
+    // LVL 8 — Le Détroit : deux zones 4×4 séparées (32 vides)
+    {title:'Le Détroit', hint:'Deux zones séparées — répartis les pièces intelligemment !',
+     fills:G(`XXXXXXXXXX
+X....XXXXX
+X....XXXXX
+X....XXXXX
+X....XXXXX
+XXXXX....X
+XXXXX....X
+XXXXX....X
+XXXXX....X
+XXXXXXXXXX`), pieces:[T4,L3,J3]},
+
+    // LVL 9 — Les Ruines : grande zone + 4 obstacles épars (38 vides)
+    {title:'Les Ruines', hint:'Zone criblée de débris — il reste de la place, cherche !',
+     fills:G(`XXXXXXXXXX
+XXXXXXXXXX
+X.......XX
+X..X..X.XX
+X.......XX
+X.X.....XX
+X.......XX
+X...X...XX
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[T4,S4,Z4]},
+
+    // LVL 10 — Le Dédale : obstacles en quinconce (40 vides)
+    {title:'Le Dédale', hint:'Obstacles en damier — certaines orientations sont bloquées !',
+     fills:G(`XXXXXXXXXX
+X.X.X.X.XX
+X.......XX
+X.X.....XX
+X.......XX
+X...X.X.XX
+X.......XX
+X.X.X...XX
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[T4,L3,S4]},
+
+    // LVL 11 — La Tempête : zone 6 cols + 5 obstacles intérieurs (37 vides)
+    {title:'La Tempête', hint:'S et Z en miroir — un seul sens rentre dans chaque espace !',
+     fills:G(`XXXXXXXXXX
+XX......XX
+XX.X.X..XX
+XX......XX
+XX..X...XX
+XX......XX
+XX.X....XX
+XX......XX
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[S4,Z4,T4]},
+
+    // LVL 12 — ★ BOSS Le Vortex : obstacles complexes (42 vides)
+    {title:'★ BOSS — Le Vortex', hint:'Explore toute la zone — tourne chaque pièce avant de placer !',
+     fills:G(`XXXXXXXXXX
+X.......XX
+X.X..X..XX
+X.......XX
+X..XX...XX
+X.......XX
+X...X.X.XX
+X.......XX
+XXXXXXXXXX
+XXXXXXXXXX`), pieces:[T4,S4,Z4]},
 
   ].filter(lvl=>lvl&&lvl.pieces&&lvl.pieces.every(p=>Array.isArray(p)&&p.length>0&&Array.isArray(p[0])&&p[0].length>0&&p.flat().some(v=>v))
               &&Array.isArray(lvl.fills));
@@ -1231,11 +1216,24 @@ function layoutMenu(){
   const PW=cl(W-52,148,275),PH=cl(Math.round(H*0.075),36,58);
   const lastThY=THY+THH*2+7;
   const py0=lastThY+Math.round(H*0.024);
-  playRect={x:(W-PW)/2,y:py0,w:PW,h:PH};
-  resumeRect={x:(W-PW)/2,y:py0+PH+7,w:PW,h:PH};
-  _lbRect={x:(W-PW)/2,y:py0+PH*2+14,w:PW,h:PH};
-  const SBW=cl(Math.round(PW*0.52),90,160),SBH=cl(Math.round(PH*0.72),28,42);
-  _soundRect={x:(W-SBW)/2,y:py0+PH*3+22,w:SBW,h:SBH};
+  // Son : petit bouton icône fixé en haut à droite (hors du flux vertical)
+  _soundRect={x:W-44,y:6,w:38,h:38};
+  // Calcul du gap proportionnel selon l'espace disponible
+  const numBtns=hasSave?3:2;
+  const avail=H-12-py0-PH*numBtns;
+  const gap=cl(Math.floor(avail/(numBtns+1)),5,18);
+  const y0=Math.min(py0+gap,H-12-PH);
+  playRect={x:(W-PW)/2,y:y0,w:PW,h:PH};
+  if(hasSave){
+    const y1=Math.min(y0+PH+gap,H-12-PH*2);
+    resumeRect={x:(W-PW)/2,y:y1,w:PW,h:PH};
+    const y2=Math.min(y1+PH+gap,H-12-PH);
+    _lbRect={x:(W-PW)/2,y:y2,w:PW,h:PH};
+  }else{
+    resumeRect=null;
+    const y1=Math.min(y0+PH+gap,H-12-PH);
+    _lbRect={x:(W-PW)/2,y:y1,w:PW,h:PH};
+  }
 }
 
 function drawMenu(t){
@@ -1357,32 +1355,132 @@ function drawMenu(t){
     drawPremText(ctx,'🏆  CLASSEMENT',x+w/2,y+h/2,`bold ${lfz}px Arial`,'#FFD700','#B8860B','rgba(0,0,0,0.5)','#FFD700',8,2);
     ctx.restore();
   }
-  // ── BOUTON SON (centré, sous le classement) ──
+  // ── BOUTON SON (icône fixée en haut à droite) ──
   if(_soundRect){
     const{x,y,w,h}=_soundRect;const on=_soundEnabled;
     ctx.save();
-    ctx.shadowColor=on?'#40D8FF':'#FF6060';ctx.shadowBlur=8+4*Math.abs(Math.sin(Date.now()*0.003));
+    const pulse=0.5+0.5*Math.sin(Date.now()*0.003);
+    ctx.shadowColor=on?'#40D8FF':'#FF6060';ctx.shadowBlur=6+4*pulse;
     const sbg=ctx.createLinearGradient(x,y,x,y+h);
     sbg.addColorStop(0,on?'#1A3A50':'#3A1010');sbg.addColorStop(1,on?'#0A1A26':'#1E0808');
-    rrect(ctx,x,y,w,h,h/2,sbg,null);
+    rrect(ctx,x,y,w,h,10,sbg,null);
     const ssh=ctx.createLinearGradient(x,y,x,y+h*0.5);
-    ssh.addColorStop(0,'rgba(255,255,255,0.15)');ssh.addColorStop(1,'rgba(255,255,255,0)');
-    rp(ctx,x+2,y+2,w-4,h*0.5,h/2);ctx.fillStyle=ssh;ctx.fill();
-    rp(ctx,x,y,w,h,h/2);ctx.strokeStyle=hexA(on?'#40D8FF':'#FF6060',0.55);ctx.lineWidth=1.5;ctx.stroke();
+    ssh.addColorStop(0,'rgba(255,255,255,0.18)');ssh.addColorStop(1,'rgba(255,255,255,0)');
+    rp(ctx,x+2,y+2,w-4,h*0.5,8);ctx.fillStyle=ssh;ctx.fill();
+    rp(ctx,x,y,w,h,10);ctx.strokeStyle=hexA(on?'#40D8FF':'#FF6060',0.6);ctx.lineWidth=1.5;ctx.stroke();
     ctx.shadowBlur=0;
-    const sfz=cl(Math.floor(h*0.52),10,18);
-    ctx.font=`bold ${sfz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle=on?'#40D8FF':'#FF6060';
-    ctx.fillText(on?'🔊  SON ON':'🔇  SON OFF',x+w/2,y+h/2);
+    ctx.font=`${Math.floor(h*0.58)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(on?'🔊':'🔇',x+w/2,y+h/2);
     ctx.restore();
   }
   // Best personal score
   const bsz=cl(Math.floor(H*0.020),8,14);
-  const btmY=_soundRect?_soundRect.y+_soundRect.h+bsz*1.4:H-24;
+  const btmY=H-bsz*2.5;
   ctx.textAlign='center';ctx.textBaseline='alphabetic';
   if(best>0){ctx.save();ctx.font=`bold ${bsz}px Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=5;ctx.fillText(`RECORD : ${best}`,W/2,btmY);ctx.restore();}
   ctx.font=`${bsz*0.76}px Arial`;ctx.fillStyle=hexA(th.tg,0.45);ctx.fillText('Toucher JOUER pour commencer',W/2,H-4);
   ctx.textAlign='left';ctx.textBaseline='alphabetic';
+}
+
+// ─── PAUSE MENU ──────────────────────────────────────────────────────────────
+function layoutPause(){
+  const pw=Math.min(W-32,310);
+  const bh=cl(H*0.076,40,58);
+  const gap=10;
+  const titleH=cl(H*0.10,48,68);
+  const badgeH=26;
+  const scoreH=24;
+  const padV=20;
+  const panelH=padV+titleH+10+badgeH+gap+bh*4+gap*3+scoreH+padV;
+  const px=(W-pw)/2|0;
+  const py=((H-panelH)/2)|0;
+  _pauseBtns={_panel:{x:px,y:py,w:pw,h:panelH},_titleY:py+padV+titleH*0.78,_badgeY:py+padV+titleH+10,_scoreY:py+panelH-padV-scoreH};
+  let cy=py+padV+titleH+10+badgeH+gap;
+  ['resume','restart','sound','quit'].forEach(k=>{_pauseBtns[k]={x:px+10,y:cy,w:pw-20,h:bh};cy+=bh+gap;});
+}
+
+function drawPause(t){
+  layoutPause();
+  const th=THEMES[curTheme];
+  const now=Date.now();
+  const p=_pauseBtns._panel;
+  // Dark overlay
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillRect(0,0,W,H);
+  // Panel glass
+  const pg=ctx.createLinearGradient(p.x,p.y,p.x,p.y+p.h);
+  pg.addColorStop(0,hexA(th.gbg,0.97));pg.addColorStop(1,hexA(th.bg,0.95));
+  rrect(ctx,p.x,p.y,p.w,p.h,20,pg,null);
+  // Panel shine top
+  const ps=ctx.createLinearGradient(p.x,p.y,p.x,p.y+p.h*0.45);
+  ps.addColorStop(0,'rgba(255,255,255,0.10)');ps.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.save();rp(ctx,p.x,p.y,p.w,p.h,20);ctx.clip();ctx.fillStyle=ps;ctx.fillRect(p.x,p.y,p.w,p.h*0.45);ctx.restore();
+  // Panel border
+  rp(ctx,p.x,p.y,p.w,p.h,20);ctx.strokeStyle=hexA(th.sl,0.7);ctx.lineWidth=1.5;ctx.stroke();
+  // Title
+  const tsz=cl(p.h*0.10,18,30);
+  drawPremText(ctx,'⏸  PAUSE',p.x+p.w/2,_pauseBtns._titleY,`bold ${tsz}px Arial`,th.hi||th.tm,th.ta,'rgba(0,0,0,0.5)',th.hi||th.tm,10,2);
+  // Mode badge
+  const mode=MODES[currentMode]||MODES.survie;
+  const bw2=ctx.measureText(mode.icon+' '+mode.name).width+30;
+  ctx.font=`bold 13px Arial`;
+  const bx2=(W-bw2)/2|0;
+  const by2=_pauseBtns._badgeY|0;
+  rrect(ctx,bx2,by2,bw2,24,12,hexA(mode.color,0.22),hexA(mode.color,0.80),1.5);
+  ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=mode.color;
+  ctx.fillText(mode.icon+' '+mode.name,p.x+p.w/2,by2+12);
+  // Buttons
+  const btnDefs={
+    resume:{icon:'▶',lbl:'REPRENDRE',g0:th.ta,g1:lerpC(th.ta,'#000000',0.5),border:th.tm},
+    restart:{icon:'🔁',lbl:'RECOMMENCER',g0:'#1C3A3A',g1:'#0C1E1E',border:th.tg},
+    sound:{icon:_soundEnabled?'🔊':'🔇',lbl:_soundEnabled?'SON  ON':'SON  OFF',
+      g0:_soundEnabled?'#1A4455':'#5A1A1A',g1:_soundEnabled?'#0A2230':'#2C0D0D',
+      border:_soundEnabled?'#40D8FF':'#FF6060'},
+    quit:{icon:'🏠',lbl:'MENU PRINCIPAL',g0:'#6A2C0A',g1:'#381505',border:'#FF7040'}
+  };
+  ['resume','restart','sound','quit'].forEach((k,i)=>{
+    const btn=_pauseBtns[k];const def=btnDefs[k];
+    const{x:bx,y:by,w:bw,h:bh}=btn;const br=bh/2;
+    const pulse=0.5+0.5*Math.sin(now*0.003+i*1.2);
+    // Glow border
+    ctx.save();ctx.shadowColor=def.border;ctx.shadowBlur=8+pulse*8;
+    rp(ctx,bx,by,bw,bh,br);ctx.strokeStyle=def.border;ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
+    // Fill gradient
+    const bg=ctx.createLinearGradient(bx,by,bx,by+bh);
+    bg.addColorStop(0,def.g0);bg.addColorStop(1,def.g1);
+    rrect(ctx,bx,by,bw,bh,br,bg,def.border,1.5);
+    // Shine
+    const sh=ctx.createLinearGradient(bx,by,bx,by+bh*0.45);
+    sh.addColorStop(0,'rgba(255,255,255,0.16)');sh.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.save();rp(ctx,bx,by,bw,bh,br);ctx.clip();ctx.fillStyle=sh;ctx.fillRect(bx,by,bw,bh*0.45);ctx.restore();
+    // Label
+    const fs=cl(bh*0.40,12,20);
+    ctx.font=`bold ${fs}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(255,255,255,0.95)';
+    ctx.shadowColor=def.border;ctx.shadowBlur=4;
+    ctx.fillText(def.icon+'  '+def.lbl,bx+bw/2,by+bh/2);
+    ctx.shadowBlur=0;
+  });
+  // Score actuel
+  const scSz=cl(H*0.026,10,14);
+  ctx.font=`${scSz}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=th.tm;
+  ctx.fillText(`Score actuel : ${score}`,p.x+p.w/2,_pauseBtns._scoreY+scSz/2);
+  ctx.restore();
+}
+
+function handlePauseTap(x,y){
+  if(!_pauseBtns.resume)return;
+  ['resume','restart','sound','quit'].forEach(k=>{
+    const b=_pauseBtns[k];if(!b)return;
+    if(x>=b.x&&x<b.x+b.w&&y>=b.y&&y<b.y+b.h){
+      if(k==='resume'){
+        if(_pauseStartTime>0){chronoLastTick+=Date.now()-_pauseStartTime;_pauseStartTime=0;}
+        gameState='playing';
+      }else if(k==='restart'){_pauseStartTime=0;resetGame();gameState='playing';}
+      else if(k==='sound'){_soundEnabled=!_soundEnabled;}
+      else if(k==='quit'){_pauseStartTime=0;gameState='menu';}
+    }
+  });
 }
 
 // ─── MODE SELECT SCREEN ──────────────────────────────────────────────────────
@@ -2202,35 +2300,51 @@ function drawHUD(th){
     // Glass top bar
     const bh=GRID_Y-3;
     const hg2=ctx.createLinearGradient(0,0,0,bh);
-    hg2.addColorStop(0,'rgba(0,0,0,0.55)');hg2.addColorStop(1,'rgba(0,0,0,0.35)');
+    hg2.addColorStop(0,'rgba(0,0,0,0.60)');hg2.addColorStop(1,'rgba(0,0,0,0.38)');
     ctx.fillStyle=hg2;ctx.fillRect(0,0,W,bh);
-    ctx.strokeStyle=hexA(th.sl,0.3);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,bh);ctx.lineTo(W,bh);ctx.stroke();
-    // Score (animé)
+    ctx.strokeStyle=hexA(th.sl,0.35);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,bh);ctx.lineTo(W,bh);ctx.stroke();
+    // Score centré
     const fz=cl(bh*0.55|0,11,24);
     drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,Arial`);
-    // Left: record
+    // Left: mode + record
     const modeInfo=MODES[currentMode]||MODES.survie;
     ctx.font=`bold ${fz*0.62}px Arial`;ctx.fillStyle=modeInfo.color;ctx.textAlign='left';ctx.textBaseline='middle';
     ctx.shadowColor=modeInfo.color;ctx.shadowBlur=4;ctx.fillText(modeInfo.icon+' '+modeInfo.name,8,bh*0.3);ctx.shadowBlur=0;
     ctx.font=`${fz*0.62}px Arial`;ctx.fillStyle=th.tg;ctx.fillText(`REC: ${best}`,8,bh*0.72);
-    // Right: bouton son uniquement
-    const sbW=Math.max(28,bh-4),sbH=bh-4;
-    _soundRect={x:W-sbW-4,y:2,w:sbW,h:sbH};
-    // Son button pill
+    // Right: deux boutons icônes carrés — ⏸ pause | 🔊 son
+    const iconSz=cl(bh-4,24,44);
+    const soundX=W-(iconSz+2)-4;
+    const pauseX=soundX-(iconSz+4)-4;
+    const btnY=2;
+    _soundRect={x:soundX,y:btnY,w:iconSz,h:iconSz};
+    _pauseHudRect={x:pauseX,y:btnY,w:iconSz,h:iconSz};
+    // ── Pause button ──
+    ctx.save();
+    ctx.shadowColor=th.ta;ctx.shadowBlur=5;
+    const pbg=ctx.createLinearGradient(pauseX,btnY,pauseX,btnY+iconSz);
+    pbg.addColorStop(0,hexA(th.ta,0.50));pbg.addColorStop(1,hexA(th.ta,0.22));
+    rrect(ctx,pauseX,btnY,iconSz,iconSz,iconSz/4,pbg,null);
+    rp(ctx,pauseX,btnY,iconSz,iconSz,iconSz/4);ctx.strokeStyle=hexA(th.ta,0.65);ctx.lineWidth=1;ctx.stroke();
+    ctx.shadowBlur=0;ctx.font=`${iconSz*0.56|0}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=th.hi||th.tm;ctx.fillText('⏸',pauseX+iconSz/2,btnY+iconSz/2);
+    ctx.restore();
+    // ── Son button ──
     ctx.save();
     const sOn=_soundEnabled;
-    ctx.shadowColor=sOn?'#40D8FF':'#FF6060';ctx.shadowBlur=6;
-    const sbg2=ctx.createLinearGradient(W-sbW-4,2,W-sbW-4,2+sbH);
+    ctx.shadowColor=sOn?'#40D8FF':'#FF6060';ctx.shadowBlur=5;
+    const sbg2=ctx.createLinearGradient(soundX,btnY,soundX,btnY+iconSz);
     sbg2.addColorStop(0,sOn?'#1A3A50':'#3A1010');sbg2.addColorStop(1,sOn?'#0A1A26':'#1E0808');
-    rrect(ctx,W-sbW-4,2,sbW,sbH,sbH/2,sbg2,null);
-    rp(ctx,W-sbW-4,2,sbW,sbH,sbH/2);ctx.strokeStyle=hexA(sOn?'#40D8FF':'#FF6060',0.5);ctx.lineWidth=1;ctx.stroke();
-    ctx.shadowBlur=0;ctx.font=`${bh*0.52|0}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle='rgba(255,255,255,0.9)';ctx.fillText(sOn?'🔊':'🔇',W-sbW/2-4,bh/2);
+    rrect(ctx,soundX,btnY,iconSz,iconSz,iconSz/4,sbg2,null);
+    rp(ctx,soundX,btnY,iconSz,iconSz,iconSz/4);ctx.strokeStyle=hexA(sOn?'#40D8FF':'#FF6060',0.55);ctx.lineWidth=1;ctx.stroke();
+    ctx.shadowBlur=0;ctx.font=`${iconSz*0.58|0}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(255,255,255,0.92)';ctx.fillText(sOn?'🔊':'🔇',soundX+iconSz/2,btnY+iconSz/2);
     ctx.restore();
-    // Theme + combo (décalés à gauche du son)
-    ctx.textAlign='right';ctx.fillStyle=th.ta;ctx.fillText(THEMES[curTheme].name,W-sbW-10,bh*0.38);
-    if(combo>1){ctx.save();ctx.font=`bold ${fz*0.88}px Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;ctx.fillText(`×${combo}`,W-sbW-10,bh*0.72);ctx.restore();}
-    if(doublePointsUntil>Date.now()){const rem=Math.ceil((doublePointsUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${fz*0.65}px Arial`;ctx.fillStyle='#30FFAA';ctx.shadowColor='#00FFB0';ctx.shadowBlur=5;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(`×2 ${rem}s`,W-sbW-10,combo>1?bh*0.52:bh*0.72);ctx.shadowBlur=0;ctx.restore();}
+    // Theme name + combo — calé à gauche des deux boutons
+    const rightEdge=pauseX-8;
+    ctx.font=`${fz*0.62}px Arial`;ctx.textAlign='right';ctx.fillStyle=th.ta;ctx.textBaseline='middle';
+    ctx.fillText(THEMES[curTheme].name,rightEdge,bh*0.38);
+    if(combo>1){ctx.save();ctx.font=`bold ${fz*0.88}px Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;ctx.fillText(`×${combo}`,rightEdge,bh*0.72);ctx.restore();}
+    if(doublePointsUntil>Date.now()){const rem=Math.ceil((doublePointsUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${fz*0.65}px Arial`;ctx.fillStyle='#30FFAA';ctx.shadowColor='#00FFB0';ctx.shadowBlur=5;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(`×2 ${rem}s`,rightEdge,combo>1?bh*0.52:bh*0.72);ctx.shadowBlur=0;ctx.restore();}
     ctx.textAlign='left';ctx.textBaseline='alphabetic';
   }else{
     const hx=GRID_X+GW+8,hw=W-hx-5;
@@ -2252,6 +2366,7 @@ function getPos(e){if(e.touches&&e.touches.length>0)return{x:e.touches[0].client
 function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;
   if(gameState==='menu'){handleMenuTap(x,y);return;}
   if(gameState==='modeselect'){handleModeSelectTap(x,y);return;}
+  if(gameState==='pause'){return;}
   if(gameState==='leaderboard'){if(_backLbRect&&x>=_backLbRect.x&&x<_backLbRect.x+_backLbRect.w&&y>=_backLbRect.y&&y<_backLbRect.y+_backLbRect.h){gameState='menu';}return;}
   if(gameState==='gameover'){if(Date.now()-overT>1200)gameState='menu';return;}
   // Block tray drag only when in choix PICKING phase; all other modes allow normal drag
@@ -2264,6 +2379,10 @@ function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.ran
 
 function onUp(e){
   e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;
+  // Pause overlay
+  if(gameState==='pause'){handlePauseTap(x,y);return;}
+  // Pause HUD button
+  if(gameState==='playing'&&_pauseHudRect&&x>=_pauseHudRect.x&&x<_pauseHudRect.x+_pauseHudRect.w&&y>=_pauseHudRect.y&&y<_pauseHudRect.y+_pauseHudRect.h){gameState='pause';_pauseStartTime=Date.now();return;}
   // Sound toggle (in-game bar only — menu has its own handler in handleMenuTap)
   if(gameState==='playing'&&_soundRect&&x>=_soundRect.x&&x<_soundRect.x+_soundRect.w&&y>=_soundRect.y&&y<_soundRect.y+_soundRect.h){_soundEnabled=!_soundEnabled;return;}
   // Rotation buttons — check before drag placement
@@ -2511,18 +2630,17 @@ window.addEventListener('keydown',e=>{
   if(gameState==='leaderboard'){gameState='menu';return;}
   if(gameState==='modeselect'){if(e.key==='Escape')gameState='menu';return;}
   if(gameState==='menu'&&(e.key==='Enter'||e.key===' ')){gameState='modeselect';return;}
-  if(gameState==='playing'){
-    if(e.key==='Escape'){
-      gameState='menu';
-      return;
+  if(gameState==='pause'){
+    if(e.key==='Escape'||e.key==='p'||e.key==='P'){
+      if(_pauseStartTime>0){chronoLastTick+=Date.now()-_pauseStartTime;_pauseStartTime=0;}
+      gameState='playing';
     }
+    return;
+  }
+  if(gameState==='playing'){
+    if(e.key==='Escape'||e.key==='p'||e.key==='P'){gameState='pause';_pauseStartTime=Date.now();return;}
     if(e.key==='r'||e.key==='R'){
-      if(score > best){
-        best = score;
-        try {
-          localStorage.setItem('blockpuzzle_best', String(best));
-        } catch (err) {}
-      }
+      if(score>best){best=score;try{localStorage.setItem('blockpuzzle_best',String(best));}catch(err){}}
       resetGame();
     }
   }
@@ -2541,6 +2659,7 @@ function loop(ts){
   if(gameState==='menu')drawMenu(ts);
   else if(gameState==='modeselect')drawModeSelect(ts);
   else if(gameState==='leaderboard')drawLeaderboard(ts);
+  else if(gameState==='pause'){drawGame(ts);drawPause(ts);}
   else drawGame(ts);
   requestAnimationFrame(loop);
 }

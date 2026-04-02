@@ -1775,34 +1775,33 @@ function drawGame(t){
       sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox+cc*PIECE_CELL,oy+rr*PIECE_CELL,PIECE_CELL,selSkin,t,dim?0.3:1);}));
     }
   }
-  // ── Boutons de rotation ↻ sous chaque slot ───────────────────────────────
+  // ── Boutons de rotation ↻ — mode puzzle uniquement ───────────────────────
   {
     const eM2=currentMode==='histoire'?_getHistoireSubMode():currentMode;
-    const ROT_H=cl(Math.round(TRAY_H*0.32),18,32);
-    const ROT_Y=TRAY_Y+TRAY_H+2;
-    for(let i=0;i<3;i++){
-      if(!tray[i])continue;
-      const rx=GRID_X+i*pw+pw*0.2,ry=ROT_Y,rw=pw*0.6,rh=ROT_H;
-      rotBtnRects[i]={x:rx,y:ry,w:rw,h:rh};
-      const hover=(mouseX>=rx&&mouseX<rx+rw&&mouseY>=ry&&mouseY<ry+rh);
-      // pill bg
-      ctx.save();
-      if(hover){ctx.shadowColor='#80C0FF';ctx.shadowBlur=8;}
-      const rbg3=ctx.createLinearGradient(rx,ry,rx,ry+rh);
-      rbg3.addColorStop(0,hover?'rgba(40,80,140,0.92)':'rgba(20,40,80,0.75)');
-      rbg3.addColorStop(1,hover?'rgba(20,50,100,0.88)':'rgba(10,20,50,0.60)');
-      rrect(ctx,rx,ry,rw,rh,rh/2,rbg3,null);
-      rp(ctx,rx,ry,rw,rh,rh/2);ctx.strokeStyle=hover?'rgba(128,200,255,0.7)':'rgba(64,120,200,0.45)';ctx.lineWidth=1.2;ctx.stroke();
-      ctx.shadowBlur=0;
-      // Icon + label
-      const fsz3=cl(Math.floor(rh*0.52),8,15);
-      ctx.font=`bold ${fsz3}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillStyle=hover?'#B8E0FF':'rgba(160,200,255,0.9)';
-      ctx.fillText('↻  Tourner',rx+rw/2,ry+rh/2);
-      ctx.restore();
+    rotBtnRects=[null,null,null]; // reset systématique
+    if(eM2==='puzzle'){
+      const ROT_H=cl(Math.round(TRAY_H*0.32),18,32);
+      const ROT_Y=TRAY_Y+TRAY_H+2;
+      for(let i=0;i<3;i++){
+        if(!tray[i])continue;
+        const rx=GRID_X+i*pw+pw*0.2,ry=ROT_Y,rw=pw*0.6,rh=ROT_H;
+        rotBtnRects[i]={x:rx,y:ry,w:rw,h:rh};
+        const hover=(mouseX>=rx&&mouseX<rx+rw&&mouseY>=ry&&mouseY<ry+rh);
+        ctx.save();
+        if(hover){ctx.shadowColor='#80C0FF';ctx.shadowBlur=8;}
+        const rbg3=ctx.createLinearGradient(rx,ry,rx,ry+rh);
+        rbg3.addColorStop(0,hover?'rgba(40,80,140,0.92)':'rgba(20,40,80,0.75)');
+        rbg3.addColorStop(1,hover?'rgba(20,50,100,0.88)':'rgba(10,20,50,0.60)');
+        rrect(ctx,rx,ry,rw,rh,rh/2,rbg3,null);
+        rp(ctx,rx,ry,rw,rh,rh/2);ctx.strokeStyle=hover?'rgba(128,200,255,0.7)':'rgba(64,120,200,0.45)';ctx.lineWidth=1.2;ctx.stroke();
+        ctx.shadowBlur=0;
+        const fsz3=cl(Math.floor(rh*0.52),8,15);
+        ctx.font=`bold ${fsz3}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillStyle=hover?'#B8E0FF':'rgba(160,200,255,0.9)';
+        ctx.fillText('↻  Tourner',rx+rw/2,ry+rh/2);
+        ctx.restore();
+      }
     }
-    // Cleanup rects for empty slots
-    for(let i=0;i<3;i++){if(!tray[i])rotBtnRects[i]=null;}
   }
   // ── Aperçu 2 prochains blocs ─────────────────────────────────────────────
   if(nextTrayPreview){

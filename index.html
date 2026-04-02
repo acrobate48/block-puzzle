@@ -1322,8 +1322,7 @@ function onUp(e){
         parasites=parasites.filter(p=>!entry.cells.some(cl=>cl.r===p.r&&cl.c===p.c));
       });
       // Refresh tray with 3–5 new pieces
-      const newCount=rndI(3,5);
-      tray=Array.from({length:newCount},()=>newPiece());
+      tray=newTray();
       showSecondChance=false;secondChanceUsed=true;combo=0;drag=null;
       screenFlash=160;screenFlashCol='#40FF80';
       floats.push(new FloatText('SECONDE CHANCE !',W/2,H/2,'#40FF80',1.4,120));

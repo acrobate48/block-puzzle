@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Block Puzzle">
 <title>Block Puzzle — Premium</title>
+<script src="config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
@@ -759,7 +760,7 @@ let playerPseudo='';try{playerPseudo=localStorage.getItem('bp_pseudo')||'';}catc
 let _fbDb=null;
 (function(){
   try{
-    const cfg={apiKey:"AIzaSyBfjTU2NbWMaW_RYtINKLpAE8LGIkpF4nY",authDomain:"classement-pour-index.firebaseapp.com",databaseURL:"https://classement-pour-index-default-rtdb.europe-west1.firebasedatabase.app",projectId:"classement-pour-index",storageBucket:"classement-pour-index.firebasestorage.app",messagingSenderId:"152794200568",appId:"1:152794200568:web:6294656a93fd93dfeafe0d"};
+    const cfg=window.FIREBASE_CONFIG;
     const app=firebase.initializeApp(cfg);
     _fbDb=firebase.database(app);
     _fbDb.ref('leaderboard').orderByChild('score').limitToLast(10).on('value',snap=>{

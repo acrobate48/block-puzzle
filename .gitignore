@@ -1,1 +1,8 @@
 config.js
+best_score.txt
+data.json
+err.txt
+errors.log
+log.txt
+__pycache__/
+*.pyc

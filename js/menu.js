@@ -25,23 +25,26 @@ function layoutMenu(){
   themeRects=Array.from({length:10},(_,i)=>({x:8+(i%5)*(THW+4),y:THY+(i<5?0:THH+4),w:THW,h:THH}));
   const PW=cl(W-52,148,275),PH=cl(Math.round(H*0.075),36,58);
   const lastThY=THY+THH*2+7;
-  const py0=lastThY+Math.round(H*0.024);
+  const py0=lastThY+Math.round(H*0.018);
   // Son : petit bouton icône fixé en haut à droite (hors du flux vertical)
   _soundRect={x:W-44,y:6,w:38,h:38};
-  // Calcul du gap proportionnel selon l'espace disponible
+  // Réserve de l'espace pour RECORD + combo + "Toucher JOUER" en bas
+  const _bsz=cl(Math.floor(H*0.020),8,14);
+  const _btmReserve=_bsz*4.5+10;
   const numBtns=hasSave?3:2;
-  const avail=H-12-py0-PH*numBtns;
-  const gap=cl(Math.floor(avail/(numBtns+1)),5,18);
-  const y0=Math.min(py0+gap,H-12-PH);
+  const avail=H-_btmReserve-py0-PH*numBtns;
+  const gap=cl(Math.floor(avail/(numBtns+1)),4,16);
+  const _maxBtnY=H-_btmReserve-PH;
+  const y0=Math.min(py0+gap,_maxBtnY);
   playRect={x:(W-PW)/2,y:y0,w:PW,h:PH};
   if(hasSave){
-    const y1=Math.min(y0+PH+gap,H-12-PH*2);
+    const y1=Math.min(y0+PH+gap,_maxBtnY-PH);
     resumeRect={x:(W-PW)/2,y:y1,w:PW,h:PH};
-    const y2=Math.min(y1+PH+gap,H-12-PH);
+    const y2=Math.min(y1+PH+gap,_maxBtnY);
     _lbRect={x:(W-PW)/2,y:y2,w:PW,h:PH};
   }else{
     resumeRect=null;
-    const y1=Math.min(y0+PH+gap,H-12-PH);
+    const y1=Math.min(y0+PH+gap,_maxBtnY);
     _lbRect={x:(W-PW)/2,y:y1,w:PW,h:PH};
   }
 }

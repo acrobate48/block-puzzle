@@ -266,6 +266,8 @@ function onUp(e){
       if(typeof _addLandingFlash==='function'){const _lcols=new Set();piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)_lcols.add(gc+cc);}));_addLandingFlash([..._lcols],piece.color);}
       // Grid pulse wave from placement centroid
       if(typeof _triggerGridWave==='function'){const _gwx=GRID_X+(gc+piece.shape[0].length/2)*CELL,_gwy=GRID_Y+(gr+piece.shape.length/2)*CELL;_triggerGridWave(_gwx,_gwy);}}
+      // Ink stamp landing ring
+      if(typeof _triggerStampRing==='function'){const _srx=GRID_X+(gc+piece.shape[0].length/2)*CELL,_sry=GRID_Y+(gr+piece.shape.length/2)*CELL;_triggerStampRing(_srx,_sry,piece.color,CELL*(Math.max(piece.shape[0].length,piece.shape.length)*0.65+1.3));}
       tray[drag.idx]=null;placed++;
       // Fresh cell halos
       if(typeof _addFreshCell==='function')piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)_addFreshCell(gr+rr,gc+cc,piece.color);}));
@@ -390,6 +392,16 @@ function onUp(e){
           floats.push(new FloatText('💥 PERFECT CLEAR !',W/2,H*0.30,'#FFD700',2.4,260));
           floats.push(new FloatText(`+${pcPts} BONUS`,GRID_X+GW/2,GRID_Y+GH*0.4,'#FFF0A0',1.7,210));
           spawnParticles(Array.from({length:8},()=>({r:rndI(0,9),c:rndI(0,9)})),8,2.0,['#FFD700','#FFF0A0','#FF8040','#FF40D0','#40FFFF']);
+          // Elaborate fireworks — staggered corner bursts
+          const _pcCols=['#FFD700','#FF40D0','#40FFFF','#FF8040','#FFFFFF'];
+          [[0,0],[0,GW],[GH,0],[GH,GW],[GH/2,GW/2]].forEach(([ry,cx],fi)=>{
+            setTimeout(()=>{
+              const _fx=GRID_X+cx,_fy=GRID_Y+ry;
+              for(let _pi=0;_pi<24;_pi++){const _pa=_pi/24*Math.PI*2,_ps=rnd(4,10);particles.push({x:_fx,y:_fy,vx:Math.cos(_pa)*_ps,vy:Math.sin(_pa)*_ps-rnd(0,3),color:rndc(_pcCols),size:rnd(2,5),life:rnd(40,65),ml:65,circle:Math.random()>0.4});}
+              ripples.push({x:_fx,y:_fy,life:40,ml:40,maxR:Math.max(GW,GH)*0.75,color:_pcCols[fi%_pcCols.length]});
+            },fi*90);
+          });
+          if(typeof _triggerStampRing==='function')_triggerStampRing(GRID_X+GW/2,GRID_Y+GH/2,'#FFD700',Math.max(GW,GH)*0.8);
           sndClear4();
         }
         // ── Streak: consecutive line-clearing placements ──────────────────────

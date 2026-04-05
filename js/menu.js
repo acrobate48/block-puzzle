@@ -374,6 +374,17 @@ function drawPause(t){
   // Dark overlay
   ctx.save();
   ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillRect(0,0,W,H);
+  // Animated ambient orbs behind panel
+  ctx.save();
+  for(let oi=0;oi<5;oi++){
+    const ox=p.x+p.w*(0.1+oi*0.2+Math.sin(now*0.00055+oi*2.1)*0.12);
+    const oy=p.y+p.h*(0.15+oi*0.16+Math.cos(now*0.00042+oi*1.7)*0.12);
+    const or2=p.w*(0.08+oi*0.015);
+    const og=ctx.createRadialGradient(ox,oy,0,ox,oy,or2);
+    og.addColorStop(0,hexA(oi%2===0?th.tm:th.ta,0.12));og.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=og;ctx.fillRect(ox-or2,oy-or2,or2*2,or2*2);
+  }
+  ctx.restore();
   // Panel glass
   const pg=ctx.createLinearGradient(p.x,p.y,p.x,p.y+p.h);
   pg.addColorStop(0,hexA(th.gbg,0.97));pg.addColorStop(1,hexA(th.bg,0.95));
@@ -382,6 +393,10 @@ function drawPause(t){
   const ps=ctx.createLinearGradient(p.x,p.y,p.x,p.y+p.h*0.45);
   ps.addColorStop(0,'rgba(255,255,255,0.10)');ps.addColorStop(1,'rgba(255,255,255,0)');
   ctx.save();rp(ctx,p.x,p.y,p.w,p.h,20);ctx.clip();ctx.fillStyle=ps;ctx.fillRect(p.x,p.y,p.w,p.h*0.45);ctx.restore();
+  // Animated panel border (rotating gradient)
+  const _pbPulse=0.5+0.5*Math.abs(Math.sin(now*0.0025));
+  ctx.save();ctx.shadowColor=th.tm;ctx.shadowBlur=8*_pbPulse;
+  rp(ctx,p.x,p.y,p.w,p.h,20);ctx.strokeStyle=hexA(th.tm,0.35+0.25*_pbPulse);ctx.lineWidth=1.5+_pbPulse;ctx.stroke();ctx.restore();
   // Panel border
   rp(ctx,p.x,p.y,p.w,p.h,20);ctx.strokeStyle=hexA(th.sl,0.7);ctx.lineWidth=1.5;ctx.stroke();
   // Title

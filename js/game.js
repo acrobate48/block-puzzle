@@ -202,13 +202,14 @@ function _drawFloorEffect(t){
 // ─── 7. SCANLINES — NÉOPOLIS CRT ─────────────────────────────────────────────
 function _drawScanlines(){
   if(curTheme!==9||over)return;
-  ctx.save();ctx.globalAlpha=0.055;
+  const _nf=getNeonFlicker();
+  ctx.save();ctx.globalAlpha=0.055*_nf;
   for(let sy=0;sy<H;sy+=4){ctx.fillStyle='rgba(0,0,0,0.9)';ctx.fillRect(0,sy,W,2);}
   // Subtle horizontal sweep line
   const sweepY=(Date.now()*0.04)%H;
   const sg=ctx.createLinearGradient(0,sweepY-8,0,sweepY+8);
-  sg.addColorStop(0,'rgba(0,255,200,0)');sg.addColorStop(0.5,'rgba(0,255,200,0.06)');sg.addColorStop(1,'rgba(0,255,200,0)');
-  ctx.globalAlpha=1;ctx.fillStyle=sg;ctx.fillRect(0,sweepY-8,W,16);
+  sg.addColorStop(0,'rgba(0,255,200,0)');sg.addColorStop(0.5,`rgba(0,255,200,${(0.06*_nf).toFixed(3)})`);sg.addColorStop(1,'rgba(0,255,200,0)');
+  ctx.globalAlpha=_nf;ctx.fillStyle=sg;ctx.fillRect(0,sweepY-8,W,16);
   ctx.restore();
 }
 
@@ -577,6 +578,102 @@ function _drawLightnings(){
   ctx.shadowBlur=0;ctx.restore();
 }
 
+// ─── 25. ZAP ARCS BETWEEN POWER CELLS ────────────────────────────────────────
+function _drawPowerZaps(t){
+  if(!grid||over)return;
+  const now=t;
+  ctx.save();ctx.strokeStyle='rgba(255,230,0,0.35)';ctx.lineWidth=0.8;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(!(gridStars[r][c]||gridBonus[r][c]))continue;
+    // Check right and down neighbors
+    [[0,1],[1,0]].forEach(([dr,dc])=>{
+      const r2=r+dr,c2=c+dc;
+      if(r2>=ROWS||c2>=COLS)return;
+      if(!(gridStars[r2][c2]||gridBonus[r2][c2]))return;
+      const x1=GRID_X+(c+0.5)*CELL,y1=GRID_Y+(r+0.5)*CELL;
+      const x2=GRID_X+(c2+0.5)*CELL,y2=GRID_Y+(r2+0.5)*CELL;
+      // Zigzag spark
+      const pulse=Math.sin(now*0.015+r*11+c*7);
+      if(pulse<0.1)return; // sparse
+      const mx=lerp(x1,x2,0.5)+Math.sin(now*0.02+r*5+c*9)*CELL*0.2;
+      const my=lerp(y1,y2,0.5)+Math.cos(now*0.018+r*7+c*13)*CELL*0.2;
+      ctx.globalAlpha=(pulse-0.1)/0.9*0.55;
+      ctx.shadowColor='#FFD700';ctx.shadowBlur=5;
+      ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(mx,my);ctx.lineTo(x2,y2);ctx.stroke();
+    });
+  }
+  ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.restore();
+}
+
+// ─── 22. NEON FLICKER — NÉOPOLIS ─────────────────────────────────────────────
+let _neonFlicker=1.0,_neonFlickerT=0;
+function _updateNeonFlicker(t){
+  if(curTheme!==9)return;
+  // Occasional random flicker
+  if(Math.random()<0.004){_neonFlicker=0.3+Math.random()*0.5;_neonFlickerT=2+Math.random()*4;}
+  if(_neonFlickerT>0){_neonFlickerT--;if(_neonFlickerT<=0)_neonFlicker=1.0;}
+  else{_neonFlicker=Math.min(1.0,_neonFlicker+0.08);}
+}
+function getNeonFlicker(){return curTheme===9?_neonFlicker:1.0;}
+
+// ─── 23. LENSFLARE at 100K+ ──────────────────────────────────────────────────
+let _lensFlares=[]; // {x,y,born,col,size}
+function _maybeSpawnLensFlare(){
+  if(score<100000||over||Math.random()>0.003)return;
+  const th=THEMES[curTheme];
+  _lensFlares.push({x:rnd(W*0.1,W*0.9),y:rnd(0,H*0.25),born:Date.now(),col:th.hi||'#FFFFFF',size:rnd(30,80)});
+  if(_lensFlares.length>3)_lensFlares.shift();
+}
+function _drawLensFlares(){
+  if(!_lensFlares.length)return;
+  const now=Date.now();
+  ctx.save();
+  _lensFlares=_lensFlares.filter(lf=>{
+    const p=Math.min(1,(now-lf.born)/1200);if(p>=1)return false;
+    const a=(p<0.15?p/0.15:p>0.6?(1-p)/0.4:1)*0.55;
+    // Central bright disc
+    const rg=ctx.createRadialGradient(lf.x,lf.y,0,lf.x,lf.y,lf.size);
+    rg.addColorStop(0,`rgba(255,255,255,${a.toFixed(3)})`);
+    rg.addColorStop(0.2,hexA(lf.col,a*0.6));
+    rg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=rg;ctx.fillRect(lf.x-lf.size,lf.y-lf.size,lf.size*2,lf.size*2);
+    // Cross streaks
+    ctx.save();ctx.strokeStyle=`rgba(255,255,255,${(a*0.5).toFixed(3)})`;ctx.lineWidth=1;
+    ctx.shadowColor='#FFFFFF';ctx.shadowBlur=10;
+    for(let si=0;si<4;si++){const ang=si*Math.PI/4;const len=lf.size*(1.5+si*0.3);ctx.beginPath();ctx.moveTo(lf.x-Math.cos(ang)*len*0.1,lf.y-Math.sin(ang)*len*0.1);ctx.lineTo(lf.x+Math.cos(ang)*len,lf.y+Math.sin(ang)*len);ctx.stroke();}
+    // Small secondary flares along lens axis
+    const axis=Math.PI*0.4;
+    [0.4,0.7,1.1].forEach((d,di)=>{const fx=lf.x+Math.cos(axis)*lf.size*d*2,fy=lf.y+Math.sin(axis)*lf.size*d*2;const fr=lf.size*(0.12-di*0.03);if(fr<2)return;const fg2=ctx.createRadialGradient(fx,fy,0,fx,fy,fr);fg2.addColorStop(0,hexA(lf.col,a*0.45));fg2.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=fg2;ctx.fillRect(fx-fr,fy-fr,fr*2,fr*2);});
+    ctx.restore();
+    return true;
+  });
+  ctx.restore();
+}
+
+// ─── 24. SNOW ACCUMULATION — ARCTIQUE ────────────────────────────────────────
+let _snowAccum=Array(COLS).fill(0); // height of snow at bottom of each column
+function _updateSnowAccum(t){
+  if(curTheme!==5)return;
+  // Slowly grow, cap at CELL*0.4
+  if(Math.random()<0.015){const c=Math.floor(Math.random()*COLS);_snowAccum[c]=Math.min(CELL*0.4,_snowAccum[c]+0.5+Math.random()*1.5);}
+  // Slowly melt when grid is empty in that column
+  for(let c=0;c<COLS;c++){const colFull=grid.some(row=>row[c]);if(!colFull)_snowAccum[c]=Math.max(0,_snowAccum[c]-0.3);}
+}
+function _drawSnowAccum(){
+  if(curTheme!==5||over)return;
+  ctx.save();
+  for(let c=0;c<COLS;c++){
+    const h=_snowAccum[c];if(h<1)continue;
+    const x=GRID_X+c*CELL,y=GRID_Y+GH-h;
+    const sg=ctx.createLinearGradient(x,y,x,y+h);
+    sg.addColorStop(0,'rgba(220,240,255,0.85)');sg.addColorStop(1,'rgba(180,220,255,0.55)');
+    ctx.fillStyle=sg;
+    // Rounded snow pile
+    ctx.beginPath();ctx.moveTo(x,y+h);ctx.quadraticCurveTo(x+CELL*0.3,y,x+CELL/2,y);ctx.quadraticCurveTo(x+CELL*0.7,y,x+CELL,y+h);ctx.closePath();ctx.fill();
+  }
+  ctx.restore();
+}
+
 // ─── 8. PARALLAX OVERLAY LAYERS ──────────────────────────────────────────────
 function _drawParallax(t){
   const th=THEMES[curTheme];
@@ -641,6 +738,10 @@ function drawGame(t){
   _drawParallax(t);
   // God rays (Jungle, Désert, Plage)
   _spawnGodRay();_drawGodRays();
+  // Lensflare at 100K+
+  _maybeSpawnLensFlare();_drawLensFlares();
+  // Neon flicker update (Néopolis)
+  _updateNeonFlicker(t);
   drawFx(ctx,gameFx,t);
   _drawWeather(t);
   // ── DUST MOTES — lazy-initialized ambient floating particles ──────────────
@@ -746,16 +847,22 @@ function drawGame(t){
       ctx.fillStyle=hexA(th.sl,0.15);ctx.beginPath();ctx.arc(x+CELL/2,y+CELL/2,Math.max(1,CELL*0.055),0,Math.PI*2);ctx.fill();
     }
   }}
+  // Snow accumulation on Arctic grid bottom
+  _updateSnowAccum(t);
   // Ambient grid mist
   _drawGridMist(t);
   // Grid pulse wave from recent placements
   _drawGridWave(t);
+  // Power cell zap arcs (star ↔ X2 adjacent cells)
+  _drawPowerZaps(t);
   // Almost-clear row/col golden highlight
   _drawAlmostClear(t);
   // Persistent halos on freshly placed cells
   _drawFreshHalos();
   // Landing column flash (brief streak down columns of placed piece)
   _drawLandingFlashes();
+  // Snow accumulation display (Arctic theme)
+  _drawSnowAccum();
   // Floor glow effect below grid
   _drawFloorEffect(t);
   // Stress cracks on overcrowded grid

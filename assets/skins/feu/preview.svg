@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" width="100%" height="100%">
+  <defs>
+    <linearGradient id="f-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#800000"/>
+      <stop offset="100%" stop-color="#CC3000"/>
+    </linearGradient>
+    <linearGradient id="f-shine" x1="0%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color="#FF8020" stop-opacity="0.22"/>
+      <stop offset="45%" stop-color="#FF8020" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#FF8020" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="f-top" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8B0000"/>
+      <stop offset="40%" stop-color="#CC2200"/>
+      <stop offset="70%" stop-color="#FF5500"/>
+      <stop offset="100%" stop-color="#FF8820"/>
+    </linearGradient>
+    <linearGradient id="f-left" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#5A0000"/>
+      <stop offset="100%" stop-color="#881000"/>
+    </linearGradient>
+    <linearGradient id="f-right" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#AA2200"/>
+      <stop offset="100%" stop-color="#CC4000"/>
+    </linearGradient>
+    <!-- Texture lave -->
+    <filter id="f-lava" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="turbulence" baseFrequency="0.08" numOctaves="3" seed="2" result="noise"/>
+      <feColorMatrix type="matrix" values="1 0.2 0 0 0
+                                           0 0.1 0 0 0
+                                           0 0 0 0 0
+                                           0 0 0 0.8 0" in="noise" result="cn"/>
+      <feBlend in="SourceGraphic" in2="cn" mode="overlay" result="t"/>
+      <feComposite in="t" in2="SourceGraphic" operator="in"/>
+    </filter>
+    <!-- Glow orange-rouge -->
+    <filter id="f-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="f-shadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="2" dy="3" stdDeviation="5" flood-color="#FF4400" flood-opacity="0.65"/>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="200" height="140" rx="10" fill="url(#f-bg)"/>
+
+  <!-- Glow lava derrière le bloc -->
+  <ellipse cx="100" cy="65" rx="48" ry="26" fill="#FF4400" opacity="0.22" filter="url(#f-glow)"/>
+
+  <g filter="url(#f-shadow)">
+    <polygon points="100,30 127.7,46 100,62 72.3,46"
+             fill="url(#f-top)" filter="url(#f-lava)"
+             stroke="#FF4400" stroke-width="0.8"/>
+    <polygon points="72.3,46 100,62 100,78 72.3,62"
+             fill="url(#f-left)"
+             stroke="#660000" stroke-width="0.8"/>
+    <polygon points="127.7,46 100,62 100,78 127.7,62"
+             fill="url(#f-right)"
+             stroke="#AA2200" stroke-width="0.8"/>
+  </g>
+
+  <!-- Points incandescents sur top -->
+  <circle cx="90" cy="46" r="2.5" fill="#FFDD00" opacity="0.70" filter="url(#f-glow)"/>
+  <circle cx="108" cy="40" r="1.8" fill="#FFCC00" opacity="0.60" filter="url(#f-glow)"/>
+  <circle cx="100" cy="52" r="1.5" fill="#FFA020" opacity="0.55" filter="url(#f-glow)"/>
+  <!-- Veines lave -->
+  <path d="M 78,54 Q 88,44 100,48 Q 112,52 122,44"
+        stroke="#FF6600" stroke-width="0.9" fill="none" opacity="0.60"/>
+  <path d="M 82,48 Q 92,40 104,44"
+        stroke="#FF8820" stroke-width="0.6" fill="none" opacity="0.45"/>
+  <!-- Étincelles -->
+  <line x1="96" y1="28" x2="94" y2="24" stroke="#FFD040" stroke-width="0.8" opacity="0.7"/>
+  <line x1="104" y1="27" x2="106" y2="23" stroke="#FFE060" stroke-width="0.7" opacity="0.6"/>
+  <line x1="112" y1="42" x2="115" y2="38" stroke="#FFD040" stroke-width="0.6" opacity="0.5"/>
+  <!-- Arête supérieure incandescente -->
+  <line x1="72.3" y1="46" x2="100" y2="30" stroke="#FF8820" stroke-width="1.2" opacity="0.75"/>
+  <line x1="100" y1="30" x2="127.7" y2="46" stroke="#FF6600" stroke-width="1.0" opacity="0.6"/>
+
+  <rect x="0" y="0" width="200" height="140" rx="10" fill="url(#f-shine)"/>
+
+  <text x="100" y="115" font-family="Arial Black, Arial, sans-serif" font-weight="900"
+        font-size="14" text-anchor="middle" letter-spacing="2" fill="#FF8020"
+        paint-order="stroke" stroke="#400000" stroke-width="2">FEU</text>
+
+  <rect x="1" y="1" width="198" height="138" rx="9.5" fill="none"
+        stroke="#FF4400" stroke-width="1.5" opacity="0.75"/>
+</svg>

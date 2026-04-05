@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" width="100%" height="100%">
+  <defs>
+    <!-- Fond -->
+    <linearGradient id="p-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#808080"/>
+      <stop offset="100%" stop-color="#505050"/>
+    </linearGradient>
+    <!-- Brillance overlay -->
+    <linearGradient id="p-shine" x1="0%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Bloc top -->
+    <linearGradient id="p-top" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C8C8C8"/>
+      <stop offset="100%" stop-color="#888888"/>
+    </linearGradient>
+    <!-- Bloc left -->
+    <linearGradient id="p-left" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#606060"/>
+      <stop offset="100%" stop-color="#787878"/>
+    </linearGradient>
+    <!-- Bloc right -->
+    <linearGradient id="p-right" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#A0A0A0"/>
+      <stop offset="100%" stop-color="#888888"/>
+    </linearGradient>
+    <!-- Texture -->
+    <filter id="p-rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="7" result="noise"/>
+      <feColorMatrix type="saturate" values="0" in="noise" result="gn"/>
+      <feBlend in="SourceGraphic" in2="gn" mode="multiply" result="t"/>
+      <feComposite in="t" in2="SourceGraphic" operator="in"/>
+    </filter>
+    <!-- Shadow -->
+    <filter id="p-shadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-color="#181818" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Fond arrondi -->
+  <rect x="0" y="0" width="200" height="140" rx="10" fill="url(#p-bg)"/>
+
+  <!-- Bloc isométrique centré (cx=100, cy=62, s=32) -->
+  <!-- top: cx,cy-s  cx+s*0.866,cy-s*0.5  cx,cy  cx-s*0.866,cy-s*0.5 -->
+  <!-- s=32: s*0.866≈27.7  s*0.5=16  hauteur flanc=s*0.5=16 -->
+  <!-- top    : 100,30  127.7,46  100,62  72.3,46 -->
+  <!-- left   : 72.3,46  100,62  100,78  72.3,62 -->
+  <!-- right  : 127.7,46  100,62  100,78  127.7,62 -->
+  <g filter="url(#p-shadow)">
+    <polygon points="100,30 127.7,46 100,62 72.3,46"
+             fill="url(#p-top)" filter="url(#p-rough)"
+             stroke="#404040" stroke-width="0.8"/>
+    <polygon points="72.3,46 100,62 100,78 72.3,62"
+             fill="url(#p-left)"
+             stroke="#404040" stroke-width="0.8"/>
+    <polygon points="127.7,46 100,62 100,78 127.7,62"
+             fill="url(#p-right)"
+             stroke="#404040" stroke-width="0.8"/>
+  </g>
+
+  <!-- Veines légères -->
+  <line x1="82" y1="42" x2="96" y2="50" stroke="#909090" stroke-width="0.5" opacity="0.5"/>
+  <line x1="106" y1="36" x2="120" y2="52" stroke="#888888" stroke-width="0.4" opacity="0.4"/>
+
+  <!-- Brillance overlay diagonal -->
+  <rect x="0" y="0" width="200" height="140" rx="10" fill="url(#p-shine)"/>
+
+  <!-- Texte -->
+  <text x="100" y="115" font-family="Arial Black, Arial, sans-serif" font-weight="900"
+        font-size="14" text-anchor="middle" letter-spacing="2" fill="#FFFFFF"
+        paint-order="stroke" stroke="#303030" stroke-width="2">PIERRE</text>
+
+  <!-- Bordure -->
+  <rect x="1" y="1" width="198" height="138" rx="9.5" fill="none"
+        stroke="#A0A0A0" stroke-width="1.5" opacity="0.7"/>
+</svg>

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100" width="120" height="100">
+  <defs>
+    <!-- Gradient top face -->
+    <linearGradient id="pierre-top-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C8C8C8"/>
+      <stop offset="100%" stop-color="#888888"/>
+    </linearGradient>
+    <!-- Gradient left face -->
+    <linearGradient id="pierre-left-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#606060"/>
+      <stop offset="100%" stop-color="#787878"/>
+    </linearGradient>
+    <!-- Gradient right face -->
+    <linearGradient id="pierre-right-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#A0A0A0"/>
+      <stop offset="100%" stop-color="#888888"/>
+    </linearGradient>
+    <!-- Texture rugueuse top -->
+    <filter id="pierre-rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" seed="3" result="noise"/>
+      <feColorMatrix type="saturate" values="0" in="noise" result="grayNoise"/>
+      <feBlend in="SourceGraphic" in2="grayNoise" mode="multiply" result="textured"/>
+      <feComposite in="textured" in2="SourceGraphic" operator="in"/>
+    </filter>
+    <!-- Ombre portée -->
+    <filter id="pierre-shadow" x="-15%" y="-15%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="4" stdDeviation="3" flood-color="#202020" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#pierre-shadow)">
+    <!-- Top face -->
+    <polygon points="60,24 105.2,50 60,76 14.8,50"
+             fill="url(#pierre-top-grad)" filter="url(#pierre-rough)"
+             stroke="#404040" stroke-width="0.8"/>
+    <!-- Left face -->
+    <polygon points="14.8,50 60,76 60,102 14.8,76"
+             fill="url(#pierre-left-grad)"
+             stroke="#404040" stroke-width="0.8"/>
+    <!-- Right face -->
+    <polygon points="105.2,50 60,76 60,102 105.2,76"
+             fill="url(#pierre-right-grad)"
+             stroke="#404040" stroke-width="0.8"/>
+  </g>
+
+  <!-- Veines/craquelures légères sur top -->
+  <line x1="35" y1="44" x2="55" y2="54" stroke="#707070" stroke-width="0.5" opacity="0.5"/>
+  <line x1="68" y1="38" x2="90" y2="58" stroke="#686868" stroke-width="0.4" opacity="0.4"/>
+  <line x1="50" y1="62" x2="72" y2="68" stroke="#686868" stroke-width="0.4" opacity="0.4"/>
+</svg>

@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100" width="120" height="100">
+  <defs>
+    <!-- Fond très sombre top -->
+    <linearGradient id="neon-top-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#0C0A22"/>
+      <stop offset="100%" stop-color="#060418"/>
+    </linearGradient>
+    <!-- Point lumineux central -->
+    <radialGradient id="neon-center" cx="50%" cy="50%" r="45%">
+      <stop offset="0%"   stop-color="#00DDFF" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#00DDFF" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Left face sombre -->
+    <linearGradient id="neon-left-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#040310"/>
+      <stop offset="100%" stop-color="#060418"/>
+    </linearGradient>
+    <!-- Right face sombre -->
+    <linearGradient id="neon-right-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#080618"/>
+      <stop offset="100%" stop-color="#060416"/>
+    </linearGradient>
+    <!-- Glow néon cyan -->
+    <filter id="neon-glow-line" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- DropShadow cyan intense -->
+    <filter id="neon-shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#00CCFF" flood-opacity="0.7"/>
+    </filter>
+    <!-- Clip top -->
+    <clipPath id="neon-top-clip">
+      <polygon points="60,24 105.2,50 60,76 14.8,50"/>
+    </clipPath>
+    <!-- Clip left -->
+    <clipPath id="neon-left-clip">
+      <polygon points="14.8,50 60,76 60,102 14.8,76"/>
+    </clipPath>
+    <!-- Clip right -->
+    <clipPath id="neon-right-clip">
+      <polygon points="105.2,50 60,76 60,102 105.2,76"/>
+    </clipPath>
+  </defs>
+
+  <g filter="url(#neon-shadow)">
+    <!-- Top face très sombre -->
+    <polygon points="60,24 105.2,50 60,76 14.8,50"
+             fill="url(#neon-top-grad)"
+             stroke="#00DDFF" stroke-width="0.5"/>
+    <!-- Left face -->
+    <polygon points="14.8,50 60,76 60,102 14.8,76"
+             fill="url(#neon-left-grad)"
+             stroke="#8800FF" stroke-width="0.5"/>
+    <!-- Right face -->
+    <polygon points="105.2,50 60,76 60,102 105.2,76"
+             fill="url(#neon-right-grad)"
+             stroke="#00DDFF" stroke-width="0.5"/>
+  </g>
+
+  <!-- Point lumineux central top -->
+  <polygon points="60,24 105.2,50 60,76 14.8,50"
+           fill="url(#neon-center)"/>
+
+  <!-- Lignes néon sur les bords top (cyan) avec glow -->
+  <g filter="url(#neon-glow-line)">
+    <line x1="14.8" y1="50" x2="60" y2="24" stroke="#00DDFF" stroke-width="2" opacity="0.9"/>
+    <line x1="60"   y1="24" x2="105.2" y2="50" stroke="#00DDFF" stroke-width="2" opacity="0.9"/>
+    <line x1="14.8" y1="50" x2="60" y2="76" stroke="#00DDFF" stroke-width="1.5" opacity="0.7"/>
+    <line x1="105.2" y1="50" x2="60" y2="76" stroke="#00DDFF" stroke-width="1.5" opacity="0.7"/>
+    <!-- Néon violet sur left face -->
+    <line x1="14.8" y1="50" x2="14.8" y2="76" stroke="#8800FF" stroke-width="1.5" opacity="0.8"/>
+    <line x1="60"   y1="76" x2="60" y2="102" stroke="#8800FF" stroke-width="1.5" opacity="0.8"/>
+    <!-- Néon cyan right -->
+    <line x1="105.2" y1="50" x2="105.2" y2="76" stroke="#00DDFF" stroke-width="1.5" opacity="0.8"/>
+  </g>
+
+  <!-- Grille néon fine sur top -->
+  <g clip-path="url(#neon-top-clip)" opacity="0.25">
+    <line x1="14.8" y1="50" x2="105.2" y2="50" stroke="#00DDFF" stroke-width="0.5"/>
+    <line x1="60"   y1="24" x2="60"    y2="76"  stroke="#00DDFF" stroke-width="0.5"/>
+  </g>
+</svg>

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60">
+  <defs>
+    <linearGradient id="bg_choix" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#160828"/>
+      <stop offset="100%" stop-color="#2C1040"/>
+    </linearGradient>
+    <linearGradient id="icon_choix" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C080FF"/>
+      <stop offset="100%" stop-color="#6020C0"/>
+    </linearGradient>
+    <filter id="shadow_choix" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#8040FF" flood-opacity="0.5"/>
+    </filter>
+    <filter id="glow_choix">
+      <feDropShadow dx="0" dy="0" stdDeviation="2.5" flood-color="#8040FF" flood-opacity="0.9"/>
+    </filter>
+  </defs>
+
+  <!-- Badge pill background -->
+  <rect x="1" y="1" width="158" height="58" rx="28" ry="28"
+        fill="url(#bg_choix)"
+        stroke="#8040FF" stroke-width="1.5"
+        filter="url(#shadow_choix)"/>
+
+  <!-- Inner highlight border -->
+  <rect x="2.5" y="2.5" width="155" height="55" rx="27" ry="27"
+        fill="none" stroke="#8040FF" stroke-width="0.4" stroke-opacity="0.3"/>
+
+  <!-- 3 squares in triangle arrangement (choice icon) -->
+  <g transform="translate(30,30)" filter="url(#glow_choix)">
+    <!-- Top square -->
+    <rect x="-5" y="-14" width="10" height="10" rx="2"
+          fill="url(#icon_choix)" stroke="#8040FF" stroke-width="0.8"/>
+    <!-- Bottom-left square -->
+    <rect x="-14" y="-1" width="10" height="10" rx="2"
+          fill="url(#icon_choix)" stroke="#8040FF" stroke-width="0.8" fill-opacity="0.8"/>
+    <!-- Bottom-right square -->
+    <rect x="4" y="-1" width="10" height="10" rx="2"
+          fill="url(#icon_choix)" stroke="#8040FF" stroke-width="0.8" fill-opacity="0.8"/>
+    <!-- Connecting dots / arrows -->
+    <circle cx="-9" cy="-2" r="1.2" fill="#C080FF" fill-opacity="0.7"/>
+    <circle cx="9" cy="-2" r="1.2" fill="#C080FF" fill-opacity="0.7"/>
+    <circle cx="0" cy="-2" r="1.2" fill="#C080FF"/>
+  </g>
+
+  <!-- Separator line -->
+  <line x1="52" y1="12" x2="52" y2="48" stroke="#8040FF" stroke-width="0.6" stroke-opacity="0.4"/>
+
+  <!-- Mode name -->
+  <text x="88" y="27" text-anchor="middle"
+        font-family="'Arial Black', Arial, sans-serif" font-weight="900"
+        font-size="15" fill="#8040FF" letter-spacing="2">CHOIX</text>
+
+  <!-- Subtitle -->
+  <text x="88" y="41" text-anchor="middle"
+        font-family="Arial, sans-serif" font-weight="400"
+        font-size="9" fill="#8040FF" fill-opacity="0.7" letter-spacing="0.5">Pioche stratégique</text>
+
+  <!-- Light burst top-left -->
+  <ellipse cx="18" cy="11" rx="7" ry="4" fill="#8040FF" fill-opacity="0.18" transform="rotate(-30,18,11)"/>
+  <ellipse cx="18" cy="11" rx="3" ry="1.5" fill="#FFFFFF" fill-opacity="0.25" transform="rotate(-30,18,11)"/>
+</svg>

@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80" opacity="0.85">
+  <defs>
+    <linearGradient id="neo-circuit-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="100%" stop-color="#0097a7"/>
+    </linearGradient>
+    <linearGradient id="neo-bracket-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#18ffff"/>
+      <stop offset="50%" stop-color="#00e5ff"/>
+      <stop offset="100%" stop-color="#00acc1"/>
+    </linearGradient>
+    <filter id="neo-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#00e5ff" flood-opacity="0.5"/>
+    </filter>
+    <filter id="neo-glow-strong">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#18ffff" flood-opacity="0.9"/>
+    </filter>
+    <filter id="neo-glow-soft">
+      <feDropShadow dx="0" dy="0" stdDeviation="2.5" flood-color="#00e5ff" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Bracket "[" néon — barre verticale gauche -->
+  <rect x="4" y="4" width="5" height="72" rx="1.5"
+        fill="url(#neo-bracket-grad)" filter="url(#neo-glow-strong)"/>
+  <!-- Barre horizontale haut du bracket -->
+  <rect x="4" y="4" width="22" height="5" rx="1.5"
+        fill="url(#neo-bracket-grad)" filter="url(#neo-glow-strong)"/>
+  <!-- Barre horizontale bas du bracket -->
+  <rect x="4" y="71" width="22" height="5" rx="1.5"
+        fill="url(#neo-bracket-grad)" filter="url(#neo-glow-strong)"/>
+
+  <!-- Halo diffus du bracket -->
+  <rect x="2" y="2" width="28" height="76" rx="3" fill="none"
+        stroke="#00e5ff" stroke-width="0.5" opacity="0.25"/>
+
+  <!-- Lignes de circuit imprimé — réseau depuis le bracket -->
+  <g stroke="url(#neo-circuit-grad)" stroke-linecap="round" stroke-linejoin="round"
+     fill="none" filter="url(#neo-shadow)">
+
+    <!-- Ligne principale horizontale depuis la barre haute -->
+    <polyline points="26,10 40,10 40,20" stroke-width="1.8"/>
+    <!-- Dérivation 1 -->
+    <polyline points="40,10 58,10 58,22" stroke-width="1.5"/>
+    <!-- Dérivation 2 (vers droite) -->
+    <polyline points="58,10 72,10" stroke-width="1.3"/>
+
+    <!-- Ligne principale horizontale depuis mid -->
+    <polyline points="26,30 46,30 46,44 60,44" stroke-width="1.8"/>
+    <!-- Branche verticale descendante -->
+    <polyline points="46,30 46,22 58,22" stroke-width="1.3"/>
+    <!-- Branche vers la droite -->
+    <polyline points="60,44 72,44 72,56" stroke-width="1.5"/>
+
+    <!-- Ligne principale depuis la barre basse -->
+    <polyline points="26,68 46,68 46,56 62,56 62,68 72,68" stroke-width="1.8"/>
+    <!-- Branche diagonale (en L) -->
+    <polyline points="46,56 46,44" stroke-width="1"/>
+    <polyline points="62,56 62,44 72,44" stroke-width="1"/>
+
+    <!-- Connexion verticale droite -->
+    <line x1="72" y1="10" x2="72" y2="26" stroke-width="1.2"/>
+    <line x1="72" y1="38" x2="72" y2="44" stroke-width="1.2"/>
+  </g>
+
+  <!-- Noeuds de circuit (jonctions) — petits cercles pleins -->
+  <g fill="#18ffff" filter="url(#neo-glow-soft)">
+    <!-- Noeud haut horizontale -->
+    <circle cx="40" cy="10" r="2.5"/>
+    <circle cx="58" cy="10" r="2.5"/>
+    <circle cx="72" cy="10" r="2.5"/>
+    <!-- Noeud section mid -->
+    <circle cx="46" cy="30" r="2.5"/>
+    <circle cx="46" cy="22" r="2"/>
+    <circle cx="58" cy="22" r="2"/>
+    <circle cx="60" cy="44" r="2.5"/>
+    <circle cx="72" cy="44" r="2.5"/>
+    <circle cx="72" cy="56" r="2"/>
+    <!-- Noeud section bas -->
+    <circle cx="46" cy="68" r="2.5"/>
+    <circle cx="62" cy="56" r="2.5"/>
+    <circle cx="62" cy="68" r="2"/>
+    <circle cx="72" cy="68" r="2.5"/>
+  </g>
+
+  <!-- Petites pastilles CMS (composants) -->
+  <g filter="url(#neo-shadow)">
+    <!-- Composant 1 (rectangle) -->
+    <rect x="54" y="26" width="10" height="6" rx="1"
+          fill="#00acc1" stroke="#18ffff" stroke-width="0.8"/>
+    <line x1="56" y1="26" x2="56" y2="24" stroke="#00e5ff" stroke-width="0.8"/>
+    <line x1="60" y1="26" x2="60" y2="24" stroke="#00e5ff" stroke-width="0.8"/>
+    <line x1="56" y1="32" x2="56" y2="34" stroke="#00e5ff" stroke-width="0.8"/>
+    <line x1="60" y1="32" x2="60" y2="34" stroke="#00e5ff" stroke-width="0.8"/>
+
+    <!-- Composant 2 (carré) -->
+    <rect x="66" y="28" width="8" height="8" rx="1"
+          fill="#006064" stroke="#18ffff" stroke-width="0.8"/>
+    <line x1="68" y1="28" x2="68" y2="26" stroke="#00e5ff" stroke-width="0.8"/>
+    <line x1="72" y1="28" x2="72" y2="26" stroke="#00e5ff" stroke-width="0.8"/>
+  </g>
+
+  <!-- Lignes de scan (effet CRT léger) -->
+  <g stroke="#00e5ff" stroke-width="0.3" opacity="0.12">
+    <line x1="30" y1="0" x2="30" y2="80"/>
+    <line x1="0" y1="35" x2="80" y2="35"/>
+  </g>
+</svg>

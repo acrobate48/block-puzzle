@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 20" width="100%" height="20" opacity="0.90">
+  <defs>
+    <filter id="nglow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="#8855ff" flood-opacity="0.7"/>
+    </filter>
+    <filter id="starglow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="0" stdDeviation="1" flood-color="#ccaaff" flood-opacity="0.9"/>
+    </filter>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d0025"/>
+      <stop offset="100%" stop-color="#1a004a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Night sky background -->
+  <rect x="0" y="0" width="400" height="20" fill="url(#sky)"/>
+
+  <!-- Skyline: rectangles of varying height (buildings) -->
+  <!-- Ground line at y=18 -->
+  <rect x="0"   y="10" width="12" height="10" fill="#1e0050" stroke="#4400aa" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="14"  y="6"  width="18" height="14" fill="#1a0040" stroke="#3300cc" stroke-width="0.4" filter="url(#nglow)"/>
+  <!-- window dots on tall building -->
+  <rect x="16"  y="8"  width="2" height="2" fill="#ffffaa" opacity="0.7"/>
+  <rect x="20"  y="8"  width="2" height="2" fill="#ffffaa" opacity="0.5"/>
+  <rect x="16"  y="12" width="2" height="2" fill="#ffffaa" opacity="0.6"/>
+
+  <rect x="34"  y="13" width="10" height="7"  fill="#200055" stroke="#4400aa" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="46"  y="8"  width="14" height="12" fill="#1c0048" stroke="#3300cc" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="48"  y="10" width="2"  height="2"  fill="#aaddff" opacity="0.65"/>
+  <rect x="52"  y="10" width="2"  height="2"  fill="#aaddff" opacity="0.5"/>
+
+  <rect x="62"  y="11" width="8"  height="9"  fill="#1e0050" stroke="#4400aa" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="72"  y="5"  width="20" height="15" fill="#1a0040" stroke="#3300cc" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="74"  y="7"  width="2"  height="2"  fill="#ffffaa" opacity="0.7"/>
+  <rect x="78"  y="7"  width="2"  height="2"  fill="#ffffaa" opacity="0.55"/>
+  <rect x="82"  y="7"  width="2"  height="2"  fill="#ffffaa" opacity="0.6"/>
+  <rect x="74"  y="11" width="2"  height="2"  fill="#ffffaa" opacity="0.45"/>
+
+  <rect x="94"  y="12" width="12" height="8"  fill="#200055" stroke="#4400aa" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="108" y="7"  width="16" height="13" fill="#1c0048" stroke="#3300cc" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="110" y="9"  width="2"  height="2"  fill="#aaddff" opacity="0.6"/>
+  <rect x="114" y="9"  width="2"  height="2"  fill="#aaddff" opacity="0.5"/>
+
+  <rect x="126" y="10" width="10" height="10" fill="#1e0050" stroke="#4400aa" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="138" y="6"  width="18" height="14" fill="#1a0040" stroke="#3300cc" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="140" y="8"  width="2"  height="2"  fill="#ffffaa" opacity="0.65"/>
+  <rect x="144" y="8"  width="2"  height="2"  fill="#ffffaa" opacity="0.5"/>
+
+  <rect x="158" y="13" width="10" height="7"  fill="#200055" stroke="#4400aa" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="170" y="8"  width="14" height="12" fill="#1c0048" stroke="#3300cc" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="172" y="10" width="2"  height="2"  fill="#aaddff" opacity="0.6"/>
+
+  <rect x="186" y="11" width="8"  height="9"  fill="#1e0050" stroke="#4400aa" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="196" y="5"  width="20" height="15" fill="#1a0040" stroke="#3300cc" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="198" y="7"  width="2"  height="2"  fill="#ffffaa" opacity="0.7"/>
+  <rect x="202" y="7"  width="2"  height="2"  fill="#ffffaa" opacity="0.5"/>
+  <rect x="206" y="7"  width="2"  height="2"  fill="#ffffaa" opacity="0.6"/>
+
+  <rect x="218" y="12" width="12" height="8"  fill="#200055" stroke="#4400aa" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="232" y="7"  width="16" height="13" fill="#1c0048" stroke="#3300cc" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="234" y="9"  width="2"  height="2"  fill="#aaddff" opacity="0.6"/>
+  <rect x="238" y="9"  width="2"  height="2"  fill="#aaddff" opacity="0.5"/>
+
+  <rect x="250" y="10" width="10" height="10" fill="#1e0050" stroke="#4400aa" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="262" y="6"  width="18" height="14" fill="#1a0040" stroke="#3300cc" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="264" y="8"  width="2"  height="2"  fill="#ffffaa" opacity="0.65"/>
+  <rect x="268" y="8"  width="2"  height="2"  fill="#ffffaa" opacity="0.5"/>
+
+  <rect x="282" y="13" width="10" height="7"  fill="#200055" stroke="#4400aa" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="294" y="8"  width="14" height="12" fill="#1c0048" stroke="#3300cc" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="296" y="10" width="2"  height="2"  fill="#aaddff" opacity="0.6"/>
+
+  <rect x="310" y="11" width="8"  height="9"  fill="#1e0050" stroke="#4400aa" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="320" y="5"  width="20" height="15" fill="#1a0040" stroke="#3300cc" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="322" y="7"  width="2"  height="2"  fill="#ffffaa" opacity="0.7"/>
+  <rect x="326" y="7"  width="2"  height="2"  fill="#ffffaa" opacity="0.5"/>
+  <rect x="330" y="7"  width="2"  height="2"  fill="#ffffaa" opacity="0.6"/>
+
+  <rect x="342" y="12" width="12" height="8"  fill="#200055" stroke="#4400aa" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="356" y="7"  width="16" height="13" fill="#1c0048" stroke="#3300cc" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="358" y="9"  width="2"  height="2"  fill="#aaddff" opacity="0.6"/>
+  <rect x="362" y="9"  width="2"  height="2"  fill="#aaddff" opacity="0.5"/>
+
+  <rect x="374" y="10" width="10" height="10" fill="#1e0050" stroke="#4400aa" stroke-width="0.4" filter="url(#nglow)"/>
+  <rect x="386" y="8"  width="14" height="12" fill="#1c0048" stroke="#3300cc" stroke-width="0.4" filter="url(#nglow)"/>
+
+  <!-- Stars between/above buildings -->
+  <circle cx="10"  cy="3" r="0.8" fill="#ffffff" filter="url(#starglow)"/>
+  <circle cx="42"  cy="2" r="0.6" fill="#ddccff" filter="url(#starglow)"/>
+  <circle cx="68"  cy="3" r="0.9" fill="#ffffff" filter="url(#starglow)"/>
+  <circle cx="100" cy="2" r="0.7" fill="#ccaaff" filter="url(#starglow)"/>
+  <circle cx="130" cy="3" r="0.8" fill="#ffffff" filter="url(#starglow)"/>
+  <circle cx="162" cy="2" r="0.6" fill="#ddccff" filter="url(#starglow)"/>
+  <circle cx="190" cy="3" r="0.9" fill="#ffffff" filter="url(#starglow)"/>
+  <circle cx="224" cy="2" r="0.7" fill="#ccaaff" filter="url(#starglow)"/>
+  <circle cx="254" cy="3" r="0.8" fill="#ffffff" filter="url(#starglow)"/>
+  <circle cx="288" cy="2" r="0.6" fill="#ddccff" filter="url(#starglow)"/>
+  <circle cx="316" cy="3" r="0.9" fill="#ffffff" filter="url(#starglow)"/>
+  <circle cx="350" cy="2" r="0.7" fill="#ccaaff" filter="url(#starglow)"/>
+  <circle cx="380" cy="3" r="0.8" fill="#ffffff" filter="url(#starglow)"/>
+</svg>

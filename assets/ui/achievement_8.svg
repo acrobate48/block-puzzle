@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <defs>
+    <radialGradient id="bg8" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1a0830"/>
+      <stop offset="100%" stop-color="#0a0318"/>
+    </radialGradient>
+    <radialGradient id="crown8" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#FFF8A0"/>
+      <stop offset="50%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#A07000"/>
+    </radialGradient>
+    <radialGradient id="halo8" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#8040FF" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#8040FF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow8" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#8040FF" flood-opacity="0.7"/>
+    </filter>
+    <filter id="crownglow8">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#FFD700" flood-opacity="0.8"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#FFD700" flood-opacity="0.3"/>
+    </filter>
+    <filter id="textglow8">
+      <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#FFD700" flood-opacity="0.9"/>
+    </filter>
+  </defs>
+  <!-- Hexagonal background -->
+  <polygon points="40,4 73,22 73,58 40,76 7,58 7,22" fill="url(#bg8)" filter="url(#shadow8)"/>
+  <!-- Purple halo -->
+  <circle cx="40" cy="34" r="28" fill="url(#halo8)"/>
+  <!-- Stars background -->
+  <circle cx="20" cy="18" r="1" fill="#CC80FF" opacity="0.7"/>
+  <circle cx="62" cy="15" r="1.2" fill="#CC80FF" opacity="0.6"/>
+  <circle cx="68" cy="32" r="0.8" fill="#FFFFFF" opacity="0.5"/>
+  <circle cx="14" cy="42" r="0.8" fill="#CC80FF" opacity="0.5"/>
+  <circle cx="65" cy="50" r="1" fill="#FFFFFF" opacity="0.4"/>
+  <circle cx="25" cy="56" r="0.8" fill="#CC80FF" opacity="0.4"/>
+  <!-- Crown shape -->
+  <!-- Crown base band -->
+  <rect x="22" y="44" width="36" height="8" rx="1.5" fill="url(#crown8)" filter="url(#crownglow8)"/>
+  <!-- Crown teeth -->
+  <!-- Left tooth -->
+  <polygon points="22,44 26,28 30,44" fill="url(#crown8)" filter="url(#crownglow8)"/>
+  <!-- Center tooth (tallest) -->
+  <polygon points="33,44 40,20 47,44" fill="url(#crown8)" filter="url(#crownglow8)"/>
+  <!-- Right tooth -->
+  <polygon points="50,44 54,28 58,44" fill="url(#crown8)" filter="url(#crownglow8)"/>
+  <!-- Crown gems -->
+  <circle cx="28" cy="38" r="2.5" fill="#FF4080"/>
+  <circle cx="40" cy="32" r="3" fill="#4080FF"/>
+  <circle cx="52" cy="38" r="2.5" fill="#40C060"/>
+  <!-- Gem highlights -->
+  <circle cx="27.2" cy="37.2" r="0.8" fill="white" opacity="0.7"/>
+  <circle cx="39.2" cy="31.2" r="1" fill="white" opacity="0.7"/>
+  <circle cx="51.2" cy="37.2" r="0.8" fill="white" opacity="0.7"/>
+  <!-- Crown base highlight -->
+  <rect x="22" y="44" width="36" height="2" rx="1" fill="#FFFAAA" opacity="0.4"/>
+  <!-- 100K score text -->
+  <text x="40" y="62" font-family="Arial Black, Arial, sans-serif" font-size="10" font-weight="900" fill="#FFD700" text-anchor="middle" filter="url(#textglow8)">100K</text>
+  <!-- Label -->
+  <text x="40" y="72.5" font-family="Arial, sans-serif" font-size="6" font-weight="bold" fill="#CC80FF" text-anchor="middle" letter-spacing="0.5">SCORE 100K</text>
+  <!-- Hex border -->
+  <polygon points="40,4 73,22 73,58 40,76 7,58 7,22" fill="none" stroke="#8040FF" stroke-width="1.5" opacity="0.9"/>
+  <polygon points="40,5.5 71.5,23 71.5,57 40,74.5 8.5,57 8.5,23" fill="none" stroke="#CC80FF" stroke-width="0.5" opacity="0.4"/>
+</svg>

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100" width="120" height="100">
+  <defs>
+    <!-- Radial gradient lave/feu top -->
+    <radialGradient id="feu-top-grad" cx="50%" cy="45%" r="55%">
+      <stop offset="0%"   stop-color="#FF9030"/>
+      <stop offset="45%"  stop-color="#FF2800"/>
+      <stop offset="100%" stop-color="#280600"/>
+    </radialGradient>
+    <!-- Texture lave -->
+    <filter id="feu-lava" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="turbulence" baseFrequency="0.08 0.06" numOctaves="4" seed="17" result="lava"/>
+      <feColorMatrix type="matrix"
+        values="1   0.3 0 0 0
+                0.2 0   0 0 0
+                0   0   0 0 0
+                0   0   0 3 -1"
+        in="lava" result="lavaColor"/>
+      <feBlend in="SourceGraphic" in2="lavaColor" mode="hard-light" result="blended"/>
+      <feComposite in="blended" in2="SourceGraphic" operator="in"/>
+    </filter>
+    <!-- Left face -->
+    <linearGradient id="feu-left-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#600000"/>
+      <stop offset="100%" stop-color="#800000"/>
+    </linearGradient>
+    <!-- Right face -->
+    <linearGradient id="feu-right-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#CC3000"/>
+      <stop offset="100%" stop-color="#A02000"/>
+    </linearGradient>
+    <!-- Halo feu rouge-orange intense -->
+    <filter id="feu-glow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#FF4400" flood-opacity="0.8"/>
+    </filter>
+    <!-- Clip top -->
+    <clipPath id="feu-top-clip">
+      <polygon points="60,24 105.2,50 60,76 14.8,50"/>
+    </clipPath>
+  </defs>
+
+  <g filter="url(#feu-glow)">
+    <!-- Top face lave -->
+    <polygon points="60,24 105.2,50 60,76 14.8,50"
+             fill="url(#feu-top-grad)" filter="url(#feu-lava)"
+             stroke="#FF4400" stroke-width="0.8"/>
+    <!-- Left face -->
+    <polygon points="14.8,50 60,76 60,102 14.8,76"
+             fill="url(#feu-left-grad)"
+             stroke="#AA2200" stroke-width="0.8"/>
+    <!-- Right face -->
+    <polygon points="105.2,50 60,76 60,102 105.2,76"
+             fill="url(#feu-right-grad)"
+             stroke="#AA2200" stroke-width="0.8"/>
+  </g>
+
+  <!-- Points lumineux de lave sur top -->
+  <g clip-path="url(#feu-top-clip)">
+    <circle cx="48" cy="42" r="3" fill="#FF8820" opacity="0.7"/>
+    <circle cx="72" cy="48" r="2" fill="#FFAA30" opacity="0.6"/>
+    <circle cx="60" cy="58" r="2.5" fill="#FF6600" opacity="0.65"/>
+    <circle cx="38" cy="54" r="1.5" fill="#FF5500" opacity="0.5"/>
+    <circle cx="84" cy="56" r="2" fill="#FF7720" opacity="0.55"/>
+  </g>
+
+  <!-- Bords en braise -->
+  <line x1="14.8" y1="50" x2="60" y2="24" stroke="#FF6600" stroke-width="1.2" opacity="0.7"/>
+  <line x1="60"   y1="24" x2="105.2" y2="50" stroke="#FF6600" stroke-width="1.2" opacity="0.7"/>
+</svg>

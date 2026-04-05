@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 20" width="100%" height="20" opacity="0.90">
+  <defs>
+    <filter id="mglow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="1.8" flood-color="#00ff88" flood-opacity="0.7"/>
+    </filter>
+    <filter id="sparkglow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="0" stdDeviation="1.2" flood-color="#ffd700" flood-opacity="0.9"/>
+    </filter>
+    <linearGradient id="mgnd" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#004422"/>
+      <stop offset="100%" stop-color="#001a0d"/>
+    </linearGradient>
+
+    <!-- Red mushroom cap -->
+    <g id="mushR">
+      <ellipse cx="0" cy="0" rx="6" ry="4" fill="#cc2200" stroke="#ff4422" stroke-width="0.5" filter="url(#mglow)"/>
+      <!-- white dots on cap -->
+      <circle cx="-2" cy="-1" r="1" fill="#ffffff" opacity="0.85"/>
+      <circle cx="2"  cy="-1" r="1" fill="#ffffff" opacity="0.85"/>
+      <circle cx="0"  cy="1"  r="0.7" fill="#ffffff" opacity="0.75"/>
+      <!-- stem -->
+      <rect x="-2.5" y="4" width="5" height="5" rx="1" fill="#ffe0cc" stroke="#cc9966" stroke-width="0.4"/>
+    </g>
+    <!-- Orange mushroom cap -->
+    <g id="mushO">
+      <ellipse cx="0" cy="0" rx="5" ry="3.5" fill="#e06600" stroke="#ffaa00" stroke-width="0.5" filter="url(#mglow)"/>
+      <circle cx="-1.5" cy="-0.5" r="0.8" fill="#ffffff" opacity="0.8"/>
+      <circle cx="1.5"  cy="-0.5" r="0.8" fill="#ffffff" opacity="0.8"/>
+      <rect x="-2" y="3.5" width="4" height="4.5" rx="1" fill="#ffe0cc" stroke="#cc9966" stroke-width="0.4"/>
+    </g>
+    <!-- Purple mushroom cap -->
+    <g id="mushP">
+      <ellipse cx="0" cy="0" rx="6.5" ry="4.5" fill="#7700cc" stroke="#bb44ff" stroke-width="0.5" filter="url(#mglow)"/>
+      <circle cx="-2.5" cy="-1" r="1.1" fill="#ffffff" opacity="0.8"/>
+      <circle cx="2.5"  cy="-1" r="1.1" fill="#ffffff" opacity="0.8"/>
+      <circle cx="0"    cy="1"  r="0.8" fill="#ffffff" opacity="0.7"/>
+      <rect x="-2.5" y="4.5" width="5" height="5" rx="1" fill="#ffe0cc" stroke="#cc9966" stroke-width="0.4"/>
+    </g>
+    <!-- Magic sparkle: 4-point star -->
+    <g id="spark">
+      <line x1="0" y1="-3" x2="0" y2="3"  stroke="#ffd700" stroke-width="1"   stroke-linecap="round" filter="url(#sparkglow)"/>
+      <line x1="-3" y1="0" x2="3" y2="0"  stroke="#ffd700" stroke-width="1"   stroke-linecap="round" filter="url(#sparkglow)"/>
+      <line x1="-2" y1="-2" x2="2" y2="2" stroke="#ffd700" stroke-width="0.5" stroke-linecap="round" filter="url(#sparkglow)"/>
+      <line x1="2"  y1="-2" x2="-2" y2="2" stroke="#ffd700" stroke-width="0.5" stroke-linecap="round" filter="url(#sparkglow)"/>
+    </g>
+  </defs>
+
+  <!-- Magical ground -->
+  <rect x="0" y="0" width="400" height="20" fill="url(#mgnd)"/>
+  <!-- Glowing ground line -->
+  <rect x="0" y="17" width="400" height="3" fill="#003318" opacity="0.8"/>
+  <line x1="0" y1="17" x2="400" y2="17" stroke="#00ff88" stroke-width="0.6" opacity="0.5" filter="url(#mglow)"/>
+
+  <!-- Repeating mushroom pattern: R O P R O P ... every ~37px, 11 mushrooms -->
+  <use href="#mushR" transform="translate(12,13)"/>
+  <use href="#mushO" transform="translate(37,13.5)"/>
+  <use href="#mushP" transform="translate(64,13)"/>
+  <use href="#mushR" transform="translate(91,13)"/>
+  <use href="#mushO" transform="translate(116,13.5)"/>
+  <use href="#mushP" transform="translate(143,13)"/>
+  <use href="#mushR" transform="translate(170,13)"/>
+  <use href="#mushO" transform="translate(195,13.5)"/>
+  <use href="#mushP" transform="translate(222,13)"/>
+  <use href="#mushR" transform="translate(249,13)"/>
+  <use href="#mushO" transform="translate(274,13.5)"/>
+  <use href="#mushP" transform="translate(301,13)"/>
+  <use href="#mushR" transform="translate(328,13)"/>
+  <use href="#mushO" transform="translate(353,13.5)"/>
+  <use href="#mushP" transform="translate(380,13)"/>
+
+  <!-- Magic sparkles between mushrooms -->
+  <use href="#spark" transform="translate(25,7)"/>
+  <use href="#spark" transform="translate(51,5)"/>
+  <use href="#spark" transform="translate(78,6)"/>
+  <use href="#spark" transform="translate(104,5)"/>
+  <use href="#spark" transform="translate(130,7)"/>
+  <use href="#spark" transform="translate(157,5)"/>
+  <use href="#spark" transform="translate(183,6)"/>
+  <use href="#spark" transform="translate(209,5)"/>
+  <use href="#spark" transform="translate(236,7)"/>
+  <use href="#spark" transform="translate(262,5)"/>
+  <use href="#spark" transform="translate(288,6)"/>
+  <use href="#spark" transform="translate(315,5)"/>
+  <use href="#spark" transform="translate(341,7)"/>
+  <use href="#spark" transform="translate(367,5)"/>
+  <use href="#spark" transform="translate(393,6)"/>
+</svg>

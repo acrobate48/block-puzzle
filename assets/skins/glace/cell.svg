@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100" width="120" height="100">
+  <defs>
+    <!-- Gradient top bleu pâle -->
+    <linearGradient id="glace-top-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#C8F0F8"/>
+      <stop offset="60%"  stop-color="#88C8E4"/>
+      <stop offset="100%" stop-color="#5098C8"/>
+    </linearGradient>
+    <!-- Reflet interne -->
+    <radialGradient id="glace-inner" cx="40%" cy="35%" r="45%">
+      <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.5"/>
+      <stop offset="70%"  stop-color="#FFFFFF" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Left face -->
+    <linearGradient id="glace-left-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#185878"/>
+      <stop offset="100%" stop-color="#2870A0"/>
+    </linearGradient>
+    <!-- Right face -->
+    <linearGradient id="glace-right-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#5098C8"/>
+      <stop offset="100%" stop-color="#3878A8"/>
+    </linearGradient>
+    <!-- Flou + glow bleu -->
+    <filter id="glace-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#60C0F0" flood-opacity="0.6"/>
+    </filter>
+    <!-- Clip top -->
+    <clipPath id="glace-top-clip">
+      <polygon points="60,24 105.2,50 60,76 14.8,50"/>
+    </clipPath>
+  </defs>
+
+  <g filter="url(#glace-glow)">
+    <!-- Top face glace translucide -->
+    <polygon points="60,24 105.2,50 60,76 14.8,50"
+             fill="url(#glace-top-grad)" opacity="0.78"
+             stroke="#A0DCF0" stroke-width="0.8"/>
+    <!-- Left face -->
+    <polygon points="14.8,50 60,76 60,102 14.8,76"
+             fill="url(#glace-left-grad)" opacity="0.85"
+             stroke="#80C0E0" stroke-width="0.8"/>
+    <!-- Right face -->
+    <polygon points="105.2,50 60,76 60,102 105.2,76"
+             fill="url(#glace-right-grad)" opacity="0.88"
+             stroke="#80C0E0" stroke-width="0.8"/>
+  </g>
+
+  <!-- Reflet interne -->
+  <polygon points="60,24 105.2,50 60,76 14.8,50"
+           fill="url(#glace-inner)"/>
+
+  <!-- Craquelures légères sur top -->
+  <g clip-path="url(#glace-top-clip)" opacity="0.6">
+    <line x1="50" y1="35" x2="58" y2="50" stroke="#FFFFFF" stroke-width="0.6"/>
+    <line x1="58" y1="50" x2="48" y2="62" stroke="#FFFFFF" stroke-width="0.5"/>
+    <line x1="72" y1="40" x2="80" y2="55" stroke="#C8ECFF" stroke-width="0.5"/>
+    <line x1="38" y1="52" x2="50" y2="58" stroke="#FFFFFF" stroke-width="0.4"/>
+  </g>
+
+  <!-- Bords glow bleu -->
+  <line x1="14.8" y1="50" x2="60" y2="24" stroke="#90D8FF" stroke-width="1.4" opacity="0.8"/>
+  <line x1="60"   y1="24" x2="105.2" y2="50" stroke="#90D8FF" stroke-width="1.4" opacity="0.8"/>
+  <line x1="14.8" y1="50" x2="14.8" y2="76" stroke="#70B8E0" stroke-width="1" opacity="0.6"/>
+  <line x1="105.2" y1="50" x2="105.2" y2="76" stroke="#70B8E0" stroke-width="1" opacity="0.6"/>
+</svg>

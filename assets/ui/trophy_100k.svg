@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="100" height="120">
+  <defs>
+    <!-- Legendary violet-to-gold cup gradient -->
+    <linearGradient id="cupGrad100k" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#C060F0"/>
+      <stop offset="25%"  stop-color="#9030D0"/>
+      <stop offset="55%"  stop-color="#6010A0"/>
+      <stop offset="80%"  stop-color="#A06000"/>
+      <stop offset="100%" stop-color="#FFD700"/>
+    </linearGradient>
+    <!-- Alternate cup gradient (lighter side for left face) -->
+    <linearGradient id="cupGradAlt100k" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#E080FF"/>
+      <stop offset="40%"  stop-color="#8020C0"/>
+      <stop offset="100%" stop-color="#FFD700"/>
+    </linearGradient>
+    <!-- Pedestal gradient -->
+    <linearGradient id="pedGrad100k" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#8020C0"/>
+      <stop offset="40%"  stop-color="#500090"/>
+      <stop offset="100%" stop-color="#200040"/>
+    </linearGradient>
+    <!-- Stem gradient -->
+    <linearGradient id="stemGrad100k" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#500090"/>
+      <stop offset="30%"  stop-color="#FFD700"/>
+      <stop offset="70%"  stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#500090"/>
+    </linearGradient>
+    <!-- Rim gradient -->
+    <linearGradient id="rimGrad100k" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#E0A0FF"/>
+      <stop offset="50%"  stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#9030D0"/>
+    </linearGradient>
+    <!-- "100K" chrome gradient -->
+    <linearGradient id="chromeTxt" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="white"/>
+      <stop offset="30%"  stop-color="#FFD700"/>
+      <stop offset="60%"  stop-color="white"/>
+      <stop offset="100%" stop-color="#FFD700"/>
+    </linearGradient>
+    <!-- Violet glow radial halo -->
+    <radialGradient id="haloViolet" cx="50%" cy="46%" r="50%">
+      <stop offset="0%"   stop-color="#A040E0" stop-opacity="0.50"/>
+      <stop offset="45%"  stop-color="#6010A0" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#6010A0" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Gold outer ring halo -->
+    <radialGradient id="haloGold" cx="50%" cy="46%" r="50%">
+      <stop offset="60%"  stop-color="#FFD700" stop-opacity="0"/>
+      <stop offset="85%"  stop-color="#FFD700" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FFD700" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Laurel leaf gradient -->
+    <linearGradient id="laurelGrad100k" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#70D040"/>
+      <stop offset="100%" stop-color="#106800"/>
+    </linearGradient>
+    <!-- Laurel leaf gradient gold tipped -->
+    <linearGradient id="laurelGrad100kB" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#FFD700"/>
+      <stop offset="50%"  stop-color="#50A820"/>
+      <stop offset="100%" stop-color="#106800"/>
+    </linearGradient>
+
+    <!-- Double drop shadow: violet layer -->
+    <filter id="shadowViolet" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#8020C0" flood-opacity="0.85"/>
+    </filter>
+    <!-- Double drop shadow: gold layer -->
+    <filter id="shadowGold100k" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#FFD700" flood-opacity="0.75"/>
+    </filter>
+    <!-- Combined double glow -->
+    <filter id="doubleGlow" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#8020C0" flood-opacity="0.7" result="violet"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#FFD700" flood-opacity="0.6"/>
+    </filter>
+    <!-- Gem glow bright -->
+    <filter id="gemGlow100k" x="-80%" y="-80%" width="260%" height="260%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2.5" flood-color="white" flood-opacity="0.9"/>
+    </filter>
+    <!-- Star crown glow -->
+    <filter id="crownGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2.5" flood-color="#FFD700" flood-opacity="1.0"/>
+    </filter>
+    <!-- Text glow -->
+    <filter id="txtGlow100k" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#FFD700" flood-opacity="0.9"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#A040E0" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Double halo background (violet inner + gold outer ring) -->
+  <ellipse cx="50" cy="54" rx="50" ry="56" fill="url(#haloGold)"/>
+  <ellipse cx="50" cy="54" rx="44" ry="50" fill="url(#haloViolet)"/>
+
+  <!-- Pedestal (widest, with engraved text) -->
+  <rect x="14" y="98" width="72" height="17" rx="5" ry="5"
+        fill="url(#pedGrad100k)" filter="url(#shadowViolet)"/>
+  <!-- Pedestal gold border lines -->
+  <rect x="14" y="98" width="72" height="2" rx="1" fill="#FFD700" opacity="0.55"/>
+  <rect x="14" y="113" width="72" height="2" rx="1" fill="#FFD700" opacity="0.55"/>
+  <!-- Pedestal side accents -->
+  <rect x="14" y="98" width="3" height="17" rx="1.5" fill="#FFD700" opacity="0.4"/>
+  <rect x="83" y="98" width="3" height="17" rx="1.5" fill="#FFD700" opacity="0.4"/>
+  <!-- Pedestal inner diamond row -->
+  <polygon points="35,106 37.5,103 40,106 37.5,109" fill="#FFD700" opacity="0.55"/>
+  <polygon points="50,106 52.5,103 55,106 52.5,109" fill="#C060F0" opacity="0.7"/>
+  <polygon points="65,106 67.5,103 70,106 67.5,109" fill="#FFD700" opacity="0.55"/>
+
+  <!-- Stem -->
+  <rect x="42" y="85" width="16" height="15" fill="url(#stemGrad100k)"/>
+  <rect x="34" y="91" width="32" height="7" rx="3.5" fill="url(#stemGrad100k)"/>
+
+  <!-- Cup body -->
+  <path d="
+    M 13 26
+    C 13 19, 20 15, 30 15
+    L 70 15
+    C 80 15, 87 19, 87 26
+    C 87 54, 78 71, 68 79
+    C 63 83, 57 84, 56 85
+    L 56 85
+    L 44 85
+    L 44 85
+    C 43 84, 37 83, 32 79
+    C 22 71, 13 54, 13 26 Z
+  " fill="url(#cupGrad100k)" filter="url(#doubleGlow)"/>
+
+  <!-- Cup body secondary overlay for shimmer -->
+  <path d="
+    M 13 26
+    C 13 19, 20 15, 30 15
+    L 55 15
+    L 55 85
+    L 44 85
+    C 43 84, 37 83, 32 79
+    C 22 71, 13 54, 13 26 Z
+  " fill="url(#cupGradAlt100k)" opacity="0.35"/>
+
+  <!-- Left handle -->
+  <path d="M 13 31 C -4 31, -4 65, 13 65" fill="none" stroke="url(#cupGrad100k)"
+        stroke-width="7" stroke-linecap="round"/>
+  <path d="M 13 31 C 2 31, 2 65, 13 65" fill="none" stroke="#FFD700"
+        stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+
+  <!-- Right handle -->
+  <path d="M 87 31 C 104 31, 104 65, 87 65" fill="none" stroke="url(#cupGrad100k)"
+        stroke-width="7" stroke-linecap="round"/>
+  <path d="M 87 31 C 98 31, 98 65, 87 65" fill="none" stroke="#FFD700"
+        stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+
+  <!-- Reflection on body -->
+  <ellipse cx="30" cy="43" rx="10" ry="19" fill="white" opacity="0.16"
+           transform="rotate(-15 30 43)"/>
+  <ellipse cx="26" cy="25" rx="7" ry="5" fill="white" opacity="0.24"/>
+
+  <!-- Rim top bar -->
+  <rect x="13" y="13" width="74" height="8" rx="4" fill="url(#rimGrad100k)"
+        filter="url(#doubleGlow)"/>
+  <rect x="15" y="13" width="70" height="4" rx="2" fill="white" opacity="0.32"/>
+
+  <!-- ===== CROWN OF 5 STARS on top arc of cup ===== -->
+  <!-- Stars spaced in an arc above the rim -->
+  <g filter="url(#crownGlow)">
+    <!-- Left-most -->
+    <g transform="translate(24,10)">
+      <polygon points="0,-6 1.4,-2.5 5,-2.5 2.5,0.5 3.5,4 0,2 -3.5,4 -2.5,0.5 -5,-2.5 -1.4,-2.5"
+               fill="#FFD700" stroke="#C08000" stroke-width="0.5"/>
+    </g>
+    <!-- Left-center -->
+    <g transform="translate(37,6)">
+      <polygon points="0,-7 1.6,-2.8 6,-2.8 3,0.5 4,5 0,2.5 -4,5 -3,0.5 -6,-2.8 -1.6,-2.8"
+               fill="#FFD700" stroke="#C08000" stroke-width="0.5"/>
+    </g>
+    <!-- Top center -->
+    <g transform="translate(50,4)">
+      <polygon points="0,-8 1.9,-3.2 7,-3.2 3.5,0.5 4.5,5.5 0,3 -4.5,5.5 -3.5,0.5 -7,-3.2 -1.9,-3.2"
+               fill="#FFD700" stroke="#C08000" stroke-width="0.6"/>
+    </g>
+    <!-- Right-center -->
+    <g transform="translate(63,6)">
+      <polygon points="0,-7 1.6,-2.8 6,-2.8 3,0.5 4,5 0,2.5 -4,5 -3,0.5 -6,-2.8 -1.6,-2.8"
+               fill="#FFD700" stroke="#C08000" stroke-width="0.5"/>
+    </g>
+    <!-- Right-most -->
+    <g transform="translate(76,10)">
+      <polygon points="0,-6 1.4,-2.5 5,-2.5 2.5,0.5 3.5,4 0,2 -3.5,4 -2.5,0.5 -5,-2.5 -1.4,-2.5"
+               fill="#FFD700" stroke="#C08000" stroke-width="0.5"/>
+    </g>
+  </g>
+
+  <!-- ===== DOUBLE LAURELS LEFT ===== -->
+  <!-- Outer branch -->
+  <g opacity="0.90">
+    <path d="M 13 68 C 9 58, 6 44, 13 18" fill="none" stroke="#208000" stroke-width="1" opacity="0.6"/>
+    <ellipse cx="9"  cy="56" rx="7" ry="3.2" fill="url(#laurelGrad100k)" stroke="#105800" stroke-width="0.4"
+             transform="rotate(-72 9 56)"/>
+    <ellipse cx="7"  cy="47" rx="6.8" ry="3" fill="url(#laurelGrad100k)" stroke="#105800" stroke-width="0.4"
+             transform="rotate(-58 7 47)"/>
+    <ellipse cx="8"  cy="38" rx="6.5" ry="2.8" fill="url(#laurelGrad100k)" stroke="#105800" stroke-width="0.4"
+             transform="rotate(-44 8 38)"/>
+    <ellipse cx="11" cy="30" rx="6" ry="2.5" fill="url(#laurelGrad100k)" stroke="#105800" stroke-width="0.4"
+             transform="rotate(-28 11 30)"/>
+    <ellipse cx="15" cy="23" rx="5.5" ry="2.3" fill="url(#laurelGrad100kB)" stroke="#105800" stroke-width="0.4"
+             transform="rotate(-14 15 23)"/>
+  </g>
+  <!-- Inner branch (offset, gold-tipped) -->
+  <g opacity="0.80">
+    <path d="M 16 68 C 13 58, 11 44, 16 22" fill="none" stroke="#208000" stroke-width="0.8" opacity="0.5"/>
+    <ellipse cx="12" cy="54" rx="5.5" ry="2.5" fill="url(#laurelGrad100kB)" stroke="#105800" stroke-width="0.3"
+             transform="rotate(-68 12 54)"/>
+    <ellipse cx="11" cy="44" rx="5" ry="2.2" fill="url(#laurelGrad100kB)" stroke="#105800" stroke-width="0.3"
+             transform="rotate(-50 11 44)"/>
+    <ellipse cx="12" cy="36" rx="5" ry="2.2" fill="url(#laurelGrad100kB)" stroke="#105800" stroke-width="0.3"
+             transform="rotate(-35 12 36)"/>
+  </g>
+
+  <!-- ===== DOUBLE LAURELS RIGHT ===== -->
+  <!-- Outer branch -->
+  <g opacity="0.90">
+    <path d="M 87 68 C 91 58, 94 44, 87 18" fill="none" stroke="#208000" stroke-width="1" opacity="0.6"/>
+    <ellipse cx="91" cy="56" rx="7" ry="3.2" fill="url(#laurelGrad100k)" stroke="#105800" stroke-width="0.4"
+             transform="rotate(72 91 56)"/>
+    <ellipse cx="93" cy="47" rx="6.8" ry="3" fill="url(#laurelGrad100k)" stroke="#105800" stroke-width="0.4"
+             transform="rotate(58 93 47)"/>
+    <ellipse cx="92" cy="38" rx="6.5" ry="2.8" fill="url(#laurelGrad100k)" stroke="#105800" stroke-width="0.4"
+             transform="rotate(44 92 38)"/>
+    <ellipse cx="89" cy="30" rx="6" ry="2.5" fill="url(#laurelGrad100k)" stroke="#105800" stroke-width="0.4"
+             transform="rotate(28 89 30)"/>
+    <ellipse cx="85" cy="23" rx="5.5" ry="2.3" fill="url(#laurelGrad100kB)" stroke="#105800" stroke-width="0.4"
+             transform="rotate(14 85 23)"/>
+  </g>
+  <!-- Inner branch (gold-tipped) -->
+  <g opacity="0.80">
+    <path d="M 84 68 C 87 58, 89 44, 84 22" fill="none" stroke="#208000" stroke-width="0.8" opacity="0.5"/>
+    <ellipse cx="88" cy="54" rx="5.5" ry="2.5" fill="url(#laurelGrad100kB)" stroke="#105800" stroke-width="0.3"
+             transform="rotate(68 88 54)"/>
+    <ellipse cx="89" cy="44" rx="5" ry="2.2" fill="url(#laurelGrad100kB)" stroke="#105800" stroke-width="0.3"
+             transform="rotate(50 89 44)"/>
+    <ellipse cx="88" cy="36" rx="5" ry="2.2" fill="url(#laurelGrad100kB)" stroke="#105800" stroke-width="0.3"
+             transform="rotate(35 88 36)"/>
+  </g>
+
+  <!-- ===== 5 GEMSTONES on cup body ===== -->
+  <!-- Ruby (center bottom) -->
+  <circle cx="50" cy="70" r="4.5" fill="#CC1020" stroke="#FF4050" stroke-width="0.9"
+          filter="url(#gemGlow100k)"/>
+  <circle cx="49" cy="69" r="1.8" fill="white" opacity="0.55"/>
+  <!-- Sapphire (left) -->
+  <circle cx="37" cy="65" r="4" fill="#0020CC" stroke="#3050FF" stroke-width="0.8"
+          filter="url(#gemGlow100k)"/>
+  <circle cx="36" cy="64" r="1.5" fill="white" opacity="0.55"/>
+  <!-- Emerald (right) -->
+  <circle cx="63" cy="65" r="4" fill="#00A010" stroke="#20D030" stroke-width="0.8"
+          filter="url(#gemGlow100k)"/>
+  <circle cx="62" cy="64" r="1.5" fill="white" opacity="0.55"/>
+  <!-- Amethyst (left upper) -->
+  <circle cx="30" cy="52" r="3.5" fill="#A020CC" stroke="#D040FF" stroke-width="0.7"
+          filter="url(#gemGlow100k)"/>
+  <circle cx="29" cy="51" r="1.3" fill="white" opacity="0.50"/>
+  <!-- Topaz (right upper) -->
+  <circle cx="70" cy="52" r="3.5" fill="#E08010" stroke="#FFB030" stroke-width="0.7"
+          filter="url(#gemGlow100k)"/>
+  <circle cx="69" cy="51" r="1.3" fill="white" opacity="0.50"/>
+
+  <!-- "100K" chrome text (very prominent) -->
+  <text x="50" y="81"
+        font-family="'Arial Black', Arial, sans-serif"
+        font-weight="900"
+        font-size="11"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        fill="url(#chromeTxt)"
+        stroke="#8020C0"
+        stroke-width="0.7"
+        filter="url(#txtGlow100k)">100K</text>
+
+  <!-- "LEGENDAIRE" inscription under cup (in pedestal zone) -->
+  <text x="50" y="93"
+        font-family="Arial, sans-serif"
+        font-size="6.5"
+        font-weight="bold"
+        letter-spacing="1.5"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        fill="#E0B0FF"
+        filter="url(#shadowViolet)"
+        opacity="0.95">&#76;&#201;&#71;&#69;&#78;&#68;&#65;&#73;&#82;&#69;</text>
+
+  <!-- Bottom score label (gold) -->
+  <text x="50" y="114"
+        font-family="Arial, sans-serif"
+        font-size="6.5"
+        font-weight="bold"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        fill="#FFD700"
+        opacity="0.95">SCORE</text>
+</svg>

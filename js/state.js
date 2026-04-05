@@ -27,6 +27,10 @@ let _turboStreak=0; // consecutive TURBO placements
 let _enduranceBonusTriggered=false; // 5-min session reward
 let _enduranceBonusUntil=0; // timestamp until 1.5x bonus is active
 let particles=[],debris=[],floats=[];
+let ripples=[]; // expansion rings on block placement
+let dragTrail=[]; // energy particles trailing dragged pieces
+let dustMotes=[]; // lazy-initialized ambient dust motes
+let trayRefreshT=0; // timestamp of last full tray refresh (for slide-in anim)
 let screenFlash=0,screenFlashCol='#fff';
 let shake=0,shakePow=0,shakeX=0,shakeY=0;
 let drag=null,mouseX=W/2,mouseY=H/2;
@@ -56,3 +60,9 @@ const PARASITE_LIFE=5000; // ms total lifespan
 let gameStartTime=0,totalLinesCleared=0,maxComboGame=0;
 // Menu
 let resumeRect=null;
+// ─── PLACEMENT STREAK & UNDO ──────────────────────────────────────────────────
+let _placementStreak=0; // consecutive placements that cleared lines
+let _undoCount=3;       // undo uses remaining this game
+let _undoHudRect=null,_restartHudRect=null; // HUD button hit-rects (set each frame)
+// Tap vs drag detection — used to trigger piece rotation on short taps
+let _tapStartX=0,_tapStartY=0;

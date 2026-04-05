@@ -53,6 +53,8 @@ function drawMenu(t){
   const th=THEMES[selTheme];
   ctx.drawImage(menuBg,0,0);
   drawFx(ctx,menuFx,t);
+  // Animated dot grid overlay (subtle premium texture)
+  {const _gs=Math.round(Math.min(W,H)*0.088);const _gt=t*0.00045;ctx.save();ctx.fillStyle=hexA(th.tm,0.055);for(let _gy=_gs*0.5;_gy<H+_gs;_gy+=_gs){for(let _gx=_gs*0.5;_gx<W+_gs;_gx+=_gs){const _ox=Math.sin(_gt+_gy*0.014)*9,_oy=Math.cos(_gt+_gx*0.012)*9;ctx.beginPath();ctx.arc(_gx+_ox,_gy+_oy,1.3,0,Math.PI*2);ctx.fill();}}ctx.restore();}
   // Deco blocks
   menuDeco.forEach(b=>{b.x=(b.x+b.vx+W)%W;b.y=(b.y+b.vy+H)%H;ctx.globalAlpha=0.11;drawCell(ctx,b.color,b.x-b.sz/2|0,b.y-b.sz/2|0,b.sz|0,b.skin,t);ctx.globalAlpha=1;});
   // Particles
@@ -149,7 +151,7 @@ function drawMenu(t){
     if(sel){ctx.save();ctx.shadowColor=sth.tm;ctx.shadowBlur=9;rp(ctx,x,y,w,h,h/3);ctx.strokeStyle=sth.tm;ctx.lineWidth=2;ctx.stroke();ctx.restore();}
     // Full color theme bg
     const tg=ctx.createLinearGradient(x,y,x,y+h);
-    tg.addColorStop(0,hexA(sth.tm,sel?0.92:0.78));tg.addColorStop(1,hexA(sth.ta,sel?0.82:0.62));
+    tg.addColorStop(0,hexA(sth.tm,sel?1.0:0.97));tg.addColorStop(1,hexA(sth.ta,sel?0.95:0.90));
     rrect(ctx,x,y,w,h,h/3,tg,null);
     const tsh=ctx.createLinearGradient(x,y,x,y+h*0.5);tsh.addColorStop(0,'rgba(255,255,255,0.22)');tsh.addColorStop(1,'rgba(255,255,255,0)');
     rp(ctx,x,y,w,h,h/3);ctx.fillStyle=tsh;ctx.fill();
@@ -163,18 +165,38 @@ function drawMenu(t){
   if(playRect){
     const{x,y,w,h}=playRect;const now=Date.now();
     const pulse=0.5+0.5*Math.sin(now*0.004);
-    ctx.save();ctx.shadowColor=th.ta;ctx.shadowBlur=20+pulse*14;
-    rp(ctx,x-2,y-2,w+4,h+4,h/2+2);ctx.strokeStyle=hexA(th.ta,0.3+pulse*0.2);ctx.lineWidth=3;ctx.stroke();ctx.restore();
+    // Hover detection — proximity glow boost
+    const _isHov=mouseX>=x-8&&mouseX<x+w+8&&mouseY>=y-8&&mouseY<y+h+8;
+    const _hovBoost=_isHov?1.4:1.0;
+    // Strong outer glow ring (double layer)
+    ctx.save();
+    ctx.shadowColor=th.ta;ctx.shadowBlur=(28+pulse*18)*_hovBoost;
+    rp(ctx,x-3,y-3,w+6,h+6,h/2+3);ctx.strokeStyle=hexA(th.ta,(0.22+pulse*0.18)*_hovBoost);ctx.lineWidth=4;ctx.stroke();
+    ctx.shadowBlur=(12+pulse*8)*_hovBoost;
+    rp(ctx,x-6,y-6,w+12,h+12,h/2+6);ctx.strokeStyle=hexA(th.ta,(0.10+pulse*0.08)*_hovBoost);ctx.lineWidth=3;ctx.stroke();
+    ctx.restore();
+    // Main button gradient
     const pbg=ctx.createLinearGradient(x,y,x,y+h);
-    pbg.addColorStop(0,rgb(cl(hr(th.ta)+30,0,255),cl(hg(th.ta)+30,0,255),cl(hb(th.ta)+30,0,255)));
-    pbg.addColorStop(0.5,th.ta);pbg.addColorStop(1,lerpC(th.ta,'#000',0.3));
+    pbg.addColorStop(0,rgb(cl(hr(th.ta)+38,0,255),cl(hg(th.ta)+38,0,255),cl(hb(th.ta)+38,0,255)));
+    pbg.addColorStop(0.45,th.ta);pbg.addColorStop(1,lerpC(th.ta,'#000',0.35));
     rrect(ctx,x,y,w,h,h/2,pbg,null);
-    const shg=ctx.createLinearGradient(x,y,x,y+h*0.45);
-    shg.addColorStop(0,'rgba(255,255,255,0.28)');shg.addColorStop(1,'rgba(255,255,255,0)');
-    rp(ctx,x+2,y+2,w-4,h*0.45,h/2);ctx.fillStyle=shg;ctx.fill();
-    rp(ctx,x,y,w,h,h/2);ctx.strokeStyle=hexA(th.tm,0.6);ctx.lineWidth=1.5;ctx.stroke();
+    // Top shine (pill-shape top half)
+    const shg=ctx.createLinearGradient(x,y,x,y+h*0.48);
+    shg.addColorStop(0,'rgba(255,255,255,0.32)');shg.addColorStop(1,'rgba(255,255,255,0)');
+    rp(ctx,x+2,y+2,w-4,h*0.48,h/2);ctx.fillStyle=shg;ctx.fill();
+    // Animated shimmer sweep
+    const _shimX=x+((now*0.0008)%(w+h*2))-h;
+    ctx.save();ctx.beginPath();rp(ctx,x,y,w,h,h/2);ctx.clip();
+    const _shg=ctx.createLinearGradient(_shimX,y,_shimX+h*1.2,y+h);
+    _shg.addColorStop(0,'rgba(255,255,255,0)');_shg.addColorStop(0.4,'rgba(255,255,255,0.18)');
+    _shg.addColorStop(0.5,'rgba(255,255,255,0.26)');_shg.addColorStop(0.6,'rgba(255,255,255,0.18)');
+    _shg.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=_shg;ctx.fillRect(x,y,w,h);ctx.restore();
+    // Double border
+    rp(ctx,x,y,w,h,h/2);ctx.strokeStyle=hexA(th.tm,0.65);ctx.lineWidth=1.5;ctx.stroke();
+    rp(ctx,x+1.5,y+1.5,w-3,h-3,h/2-1.5);ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();
     const pfz=cl(Math.floor(h*0.48),12,22);
-    drawPremText(ctx,'▶  JOUER',x+w/2,y+h/2,`bold ${pfz}px system-ui,-apple-system,"SF Pro Display",Arial`,th.hi||th.tm,lerpC(th.tm,'#fff',0.3),'rgba(0,0,0,0.5)',th.tm,10,2.5);
+    drawPremText(ctx,'JOUER',x+w/2,y+h/2,`bold ${pfz}px system-ui,-apple-system,"SF Pro Display",Arial`,th.hi||th.tm,lerpC(th.tm,'#fff',0.3),'rgba(0,0,0,0.5)',th.tm,10,2.5);
     ctx.textAlign='center';ctx.textBaseline='middle';
   }
   // ── REPRENDRE (si sauvegarde) ── [between JOUER and CLASSEMENT]
@@ -233,8 +255,8 @@ function drawMenu(t){
   const bsz=cl(Math.floor(H*0.020),8,14);
   const btmY=H-bsz*2.5;
   ctx.textAlign='center';ctx.textBaseline='alphabetic';
-  if(best>0){ctx.save();ctx.font=`bold ${bsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=5;ctx.fillText(`RECORD : ${best}`,W/2,btmY);ctx.restore();}
-  if(bestCombo>1){ctx.save();ctx.font=`${bsz*0.82}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=hexA(th.ta,0.75);ctx.textAlign='center';ctx.fillText(`Meilleur combo : ×${bestCombo}`,W/2,btmY+bsz*1.2);ctx.restore();}
+  if(best>0){ctx.save();ctx.font=`bold ${bsz*1.18}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.shadowColor=th.tm;ctx.shadowBlur=12;ctx.fillStyle=th.tm;ctx.fillText(`★ RECORD : ${best}`,W/2,btmY);ctx.shadowBlur=22;ctx.shadowColor=th.hi||th.tm;ctx.globalAlpha=0.38;ctx.fillText(`★ RECORD : ${best}`,W/2,btmY);ctx.globalAlpha=1;ctx.restore();}
+  if(bestCombo>1){ctx.save();ctx.font=`${bsz*0.85}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=hexA(th.ta,0.80);ctx.textAlign='center';ctx.shadowColor=th.ta;ctx.shadowBlur=4;ctx.fillText(`Meilleur combo : ×${bestCombo}`,W/2,btmY+bsz*1.35);ctx.restore();}
   ctx.font=`${bsz*0.76}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=hexA(th.tg,0.45);ctx.fillText('Toucher JOUER pour commencer',W/2,H-4);
   ctx.textAlign='left';ctx.textBaseline='alphabetic';
 }
@@ -248,12 +270,12 @@ function layoutPause(){
   const badgeH=26;
   const scoreH=24;
   const padV=20;
-  const panelH=padV+titleH+10+badgeH+gap+bh*4+gap*3+scoreH+padV+52;
+  const panelH=padV+titleH+10+badgeH+gap+bh*5+gap*4+scoreH+padV+52;
   const px=(W-pw)/2|0;
   const py=((H-panelH)/2)|0;
   _pauseBtns={_panel:{x:px,y:py,w:pw,h:panelH},_titleY:py+padV+titleH*0.78,_badgeY:py+padV+titleH+10,_scoreY:py+panelH-padV-scoreH-52};
   let cy=py+padV+titleH+10+badgeH+gap;
-  ['resume','restart','sound','quit'].forEach(k=>{_pauseBtns[k]={x:px+10,y:cy,w:pw-20,h:bh};cy+=bh+gap;});
+  ['resume','restart','sound','music','quit'].forEach(k=>{_pauseBtns[k]={x:px+10,y:cy,w:pw-20,h:bh};cy+=bh+gap;});
   const sliderY=_pauseBtns._scoreY+20;
   _volumeSliderRect={x:_pauseBtns._panel.x+20,y:sliderY,w:_pauseBtns._panel.w-40,h:20};
 }
@@ -295,9 +317,12 @@ function drawPause(t){
     sound:{icon:_soundEnabled?'🔊':'🔇',lbl:_soundEnabled?'SON  ON':'SON  OFF',
       g0:_soundEnabled?'#1A4455':'#5A1A1A',g1:_soundEnabled?'#0A2230':'#2C0D0D',
       border:_soundEnabled?'#40D8FF':'#FF6060'},
+    music:{icon:_musicEnabled?'🎵':'🔇',lbl:_musicEnabled?'MUSIQUE ON':'MUSIQUE OFF',
+      g0:_musicEnabled?'#1A3A55':'#3A1A5A',g1:_musicEnabled?'#0A1E30':'#1E0A2C',
+      border:_musicEnabled?'#60C8FF':'#C060FF'},
     quit:{icon:'🏠',lbl:'MENU PRINCIPAL',g0:'#6A2C0A',g1:'#381505',border:'#FF7040'}
   };
-  ['resume','restart','sound','quit'].forEach((k,i)=>{
+  ['resume','restart','sound','music','quit'].forEach((k,i)=>{
     const btn=_pauseBtns[k];const def=btnDefs[k];
     const{x:bx,y:by,w:bw,h:bh}=btn;const br=bh/2;
     const pulse=0.5+0.5*Math.sin(now*0.003+i*1.2);
@@ -372,6 +397,7 @@ function handlePauseTap(x,y){
         gameState='playing';
       }else if(k==='restart'){_pauseStartTime=0;resetGame();gameState='playing';}
       else if(k==='sound'){_soundEnabled=!_soundEnabled;}
+      else if(k==='music'){if(typeof toggleMusic==='function')toggleMusic();}
       else if(k==='quit'){_pauseStartTime=0;gameState='menu';}
     }
   });

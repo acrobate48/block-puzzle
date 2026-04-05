@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l \"c:/Users/Admin/Desktop/Block Puzzle/js/\"*.js)",
+      "Bash(awk 'NR>=203 && NR<=227' \"c:/Users/Admin/Desktop/Block Puzzle/index.html\")"
+    ]
+  }
+}

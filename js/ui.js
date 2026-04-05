@@ -21,10 +21,11 @@ function drawModeSelect(t){
   menuDeco.forEach(b=>{b.x=(b.x+b.vx+W)%W;b.y=(b.y+b.vy+H)%H;ctx.globalAlpha=0.08;drawCell(ctx,b.color,b.x-b.sz/2|0,b.y-b.sz/2|0,b.sz|0,b.skin,t);ctx.globalAlpha=1;});
   ctx.fillStyle='rgba(0,0,0,0.62)';ctx.fillRect(0,0,W,H);
   layoutModeSelect();
-  // Title
+  // Title with animated glow pulse
   const tsz=cl(Math.floor(H*0.06),14,40);
+  const _tpulse=0.5+0.5*Math.abs(Math.sin(t*0.003));
   ctx.save();ctx.font=`bold ${tsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=10;
+  ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=10+8*_tpulse;
   ctx.fillText('CHOISIR UN MODE',W/2,Math.round(H*0.10));ctx.restore();
   // Subtitle
   const ssz=cl(Math.floor(H*0.022),8,14);
@@ -33,19 +34,21 @@ function drawModeSelect(t){
   // Mode cards
   modeSelectRects.forEach(({key,x,y,w,h})=>{
     const m=MODES[key];const sel=key===currentMode;const now=Date.now();
-    // Glow if selected
+    const _hov=!sel&&mouseX>=x&&mouseX<x+w&&mouseY>=y&&mouseY<y+h;
+    // Glow if selected or hovered
     if(sel){ctx.save();ctx.shadowColor=m.color;ctx.shadowBlur=18+6*Math.sin(now*0.004);
       rp(ctx,x-2,y-2,w+4,h+4,12);ctx.strokeStyle=hexA(m.color,0.7);ctx.lineWidth=2.5;ctx.stroke();ctx.restore();}
-    // Card bg
+    else if(_hov){ctx.save();ctx.shadowColor=m.color;ctx.shadowBlur=10;rp(ctx,x-1,y-1,w+2,h+2,12);ctx.strokeStyle=hexA(m.color,0.4);ctx.lineWidth=1.5;ctx.stroke();ctx.restore();}
+    // Card bg (brighter on hover)
     const cbg=ctx.createLinearGradient(x,y,x,y+h);
-    cbg.addColorStop(0,hexA(th.gbg,sel?0.9:0.62));cbg.addColorStop(1,hexA(th.bg,sel?0.8:0.45));
+    cbg.addColorStop(0,hexA(th.gbg,sel?0.9:_hov?0.75:0.62));cbg.addColorStop(1,hexA(th.bg,sel?0.8:_hov?0.58:0.45));
     rrect(ctx,x,y,w,h,12,cbg,null);
     // Top shine
     const csh=ctx.createLinearGradient(x,y,x,y+h*0.4);
-    csh.addColorStop(0,'rgba(255,255,255,0.12)');csh.addColorStop(1,'rgba(255,255,255,0)');
+    csh.addColorStop(0,_hov?'rgba(255,255,255,0.18)':'rgba(255,255,255,0.12)');csh.addColorStop(1,'rgba(255,255,255,0)');
     rp(ctx,x+2,y+2,w-4,h*0.4,10);ctx.fillStyle=csh;ctx.fill();
     // Border
-    rp(ctx,x,y,w,h,12);ctx.strokeStyle=sel?hexA(m.color,0.8):hexA(th.sl,0.4);ctx.lineWidth=sel?2:1;ctx.stroke();
+    rp(ctx,x,y,w,h,12);ctx.strokeStyle=sel?hexA(m.color,0.8):_hov?hexA(m.color,0.4):hexA(th.sl,0.4);ctx.lineWidth=sel?2:_hov?1.5:1;ctx.stroke();
     // Color accent bar top
     const ab=ctx.createLinearGradient(x,y,x+w,y);
     ab.addColorStop(0,hexA(m.color,0.8));ab.addColorStop(1,hexA(m.color,0.2));

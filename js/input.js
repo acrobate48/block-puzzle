@@ -258,6 +258,8 @@ function onUp(e){
       // Petites particules de placement
       {const pcells2=[];piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)pcells2.push({r:gr+rr,c:gc+cc});}));spawnParticles(pcells2,2,0.45,[piece.color]);}
       tray[drag.idx]=null;placed++;
+      // Fresh cell halos
+      if(typeof _addFreshCell==='function')piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)_addFreshCell(gr+rr,gc+cc,piece.color);}));
       // Achievement #1 (first block) + #10 (200 blocks)
       if(typeof _unlockAchieve==='function'){_totalBlocksPlaced++;if(_totalBlocksPlaced===1)_unlockAchieve(0);if(_totalBlocksPlaced>=200)_unlockAchieve(9);}
       showAddCellsBonus=false;addCellsBonusTimer--;

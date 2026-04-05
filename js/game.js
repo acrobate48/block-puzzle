@@ -13,6 +13,8 @@ function _unlockAchieve(idx){
   if(typeof sndBonus==='function')sndBonus();
 }
 let _goVideoStarted=false;
+let _goExploded=false; // board cells burst off on game-over
+let _stampRings=[]; // ink-stamp concentric rings on piece placement
 let _tiltX=0,_tiltY=0; // 3D drag tilt state
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -729,6 +731,51 @@ function _drawSnowAccum(){
   ctx.restore();
 }
 
+// ─── 29. GAME OVER BOARD EXPLOSION ──────────────────────────────────────────
+function _triggerBoardExplosion(){
+  if(!grid)return;
+  for(let r=ROWS-1;r>=0;r--){
+    for(let c=0;c<COLS;c++){
+      if(!grid[r][c])continue;
+      const delay=Math.floor((ROWS-1-r)*14+c*3+Math.random()*18);
+      const cx=GRID_X+(c+0.5)*CELL,cy=GRID_Y+(r+0.5)*CELL;
+      const col=grid[r][c];const ti=curTheme;
+      setTimeout(()=>{
+        for(let i=0;i<3;i++){
+          const d=new Debris(cx+rnd(-CELL*0.28,CELL*0.28),cy+rnd(-CELL*0.28,CELL*0.28),col,ti);
+          const ang=rnd(-Math.PI*0.95,-Math.PI*0.05)+rnd(-0.5,0.5);const spd=rnd(2.5,7);
+          d.vx=Math.cos(ang)*spd;d.vy=Math.sin(ang)*spd-rnd(0.5,2.5);d.circ=false;debris.push(d);
+        }
+        particles.push({x:cx,y:cy,vx:rnd(-1.5,1.5),vy:rnd(-3.5,-0.5),color:col,size:CELL*0.3,life:30,ml:30,circle:true});
+        ripples.push({x:cx,y:cy,life:12,ml:12,maxR:CELL*0.75,color:col});
+      },delay);
+    }
+  }
+}
+
+// ─── 30. INK STAMP LANDING RINGS ─────────────────────────────────────────────
+function _triggerStampRing(x,y,col,maxR){
+  _stampRings.push({x,y,col,maxR:maxR||CELL*2.8,born:Date.now()});
+}
+function _drawStampRings(){
+  if(!_stampRings.length)return;
+  const now=Date.now();
+  ctx.save();
+  _stampRings=_stampRings.filter(sr=>{
+    const p=Math.min(1,(now-sr.born)/480);if(p>=1)return false;
+    for(let i=0;i<3;i++){
+      const dp=cl(p-i*0.12,0,1);if(dp<=0)continue;
+      const r=sr.maxR*Math.pow(dp,0.50)*(1+i*0.22);
+      const a=(1-dp)*(1-dp)*0.58*(1-i*0.18);if(a<0.01)continue;
+      ctx.strokeStyle=hexA(sr.col,a);ctx.lineWidth=Math.max(0.5,2.2*(1-dp));
+      ctx.shadowColor=sr.col;ctx.shadowBlur=10*(1-dp)*(1-i*0.25);
+      ctx.beginPath();ctx.arc(sr.x,sr.y,r,0,Math.PI*2);ctx.stroke();
+    }
+    return true;
+  });
+  ctx.shadowBlur=0;ctx.restore();
+}
+
 // ─── 8. PARALLAX OVERLAY LAYERS ──────────────────────────────────────────────
 function _drawParallax(t){
   const th=THEMES[curTheme];
@@ -787,6 +834,7 @@ function drawGame(t){
     sndBonus();
   }
   const th=THEMES[curTheme];
+  if(!over&&_goExploded)_goExploded=false;
   if(shake>0){shake--;shakeX=rnd(-shakePow,shakePow)|0;shakeY=rnd(-shakePow,shakePow)|0;}else{shakeX=0;shakeY=0;}
   if(!drawThemeVideo(curTheme,shakeX,shakeY)&&!drawThemeBg(curTheme,shakeX,shakeY)){ctx.drawImage(gameBg,shakeX,shakeY);}
   if(typeof drawThemeTransition==='function')drawThemeTransition();
@@ -920,6 +968,7 @@ function drawGame(t){
   _drawAlmostClear(t);
   // Persistent halos on freshly placed cells
   _drawFreshHalos();
+  _drawStampRings();
   // Landing column flash (brief streak down columns of placed piece)
   _drawLandingFlashes();
   // Snow accumulation display (Arctic theme)
@@ -1113,6 +1162,7 @@ function drawGame(t){
     const sh=piece.shape,pcw=sh[0].length*PIECE_CELL,pch=sh.length*PIECE_CELL;
     const ox=(GRID_X+i*pw+pw/2-pcw/2)|0,oy=(TRAY_Y+(TRAY_H-pch)/2)|0;
     const dim=drag&&drag.idx===i;
+    const _bobY=(_trayT>=1&&!dim)?(Math.sin(Date.now()*0.0024+i*2.09)*PIECE_CELL*0.13)|0:0;
     if(piece.isParasite){
       // Parasite piece: draw with special corrupted skin + glow border
       const pulse=0.5+0.5*Math.sin(t*0.006+i*2.1);
@@ -1125,9 +1175,15 @@ function drawGame(t){
       ctx.fillStyle=`rgba(0,${(200+55*pulse)|0},60,0.95)`;ctx.shadowColor='#00FF60';ctx.shadowBlur=6;
       ctx.fillText('☠ PARASITE',GRID_X+i*pw+pw/2,TRAY_Y+TRAY_H-lsz*0.75);ctx.shadowBlur=0;ctx.restore();
     }else{
+      // Tray slot hover glow (mouse over slot, not dragging)
+      if(!drag){const _thov=mouseX>=GRID_X+i*pw&&mouseX<GRID_X+(i+1)*pw&&mouseY>=TRAY_Y&&mouseY<TRAY_Y+TRAY_H;
+        if(_thov){const _hp=0.5+0.5*Math.abs(Math.sin(Date.now()*0.009));
+          ctx.save();ctx.globalAlpha=0.36*_hp;ctx.shadowColor=piece.color;ctx.shadowBlur=PIECE_CELL*1.4*_hp;
+          sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox+cc*PIECE_CELL,(oy+rr*PIECE_CELL+_bobY)|0,PIECE_CELL,selSkin,t);}));
+          ctx.shadowBlur=0;ctx.restore();}}
       // Slide-in: fade + rise from below tray
       ctx.save();ctx.globalAlpha=_trayFade*(dim?0.3:1);
-      sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox+cc*PIECE_CELL,(oy+rr*PIECE_CELL+_traySlideY)|0,PIECE_CELL,selSkin,t);}));
+      sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox+cc*PIECE_CELL,(oy+rr*PIECE_CELL+_traySlideY+_bobY)|0,PIECE_CELL,selSkin,t);}));
       ctx.restore();
     }
   }
@@ -1387,7 +1443,7 @@ function drawGame(t){
   if(over){
     const el=Date.now()-overT;
     // Reset animated score counter when panel first appears
-    if(el<80){_goDisplayScore=0;_goRecBurst=false;if(!_goVideoStarted){_goVideoStarted=true;if(typeof startGameoverVideo==='function')startGameoverVideo(curTheme);}}
+    if(el<80){_goDisplayScore=0;_goRecBurst=false;if(!_goVideoStarted){_goVideoStarted=true;if(typeof startGameoverVideo==='function')startGameoverVideo(curTheme);}if(!_goExploded){_goExploded=true;_triggerBoardExplosion();}}
     const isRec=score>=best&&score>0;
     // Count up score display on game over screen
     if(_goDisplayScore<score){const _gg=score-_goDisplayScore;_goDisplayScore=Math.min(score,_goDisplayScore+Math.max(1,Math.ceil(_gg*(el<1400?0.055:0.20))));}

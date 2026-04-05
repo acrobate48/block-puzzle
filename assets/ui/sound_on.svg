@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <!-- Speaker body gradient: silver-white → cyan-steel -->
+    <linearGradient id="spkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#E8F8FF"/>
+      <stop offset="45%"  stop-color="#70CCEE"/>
+      <stop offset="100%" stop-color="#1888AA"/>
+    </linearGradient>
+    <!-- Cone gradient: lighter face -->
+    <linearGradient id="coneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#CCF0FF"/>
+      <stop offset="55%"  stop-color="#40C8EE"/>
+      <stop offset="100%" stop-color="#0A6888"/>
+    </linearGradient>
+    <!-- Wave glow: cyan -->
+    <filter id="waveGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#40D8FF" flood-opacity="0.85"/>
+    </filter>
+    <!-- Bloom -->
+    <filter id="bloom" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <!-- Drop shadow -->
+    <filter id="spkShadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2.5" flood-color="#003050" flood-opacity="0.55"/>
+    </filter>
+    <!-- Specular soft -->
+    <filter id="specSoft">
+      <feGaussianBlur stdDeviation="1.2"/>
+    </filter>
+  </defs>
+
+  <!-- ── SPEAKER RECTANGULAR BODY ── -->
+  <rect x="4" y="16" width="12" height="16" rx="2.5"
+        fill="url(#spkGrad)" stroke="#006080" stroke-width="1.2"
+        filter="url(#spkShadow)"/>
+  <!-- Body highlight -->
+  <rect x="5" y="17" width="3.5" height="7" rx="1.5"
+        fill="#FFFFFF" opacity="0.45"/>
+
+  <!-- ── SPEAKER CONE ── -->
+  <path d="M 16,14 L 26,6 L 26,42 L 16,34 Z"
+        fill="url(#coneGrad)" stroke="#005878" stroke-width="1.2"
+        stroke-linejoin="round" filter="url(#spkShadow)"/>
+  <!-- Cone face highlight -->
+  <path d="M 16,16 L 24,9 L 24,20 L 16,24 Z"
+        fill="#FFFFFF" opacity="0.28"/>
+
+  <!-- ── SOUND WAVES ── -->
+  <!-- Inner wave (closest) -->
+  <path d="M 30,18 Q 34,24 30,30"
+        stroke="#40D8FF" stroke-width="2.8" stroke-linecap="round"
+        fill="none" filter="url(#waveGlow)"/>
+  <!-- Mid wave -->
+  <path d="M 34,14 Q 40,24 34,34"
+        stroke="#40D8FF" stroke-width="2.4" stroke-linecap="round"
+        fill="none" filter="url(#waveGlow)" opacity="0.85"/>
+  <!-- Outer wave (farthest) -->
+  <path d="M 38,10 Q 46,24 38,38"
+        stroke="#40D8FF" stroke-width="2.0" stroke-linecap="round"
+        fill="none" filter="url(#waveGlow)" opacity="0.60"/>
+
+  <!-- ── SUBTLE GLOW AURA ── -->
+  <path d="M 30,18 Q 34,24 30,30"
+        stroke="#80EEFF" stroke-width="6" stroke-linecap="round"
+        fill="none" opacity="0.18" filter="url(#bloom)"/>
+</svg>

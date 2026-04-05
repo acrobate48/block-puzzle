@@ -1,5 +1,13 @@
 'use strict';
 // ─── INPUT ───────────────────────────────────────────────────────────────────
+// Fix A: Minimum drag distance (px) before a pointer-move is treated as a drag.
+// Prevents finger trembles from accidentally shifting the ghost piece.
+const _DRAG_THRESHOLD = 8;
+// Fix D: Debounce for game-state-changing HUD buttons (ms).
+// Prevents accidental double-fires when a user taps a button quickly twice.
+let _lastTapT = 0;
+const _TAP_DEBOUNCE = 300;
+
 function getPos(e){if(e.touches&&e.touches.length>0)return{x:e.touches[0].clientX,y:e.touches[0].clientY};if(e.changedTouches&&e.changedTouches.length>0)return{x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};return{x:e.clientX,y:e.clientY};}
 function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;_tapStartX=x;_tapStartY=y;
   if(gameState==='menu'){handleMenuTap(x,y);return;}
@@ -13,7 +21,15 @@ function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;_ta
   // Block tray drag only when in choix PICKING phase; all other modes allow normal drag
   const _inChoixPick=(currentMode==='choix'||_getHistoireSubMode()==='choix')&&choixState==='picking';
   if(gameState==='playing'&&!over&&!showSecondChance&&!showBonusPicker&&!_inChoixPick){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};break;}}}}
-function onMove(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;
+function onMove(e){e.preventDefault();const{x,y}=getPos(e);
+  // Fix A: Only commit the new pointer position (and let the ghost piece follow)
+  // once the finger has moved beyond the dead-zone threshold.  Until then we
+  // keep mouseX/mouseY at the tap origin so the piece doesn't jitter.
+  if(drag){
+    const _dist=Math.sqrt((x-_tapStartX)**2+(y-_tapStartY)**2);
+    if(_dist<_DRAG_THRESHOLD)return;
+  }
+  mouseX=x;mouseY=y;
   if(gameState==='pause'&&_volumeSliderRect){
     const{x:vx,y:vy,w:vw,h:vh}=_volumeSliderRect;
     if(mouseY>=vy-14&&mouseY<=vy+vh+14){
@@ -28,6 +44,18 @@ function onUp(e){
   e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;
   // Pause overlay
   if(gameState==='pause'){handlePauseTap(x,y);return;}
+  // Fix D: Debounce guard — ignore HUD button taps that arrive within
+  // _TAP_DEBOUNCE ms of the previous one.  Drag-release placement is exempt
+  // (checked later after this block) so normal gameplay is unaffected.
+  const _nowTap=Date.now();
+  const _hudBtnHit=(
+    (gameState==='playing'&&_pauseHudRect&&x>=_pauseHudRect.x&&x<_pauseHudRect.x+_pauseHudRect.w&&y>=_pauseHudRect.y&&y<_pauseHudRect.y+_pauseHudRect.h)||
+    (gameState==='playing'&&_soundRect&&x>=_soundRect.x&&x<_soundRect.x+_soundRect.w&&y>=_soundRect.y&&y<_soundRect.y+_soundRect.h)||
+    (gameState==='playing'&&!over&&_undoHudRect&&x>=_undoHudRect.x&&x<_undoHudRect.x+_undoHudRect.w&&y>=_undoHudRect.y&&y<_undoHudRect.y+_undoHudRect.h)||
+    (gameState==='playing'&&!over&&_restartHudRect&&x>=_restartHudRect.x&&x<_restartHudRect.x+_restartHudRect.w&&y>=_restartHudRect.y&&y<_restartHudRect.y+_restartHudRect.h)
+  );
+  if(_hudBtnHit&&(_nowTap-_lastTapT)<_TAP_DEBOUNCE){drag=null;return;}
+  if(_hudBtnHit)_lastTapT=_nowTap;
   // Pause HUD button
   if(gameState==='playing'&&_pauseHudRect&&x>=_pauseHudRect.x&&x<_pauseHudRect.x+_pauseHudRect.w&&y>=_pauseHudRect.y&&y<_pauseHudRect.y+_pauseHudRect.h){gameState='pause';_pauseStartTime=Date.now();return;}
   // Sound toggle (in-game bar only — menu has its own handler in handleMenuTap)
@@ -214,6 +242,7 @@ function onUp(e){
       const ti=getCurTheme(),{n,cells,colors}=clearLines(grid);
       if(n>0){
         sndClear(n);
+        if(typeof playEventVideo==='function')playEventVideo('line_clear',false);
         totalLinesCleared+=n;
         // Animation sweep
         clearAnims.push({cells:[...cells],born:Date.now(),color:THEMES[ti].tm});

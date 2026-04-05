@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 3840 2160" width="100%" height="100%"
+     preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="dAtm1" cx="75%" cy="18%" r="55%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E8B838" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#A07830" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#301C06" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="dAtm2" cx="50%" cy="50%" r="65%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#885018" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#281602" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="dAtm3" cx="30%" cy="70%" r="50%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#422808" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#281602" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="dSun" cx="78%" cy="15%" r="28%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFE080" stop-opacity="0.9"/>
+      <stop offset="30%" stop-color="#E8B838" stop-opacity="0.5"/>
+      <stop offset="70%" stop-color="#E07820" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#301C06" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="dVignette" cx="50%" cy="50%" r="72%" gradientUnits="userSpaceOnUse">
+      <stop offset="35%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.88"/>
+    </radialGradient>
+    <radialGradient id="dSpecular" cx="78%" cy="8%" r="32%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFE080" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#E8B838" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#301C06" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="dSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#281602"/>
+      <stop offset="20%" stop-color="#301C06"/>
+      <stop offset="55%" stop-color="#422808"/>
+      <stop offset="80%" stop-color="#A07830"/>
+      <stop offset="100%" stop-color="#885018"/>
+    </linearGradient>
+    <linearGradient id="dHorizon" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E8B838" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#E8B838" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="dDune1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#A07848"/>
+      <stop offset="100%" stop-color="#422808"/>
+    </linearGradient>
+    <linearGradient id="dDune2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#885018"/>
+      <stop offset="100%" stop-color="#301C06"/>
+    </linearGradient>
+    <linearGradient id="dSand" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#A07848"/>
+      <stop offset="50%" stop-color="#885018"/>
+      <stop offset="100%" stop-color="#422808"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="b1"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="25" result="b2"/>
+      <feColorMatrix in="b1" type="matrix"
+        values="0 0 0 0 0.91  0 0 0 0 0.72  0 0 0 0 0.22  0 0 0 2 0" result="c1"/>
+      <feColorMatrix in="b2" type="matrix"
+        values="0 0 0 0 0.91  0 0 0 0 0.72  0 0 0 0 0.22  0 0 0 0.9 0" result="c2"/>
+      <feMerge><feMergeNode in="c2"/><feMergeNode in="c1"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowOrange" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b1"/>
+      <feColorMatrix in="b1" type="matrix"
+        values="0 0 0 0 0.88  0 0 0 0 0.47  0 0 0 0 0.13  0 0 0 2.5 0" result="c1"/>
+      <feMerge><feMergeNode in="c1"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="4" dy="8" stdDeviation="20" flood-color="#281602" flood-opacity="0.9"/>
+    </filter>
+    <filter id="noise" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="4" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="saturate" values="0" result="gn"/>
+      <feBlend in="SourceGraphic" in2="gn" mode="overlay" result="bl"/>
+      <feComposite in="bl" in2="SourceGraphic" operator="in"/>
+    </filter>
+    <filter id="blur" x="-15%" y="-15%" width="130%" height="130%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+    <filter id="blurHeavy" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="blurMid" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+    <filter id="heatShimmer">
+      <feTurbulence type="turbulence" baseFrequency="0.008 0.004" numOctaves="3" seed="12" result="t"/>
+      <feDisplacementMap in="SourceGraphic" in2="t" scale="28" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="sandTexture">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9 0.4" numOctaves="5" seed="3" result="n"/>
+      <feColorMatrix in="n" type="matrix"
+        values="0.3 0 0 0 0.5  0 0.25 0 0 0.3  0 0 0.1 0 0.1  0 0 0 0.4 0" result="colored"/>
+      <feBlend in="SourceGraphic" in2="colored" mode="overlay"/>
+    </filter>
+  </defs>
+
+  <!-- LAYER 1: Deep amber sky -->
+  <rect width="3840" height="2160" fill="url(#dSky)"/>
+
+  <!-- LAYER 2: Atmospheric depth -->
+  <rect width="3840" height="2160" fill="url(#dAtm1)" filter="url(#blurHeavy)" opacity="0.85"/>
+  <rect width="3840" height="2160" fill="url(#dAtm2)" filter="url(#blurMid)" opacity="0.7"/>
+  <rect width="3840" height="2160" fill="url(#dAtm3)" filter="url(#blurMid)" opacity="0.55"/>
+
+  <!-- LAYER 3: Sun glow top-right -->
+  <ellipse cx="3000" cy="320" rx="700" ry="420" fill="url(#dSun)" filter="url(#blurHeavy)" opacity="0.9"/>
+  <ellipse cx="3000" cy="320" rx="280" ry="200" fill="#FFE080" opacity="0.35" filter="url(#blurMid)"/>
+
+  <!-- LAYER 4: Sun rays radiating from top-right -->
+  <g opacity="0.28" filter="url(#blurHeavy)">
+    <polygon points="2960,0 3040,0 2200,2160 1900,2160" fill="#E8B838"/>
+    <polygon points="3100,0 3160,0 2600,2160 2350,2160" fill="#E8B838"/>
+    <polygon points="2820,0 2900,0 1800,2160 1450,2160" fill="#E8B838"/>
+    <polygon points="3220,0 3280,0 2950,2160 2750,2160" fill="#E8B838"/>
+    <polygon points="2680,0 2760,0 1500,2160 1100,2160" fill="#E8B838"/>
+    <polygon points="3340,0 3400,0 3200,2160 3050,2160" fill="#E8B838"/>
+    <polygon points="2550,0 2630,0 1200,2160 800,2160" fill="#E8B838"/>
+    <polygon points="3460,0 3540,0 3450,2160 3350,2160" fill="#E8B838"/>
+  </g>
+
+  <!-- LAYER 5: Distant horizon heat shimmer band -->
+  <rect x="0" y="900" width="3840" height="120" fill="url(#dHorizon)" opacity="0.6" filter="url(#heatShimmer)"/>
+  <rect x="0" y="870" width="3840" height="80" fill="#E8B838" opacity="0.06" filter="url(#blurHeavy)"/>
+
+  <!-- LAYER 6: Perspective dune lines (converging to horizon vanishing point) -->
+  <g opacity="0.55" filter="url(#blur)" stroke-linecap="round">
+    <!-- Perspective lines converging to center-right horizon ~(2800, 980) -->
+    <line x1="0" y1="2160" x2="2800" y2="980" stroke="#A07830" stroke-width="3"/>
+    <line x1="400" y1="2160" x2="2800" y2="980" stroke="#885018" stroke-width="2.5"/>
+    <line x1="900" y1="2160" x2="2800" y2="980" stroke="#A07830" stroke-width="2"/>
+    <line x1="1400" y1="2160" x2="2800" y2="980" stroke="#885018" stroke-width="2"/>
+    <line x1="1900" y1="2160" x2="2800" y2="980" stroke="#A07830" stroke-width="2.5"/>
+    <line x1="2400" y1="2160" x2="2800" y2="980" stroke="#885018" stroke-width="3"/>
+    <line x1="3000" y1="2160" x2="2800" y2="980" stroke="#A07830" stroke-width="3"/>
+    <line x1="3500" y1="2160" x2="2800" y2="980" stroke="#885018" stroke-width="2.5"/>
+    <line x1="3840" y1="2000" x2="2800" y2="980" stroke="#A07830" stroke-width="3"/>
+    <line x1="3840" y1="1500" x2="2800" y2="980" stroke="#885018" stroke-width="2"/>
+    <line x1="3840" y1="1200" x2="2800" y2="980" stroke="#A07830" stroke-width="2"/>
+    <line x1="0" y1="1800" x2="2800" y2="980" stroke="#885018" stroke-width="2.5"/>
+    <line x1="0" y1="1400" x2="2800" y2="980" stroke="#A07830" stroke-width="2"/>
+    <line x1="0" y1="1100" x2="2800" y2="980" stroke="#885018" stroke-width="2"/>
+  </g>
+
+  <!-- LAYER 7: Dune silhouettes (layered depth) -->
+  <!-- Far dunes (blurred) -->
+  <g filter="url(#blurHeavy)" opacity="0.65">
+    <path d="M0,1100 Q480,820 960,1050 Q1440,1280 1920,980 Q2400,680 2880,950 Q3360,1220 3840,1020 L3840,1300 L0,1300 Z" fill="#422808"/>
+    <path d="M0,1180 Q600,960 1200,1120 Q1800,1280 2400,1060 Q3000,840 3840,1080 L3840,1350 L0,1350 Z" fill="#301C06"/>
+  </g>
+  <!-- Mid dunes -->
+  <g filter="url(#blurMid)" opacity="0.8">
+    <path d="M0,1280 Q500,1050 1000,1220 Q1500,1390 2000,1180 Q2500,970 3000,1200 Q3420,1380 3840,1250 L3840,1550 L0,1550 Z" fill="url(#dDune1)"/>
+    <path d="M0,1400 Q600,1200 1200,1360 Q1800,1520 2400,1300 Q3000,1080 3840,1380 L3840,1650 L0,1650 Z" fill="url(#dDune2)"/>
+  </g>
+  <!-- Near dunes (sharp) -->
+  <path d="M0,1550 Q400,1320 800,1480 Q1200,1640 1600,1450 Q2000,1260 2400,1500 Q2800,1740 3200,1550 Q3520,1400 3840,1530 L3840,1850 L0,1850 Z" fill="url(#dSand)" filter="url(#sandTexture)"/>
+  <path d="M0,1720 Q500,1520 1000,1680 Q1500,1840 2000,1660 Q2500,1480 3000,1700 Q3400,1860 3840,1750 L3840,2160 L0,2160 Z" fill="#422808"/>
+
+  <!-- LAYER 8: Ancient wall texture pattern -->
+  <g opacity="0.2" filter="url(#blur)">
+    <!-- Horizontal stone lines -->
+    <line x1="200" y1="1550" x2="800" y2="1540" stroke="#A07848" stroke-width="2"/>
+    <line x1="200" y1="1570" x2="800" y2="1560" stroke="#A07848" stroke-width="1"/>
+    <line x1="200" y1="1590" x2="800" y2="1580" stroke="#A07848" stroke-width="2"/>
+    <line x1="200" y1="1610" x2="800" y2="1600" stroke="#A07848" stroke-width="1"/>
+    <!-- Vertical joints offset alternating -->
+    <line x1="350" y1="1540" x2="350" y2="1570" stroke="#A07848" stroke-width="1.5"/>
+    <line x1="550" y1="1560" x2="550" y2="1590" stroke="#A07848" stroke-width="1.5"/>
+    <line x1="750" y1="1540" x2="750" y2="1570" stroke="#A07848" stroke-width="1.5"/>
+    <line x1="450" y1="1580" x2="450" y2="1610" stroke="#A07848" stroke-width="1.5"/>
+    <line x1="650" y1="1580" x2="650" y2="1610" stroke="#A07848" stroke-width="1.5"/>
+    <!-- More wall sections across terrain -->
+    <line x1="1200" y1="1480" x2="1800" y2="1465" stroke="#A07848" stroke-width="2"/>
+    <line x1="1200" y1="1500" x2="1800" y2="1485" stroke="#A07848" stroke-width="1"/>
+    <line x1="1200" y1="1520" x2="1800" y2="1505" stroke="#A07848" stroke-width="2"/>
+    <line x1="1350" y1="1465" x2="1350" y2="1500" stroke="#A07848" stroke-width="1.5"/>
+    <line x1="1550" y1="1480" x2="1550" y2="1520" stroke="#A07848" stroke-width="1.5"/>
+    <line x1="1750" y1="1465" x2="1750" y2="1500" stroke="#A07848" stroke-width="1.5"/>
+    <line x1="2500" y1="1530" x2="3100" y2="1510" stroke="#A07848" stroke-width="2"/>
+    <line x1="2500" y1="1550" x2="3100" y2="1530" stroke="#A07848" stroke-width="1"/>
+    <line x1="2500" y1="1570" x2="3100" y2="1550" stroke="#A07848" stroke-width="2"/>
+    <line x1="2650" y1="1510" x2="2650" y2="1550" stroke="#A07848" stroke-width="1.5"/>
+    <line x1="2850" y1="1530" x2="2850" y2="1570" stroke="#A07848" stroke-width="1.5"/>
+    <line x1="3050" y1="1510" x2="3050" y2="1550" stroke="#A07848" stroke-width="1.5"/>
+  </g>
+
+  <!-- LAYER 9: Heat distortion overlay on horizon -->
+  <rect x="0" y="920" width="3840" height="180" fill="#E07820" opacity="0.04" filter="url(#heatShimmer)"/>
+
+  <!-- LAYER 10: Dust particle field (50+) -->
+  <g filter="url(#glow)">
+    <circle cx="380" cy="1040" r="4" fill="#E8B838" opacity="0.8"/>
+    <circle cx="620" cy="920" r="3" fill="#FFE080" opacity="0.75"/>
+    <circle cx="900" cy="1120" r="5" fill="#E8B838" opacity="0.85"/>
+    <circle cx="1150" cy="840" r="3" fill="#FFE080" opacity="0.72"/>
+    <circle cx="1380" cy="1060" r="4" fill="#E8B838" opacity="0.82"/>
+    <circle cx="1650" cy="780" r="3" fill="#E8B838" opacity="0.78"/>
+    <circle cx="1900" cy="1200" r="5" fill="#E8B838" opacity="0.88"/>
+    <circle cx="2150" cy="910" r="3" fill="#FFE080" opacity="0.72"/>
+    <circle cx="2400" cy="1100" r="4" fill="#E8B838" opacity="0.82"/>
+    <circle cx="2680" cy="860" r="3" fill="#E8B838" opacity="0.78"/>
+    <circle cx="2950" cy="1150" r="5" fill="#E8B838" opacity="0.88"/>
+    <circle cx="3200" cy="970" r="3" fill="#FFE080" opacity="0.72"/>
+    <circle cx="3450" cy="1080" r="4" fill="#E8B838" opacity="0.82"/>
+    <circle cx="290" cy="1350" r="3" fill="#E07820" opacity="0.65"/>
+    <circle cx="560" cy="1500" r="4" fill="#E8B838" opacity="0.72"/>
+    <circle cx="840" cy="1420" r="3" fill="#FFE080" opacity="0.65"/>
+    <circle cx="1120" cy="1520" r="4" fill="#E8B838" opacity="0.75"/>
+    <circle cx="1460" cy="1380" r="3" fill="#E07820" opacity="0.68"/>
+    <circle cx="1740" cy="1580" r="4" fill="#E8B838" opacity="0.72"/>
+    <circle cx="2020" cy="1460" r="3" fill="#FFE080" opacity="0.65"/>
+    <circle cx="2310" cy="1560" r="4" fill="#E8B838" opacity="0.75"/>
+    <circle cx="2600" cy="1400" r="3" fill="#E07820" opacity="0.68"/>
+    <circle cx="2860" cy="1520" r="4" fill="#E8B838" opacity="0.72"/>
+    <circle cx="3130" cy="1450" r="3" fill="#FFE080" opacity="0.65"/>
+    <circle cx="3400" cy="1540" r="4" fill="#E8B838" opacity="0.75"/>
+    <circle cx="460" cy="660" r="3" fill="#FFE080" opacity="0.58"/>
+    <circle cx="760" cy="600" r="2" fill="#E8B838" opacity="0.52"/>
+    <circle cx="1080" cy="640" r="3" fill="#FFE080" opacity="0.55"/>
+    <circle cx="1480" cy="620" r="2" fill="#E8B838" opacity="0.52"/>
+    <circle cx="1880" cy="635" r="3" fill="#FFE080" opacity="0.55"/>
+    <circle cx="2280" cy="615" r="2" fill="#E8B838" opacity="0.52"/>
+    <circle cx="2680" cy="630" r="3" fill="#FFE080" opacity="0.55"/>
+    <circle cx="3080" cy="625" r="2" fill="#E8B838" opacity="0.52"/>
+    <circle cx="3480" cy="645" r="3" fill="#FFE080" opacity="0.55"/>
+  </g>
+  <!-- Orange ember particles -->
+  <g filter="url(#glowOrange)">
+    <circle cx="500" cy="1000" r="3" fill="#E07820" opacity="0.78"/>
+    <circle cx="950" cy="880" r="4" fill="#F09838" opacity="0.82"/>
+    <circle cx="1500" cy="980" r="3" fill="#E07820" opacity="0.75"/>
+    <circle cx="2000" cy="860" r="4" fill="#F09838" opacity="0.82"/>
+    <circle cx="2600" cy="950" r="3" fill="#E07820" opacity="0.78"/>
+    <circle cx="3100" cy="900" r="4" fill="#F09838" opacity="0.82"/>
+    <circle cx="700" cy="1250" r="3" fill="#E07820" opacity="0.65"/>
+    <circle cx="1300" cy="1300" r="3" fill="#F09838" opacity="0.68"/>
+    <circle cx="1900" cy="1260" r="3" fill="#E07820" opacity="0.65"/>
+    <circle cx="2500" cy="1280" r="3" fill="#F09838" opacity="0.68"/>
+    <circle cx="3200" cy="1240" r="3" fill="#E07820" opacity="0.65"/>
+  </g>
+
+  <!-- LAYER 11: Specular light top-right -->
+  <ellipse cx="3000" cy="180" rx="850" ry="300" fill="url(#dSpecular)" filter="url(#blurHeavy)" opacity="0.85"/>
+
+  <!-- Top sky darkening -->
+  <rect x="0" y="0" width="3840" height="350" fill="#281602" opacity="0.6" filter="url(#blurMid)"/>
+  <rect x="0" y="0" width="3840" height="180" fill="#1A0E02" opacity="0.8"/>
+
+  <!-- LAYER 12: Foreground vignette -->
+  <rect width="3840" height="2160" fill="url(#dVignette)"/>
+
+  <!-- Sand noise texture -->
+  <rect width="3840" height="2160" fill="#A07830" opacity="0.03" filter="url(#noise)"/>
+</svg>

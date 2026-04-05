@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <!-- Background gradient — deep jungle dark -->
+    <linearGradient id="bg192" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A160A"/>
+      <stop offset="50%" stop-color="#0D1C0E"/>
+      <stop offset="100%" stop-color="#060C06"/>
+    </linearGradient>
+    <!-- Radial center glow -->
+    <radialGradient id="centerGlow192" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#1A3A1A" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#060C06" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Gold gradient for text/border -->
+    <linearGradient id="gold192" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFE878"/>
+      <stop offset="40%" stop-color="#F5D060"/>
+      <stop offset="70%" stop-color="#D4B030"/>
+      <stop offset="100%" stop-color="#A07810"/>
+    </linearGradient>
+    <!-- Metallic sheen for blocks -->
+    <linearGradient id="sheen192" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.55"/>
+      <stop offset="45%" stop-color="white" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Drop shadow for blocks -->
+    <filter id="blockShadow192" x="-15%" y="-15%" width="135%" height="135%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.65"/>
+    </filter>
+    <!-- Gold glow filter -->
+    <filter id="goldGlow192" x="-15%" y="-40%" width="130%" height="180%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Border glow -->
+    <filter id="borderGlow192" x="-5%" y="-5%" width="110%" height="110%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- === BACKGROUND === -->
+  <rect width="192" height="192" rx="34" ry="34" fill="url(#bg192)"/>
+  <rect width="192" height="192" rx="34" ry="34" fill="url(#centerGlow192)"/>
+
+  <!-- Subtle background grid -->
+  <g opacity="0.045" stroke="#3AC644" stroke-width="0.6">
+    <line x1="0" y1="24" x2="192" y2="24"/>
+    <line x1="0" y1="48" x2="192" y2="48"/>
+    <line x1="0" y1="72" x2="192" y2="72"/>
+    <line x1="0" y1="96" x2="192" y2="96"/>
+    <line x1="0" y1="120" x2="192" y2="120"/>
+    <line x1="0" y1="144" x2="192" y2="144"/>
+    <line x1="0" y1="168" x2="192" y2="168"/>
+    <line x1="24" y1="0" x2="24" y2="192"/>
+    <line x1="48" y1="0" x2="48" y2="192"/>
+    <line x1="72" y1="0" x2="72" y2="192"/>
+    <line x1="96" y1="0" x2="96" y2="192"/>
+    <line x1="120" y1="0" x2="120" y2="192"/>
+    <line x1="144" y1="0" x2="144" y2="192"/>
+    <line x1="168" y1="0" x2="168" y2="192"/>
+  </g>
+
+  <!-- === 4×4 ISOMETRIC BLOCK GRID ===
+       s=20 (half-width of diamond = 20)
+       Isometric diamond: top=(cx,cy-s), right=(cx+s,cy), bottom=(cx,cy+s), left=(cx-s,cy)
+       Top face:    cx,cy-s → cx+s,cy → cx,cy → cx-s,cy
+       Right face:  cx+s,cy → cx,cy+s (drawn down)
+       Left face:   cx-s,cy → cx,cy+s
+       Column positions (cx): 42, 66, 90, 114... wait, let me use staggered isometric
+       For a flat-top isometric: each row is offset half a column
+       But simpler: use the "tilted cube" from the spec:
+         Top: (cx,cy-s)(cx+s,cy-s/2)(cx,cy)(cx-s,cy-s/2)
+         Right: (cx,cy)(cx+s,cy-s/2)(cx+s,cy+s/2)(cx,cy+s)
+         Left: (cx,cy)(cx-s,cy-s/2)(cx-s,cy+s/2)(cx,cy+s)
+       With s=20, stagger cols by 20 in x and 10 in y (right face half)
+       Col step=20, Row step=30 (s + s/2 = full height)
+       Start: top-left block center at col 0 position
+  -->
+
+  <!-- Using s=18 for each block. Stacked grid: -->
+  <!-- cx cols: 40, 64, 88, 112 (step 24) -->
+  <!-- cy rows: 40, 64, 88, 112 — but add isometric offset -->
+  <!-- For a more realistic look, use staggered rows:
+       row 0 y=36, row 1 y=60, row 2 y=84, row 3 y=108
+       odd columns shift +12 in y for isometric feel -->
+
+  <g filter="url(#blockShadow192)">
+
+  <!-- ROW 1, COL 1 — GREEN #3AC644, cx=40, cy=38, s=18 -->
+  <polygon points="40,20 58,29 40,38 22,29" fill="#6EEA7A"/>
+  <polygon points="40,38 58,29 58,47 40,56" fill="#3AC644"/>
+  <polygon points="40,38 22,29 22,47 40,56" fill="#1E7228"/>
+  <!-- glass sheen top -->
+  <polygon points="40,20 58,29 49,33.5 31,24.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 1, COL 2 — ORANGE #EE8A1C, cx=76, cy=38, s=18 -->
+  <polygon points="76,20 94,29 76,38 58,29" fill="#FFAA4E"/>
+  <polygon points="76,38 94,29 94,47 76,56" fill="#EE8A1C"/>
+  <polygon points="76,38 58,29 58,47 76,56" fill="#A05A0A"/>
+  <polygon points="76,20 94,29 85,33.5 67,24.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 1, COL 3 — CYAN #30B2C6, cx=112, cy=38, s=18 -->
+  <polygon points="112,20 130,29 112,38 94,29" fill="#5CCEDE"/>
+  <polygon points="112,38 130,29 130,47 112,56" fill="#30B2C6"/>
+  <polygon points="112,38 94,29 94,47 112,56" fill="#167688"/>
+  <polygon points="112,20 130,29 121,33.5 103,24.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 1, COL 4 — RED #DA4E30, cx=148, cy=38, s=18 -->
+  <polygon points="148,20 166,29 148,38 130,29" fill="#ED7460"/>
+  <polygon points="148,38 166,29 166,47 148,56" fill="#DA4E30"/>
+  <polygon points="148,38 130,29 130,47 148,56" fill="#8E2814"/>
+  <polygon points="148,20 166,29 157,33.5 139,24.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 2, COL 1 — PURPLE #9E3AC6, cx=40, cy=74, s=18 -->
+  <polygon points="40,56 58,65 40,74 22,65" fill="#C066E0"/>
+  <polygon points="40,74 58,65 58,83 40,92" fill="#9E3AC6"/>
+  <polygon points="40,74 22,65 22,83 40,92" fill="#641882"/>
+  <polygon points="40,56 58,65 49,69.5 31,60.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 2, COL 2 — LIME #62DA4E, cx=76, cy=74, s=18 -->
+  <polygon points="76,56 94,65 76,74 58,65" fill="#88EC74"/>
+  <polygon points="76,74 94,65 94,83 76,92" fill="#62DA4E"/>
+  <polygon points="76,74 58,65 58,83 76,92" fill="#389628"/>
+  <polygon points="76,56 94,65 85,69.5 67,60.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 2, COL 3 — GOLD #EEB23A, cx=112, cy=74, s=18 -->
+  <polygon points="112,56 130,65 112,74 94,65" fill="#FFCC68"/>
+  <polygon points="112,74 130,65 130,83 112,92" fill="#EEB23A"/>
+  <polygon points="112,74 94,65 94,83 112,92" fill="#A07618"/>
+  <polygon points="112,56 130,65 121,69.5 103,60.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 2, COL 4 — TEAL #4EBC80, cx=148, cy=74, s=18 -->
+  <polygon points="148,56 166,65 148,74 130,65" fill="#78D4A0"/>
+  <polygon points="148,74 166,65 166,83 148,92" fill="#4EBC80"/>
+  <polygon points="148,74 130,65 130,83 148,92" fill="#287C50"/>
+  <polygon points="148,56 166,65 157,69.5 139,60.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 3, COL 1 — YELLOW-GREEN #C6D026, cx=40, cy=110, s=18 -->
+  <polygon points="40,92 58,101 40,110 22,101" fill="#DCE84E"/>
+  <polygon points="40,110 58,101 58,119 40,128" fill="#C6D026"/>
+  <polygon points="40,110 22,101 22,119 40,128" fill="#828A14"/>
+  <polygon points="40,92 58,101 49,105.5 31,96.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 3, COL 2 — GREEN #3AC644, cx=76, cy=110, s=18 -->
+  <polygon points="76,92 94,101 76,110 58,101" fill="#6EEA7A"/>
+  <polygon points="76,110 94,101 94,119 76,128" fill="#3AC644"/>
+  <polygon points="76,110 58,101 58,119 76,128" fill="#1E7228"/>
+  <polygon points="76,92 94,101 85,105.5 67,96.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 3, COL 3 — RED #DA4E30, cx=112, cy=110, s=18 -->
+  <polygon points="112,92 130,101 112,110 94,101" fill="#ED7460"/>
+  <polygon points="112,110 130,101 130,119 112,128" fill="#DA4E30"/>
+  <polygon points="112,110 94,101 94,119 112,128" fill="#8E2814"/>
+  <polygon points="112,92 130,101 121,105.5 103,96.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 3, COL 4 — ORANGE #EE8A1C, cx=148, cy=110, s=18 -->
+  <polygon points="148,92 166,101 148,110 130,101" fill="#FFAA4E"/>
+  <polygon points="148,110 166,101 166,119 148,128" fill="#EE8A1C"/>
+  <polygon points="148,110 130,101 130,119 148,128" fill="#A05A0A"/>
+  <polygon points="148,92 166,101 157,105.5 139,96.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 4, COL 1 — CYAN #30B2C6, cx=40, cy=146, s=18 -->
+  <polygon points="40,128 58,137 40,146 22,137" fill="#5CCEDE"/>
+  <polygon points="40,146 58,137 58,155 40,164" fill="#30B2C6"/>
+  <polygon points="40,146 22,137 22,155 40,164" fill="#167688"/>
+  <polygon points="40,128 58,137 49,141.5 31,132.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 4, COL 2 — PURPLE #9E3AC6, cx=76, cy=146, s=18 -->
+  <polygon points="76,128 94,137 76,146 58,137" fill="#C066E0"/>
+  <polygon points="76,146 94,137 94,155 76,164" fill="#9E3AC6"/>
+  <polygon points="76,146 58,137 58,155 76,164" fill="#641882"/>
+  <polygon points="76,128 94,137 85,141.5 67,132.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 4, COL 3 — LIME #62DA4E, cx=112, cy=146, s=18 -->
+  <polygon points="112,128 130,137 112,146 94,137" fill="#88EC74"/>
+  <polygon points="112,146 130,137 130,155 112,164" fill="#62DA4E"/>
+  <polygon points="112,146 94,137 94,155 112,164" fill="#389628"/>
+  <polygon points="112,128 130,137 121,141.5 103,132.5" fill="white" opacity="0.18"/>
+
+  <!-- ROW 4, COL 4 — GOLD #EEB23A, cx=148, cy=146, s=18 -->
+  <polygon points="148,128 166,137 148,146 130,137" fill="#FFCC68"/>
+  <polygon points="148,146 166,137 166,155 148,164" fill="#EEB23A"/>
+  <polygon points="148,146 130,137 130,155 148,164" fill="#A07618"/>
+  <polygon points="148,128 166,137 157,141.5 139,132.5" fill="white" opacity="0.18"/>
+
+  </g>
+
+  <!-- === BP MONOGRAM === -->
+  <text x="96" y="184"
+        font-family="'Arial Black','Impact','Arial',sans-serif"
+        font-size="18" font-weight="900"
+        text-anchor="middle"
+        fill="url(#gold192)"
+        filter="url(#goldGlow192)"
+        letter-spacing="4">BP</text>
+
+  <!-- Gold border glow layer -->
+  <rect width="192" height="192" rx="34" ry="34"
+        fill="none" stroke="#D4B030" stroke-width="5" opacity="0.3"
+        filter="url(#borderGlow192)"/>
+  <!-- Gold border crisp -->
+  <rect width="192" height="192" rx="34" ry="34"
+        fill="none" stroke="url(#gold192)" stroke-width="2.5" opacity="0.9"/>
+  <!-- Inner subtle border -->
+  <rect x="5" y="5" width="182" height="182" rx="30" ry="30"
+        fill="none" stroke="#D4B030" stroke-width="0.8" opacity="0.2"/>
+
+  <!-- Top sheen -->
+  <path d="M34,1.5 Q96,1.5 158,1.5 Q190.5,1.5 190.5,34 Q190.5,8 158,3 Q96,1.5 34,3 Q1.5,8 1.5,34 Q1.5,1.5 34,1.5Z"
+        fill="rgba(255,255,255,0.06)"/>
+</svg>

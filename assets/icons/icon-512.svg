@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Deep dark background gradient -->
+    <linearGradient id="bg512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#112011"/>
+      <stop offset="40%" stop-color="#0A140A"/>
+      <stop offset="100%" stop-color="#060A06"/>
+    </linearGradient>
+    <!-- Radial center glow — premium depth -->
+    <radialGradient id="radGlow512" cx="50%" cy="44%" r="52%">
+      <stop offset="0%" stop-color="#1E3C1E" stop-opacity="0.75"/>
+      <stop offset="60%" stop-color="#0C180C" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#060A06" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Gold aura -->
+    <radialGradient id="goldAura512" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#D4B030" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#D4B030" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Gold metallic gradient for text/border -->
+    <linearGradient id="gold512" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFE878"/>
+      <stop offset="25%" stop-color="#F5D060"/>
+      <stop offset="60%" stop-color="#D4B030"/>
+      <stop offset="100%" stop-color="#8A6010"/>
+    </linearGradient>
+    <!-- Glass specular shine for block top faces -->
+    <linearGradient id="glassShin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.65"/>
+      <stop offset="50%" stop-color="white" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Right-face darkening gradient -->
+    <linearGradient id="rightFade" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="black" stop-opacity="0"/>
+      <stop offset="100%" stop-color="black" stop-opacity="0.22"/>
+    </linearGradient>
+    <!-- Left-face darkening gradient -->
+    <linearGradient id="leftFade" x1="100%" y1="0%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="black" stop-opacity="0"/>
+      <stop offset="100%" stop-color="black" stop-opacity="0.32"/>
+    </linearGradient>
+    <!-- Per-block color shadow radials -->
+    <radialGradient id="shadowG" cx="50%" cy="100%" r="50%">
+      <stop offset="0%" stop-color="#3AC644" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#3AC644" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Block drop shadow -->
+    <filter id="blockShadow512" x="-20%" y="-20%" width="145%" height="145%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#000000" flood-opacity="0.7"/>
+    </filter>
+    <!-- Gold text glow -->
+    <filter id="goldTextGlow512" x="-15%" y="-60%" width="130%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Outer border glow -->
+    <filter id="outerGlow512" x="-5%" y="-5%" width="110%" height="110%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Clip to rounded rect -->
+    <clipPath id="bgClip512">
+      <rect width="512" height="512" rx="92" ry="92"/>
+    </clipPath>
+  </defs>
+
+  <!-- === BACKGROUND === -->
+  <rect width="512" height="512" rx="92" ry="92" fill="url(#bg512)"/>
+  <rect width="512" height="512" rx="92" ry="92" fill="url(#radGlow512)"/>
+  <rect width="512" height="512" rx="92" ry="92" fill="url(#goldAura512)"/>
+
+  <!-- Background grid texture -->
+  <g opacity="0.05" clip-path="url(#bgClip512)" stroke="#3AC644" stroke-width="0.8">
+    <line x1="0" y1="64" x2="512" y2="64"/>
+    <line x1="0" y1="128" x2="512" y2="128"/>
+    <line x1="0" y1="192" x2="512" y2="192"/>
+    <line x1="0" y1="256" x2="512" y2="256"/>
+    <line x1="0" y1="320" x2="512" y2="320"/>
+    <line x1="0" y1="384" x2="512" y2="384"/>
+    <line x1="0" y1="448" x2="512" y2="448"/>
+    <line x1="64"  y1="0" x2="64"  y2="512"/>
+    <line x1="128" y1="0" x2="128" y2="512"/>
+    <line x1="192" y1="0" x2="192" y2="512"/>
+    <line x1="256" y1="0" x2="256" y2="512"/>
+    <line x1="320" y1="0" x2="320" y2="512"/>
+    <line x1="384" y1="0" x2="384" y2="512"/>
+    <line x1="448" y1="0" x2="448" y2="512"/>
+  </g>
+
+  <!-- === 5×5 ISOMETRIC BLOCK ARRANGEMENT ===
+       s=34 (half-diamond width)
+       Block centers: cx = 80, 124, 168, 212, 256... wait
+       Total width: 5 blocks × 2s = 5×68 = 340, plus gaps of s/2 between = 4×17 = 68, total = 408
+       Start cx = (512-408)/2 + 34 = 52 + 34 = 86
+       cx cols: 86, 154, 222, 290, 358
+       cy rows: each row height = s + s/2 = 51, total = 5×51 = 255
+       cy start = 40, rows: 40, 91, 142, 193, 244
+       But we want artistic gaps — some cells empty.
+  -->
+
+  <!-- Using s=32. Column centers cx: 84, 148, 212, 276, 340. Row cy: 46, 110, 174, 238, 302 -->
+  <!-- Macro for isometric cube at (cx, cy) s=32:
+    Top:   (cx,cy-s)(cx+s,cy-s/2)(cx,cy)(cx-s,cy-s/2)
+    Right: (cx,cy)(cx+s,cy-s/2)(cx+s,cy+s/2)(cx,cy+s)
+    Left:  (cx,cy)(cx-s,cy-s/2)(cx-s,cy+s/2)(cx,cy+s)
+  -->
+
+  <g filter="url(#blockShadow512)">
+
+  <!-- === ROW 1 (cy=50) === -->
+  <!-- R1C1 cx=84 — GREEN #3AC644 -->
+  <polygon points="84,18 116,34 84,50 52,34" fill="#70EC7C"/>
+  <polygon points="84,50 116,34 116,66 84,82" fill="#3AC644"/>
+  <polygon points="84,50 52,34 52,66 84,82" fill="#1C7026"/>
+  <!-- specular triangle on top face -->
+  <polygon points="84,18 116,34 100,42 68,26" fill="white" opacity="0.22"/>
+
+  <!-- R1C2 cx=148 — ORANGE #EE8A1C -->
+  <polygon points="148,18 180,34 148,50 116,34" fill="#FFAA4A"/>
+  <polygon points="148,50 180,34 180,66 148,82" fill="#EE8A1C"/>
+  <polygon points="148,50 116,34 116,66 148,82" fill="#9E5A06"/>
+  <polygon points="148,18 180,34 164,42 132,26" fill="white" opacity="0.22"/>
+
+  <!-- R1C3 cx=212 — GOLD #D4B030 -->
+  <polygon points="212,18 244,34 212,50 180,34" fill="#FFD864"/>
+  <polygon points="212,50 244,34 244,66 212,82" fill="#D4B030"/>
+  <polygon points="212,50 180,34 180,66 212,82" fill="#8C7418"/>
+  <polygon points="212,18 244,34 228,42 196,26" fill="white" opacity="0.28"/>
+
+  <!-- R1C4 cx=276 — RED #DA4E30 -->
+  <polygon points="276,18 308,34 276,50 244,34" fill="#EE7060"/>
+  <polygon points="276,50 308,34 308,66 276,82" fill="#DA4E30"/>
+  <polygon points="276,50 244,34 244,66 276,82" fill="#8C2A12"/>
+  <polygon points="276,18 308,34 292,42 260,26" fill="white" opacity="0.22"/>
+
+  <!-- R1C5 cx=340 — CYAN #30B2C6 -->
+  <polygon points="340,18 372,34 340,50 308,34" fill="#5CCEDE"/>
+  <polygon points="340,50 372,34 372,66 340,82" fill="#30B2C6"/>
+  <polygon points="340,50 308,34 308,66 340,82" fill="#147888"/>
+  <polygon points="340,18 372,34 356,42 324,26" fill="white" opacity="0.22"/>
+
+  <!-- === ROW 2 (cy=114) === -->
+  <!-- R2C1 cx=84 — PURPLE #9E3AC6 -->
+  <polygon points="84,82 116,98 84,114 52,98" fill="#C060E0"/>
+  <polygon points="84,114 116,98 116,130 84,146" fill="#9E3AC6"/>
+  <polygon points="84,114 52,98 52,130 84,146" fill="#621880"/>
+  <polygon points="84,82 116,98 100,106 68,90" fill="white" opacity="0.22"/>
+
+  <!-- R2C2 cx=148 — LIME #62DA4E -->
+  <polygon points="148,82 180,98 148,114 116,98" fill="#86EC72"/>
+  <polygon points="148,114 180,98 180,130 148,146" fill="#62DA4E"/>
+  <polygon points="148,114 116,98 116,130 148,146" fill="#369424"/>
+  <polygon points="148,82 180,98 164,106 132,90" fill="white" opacity="0.22"/>
+
+  <!-- R2C3 cx=212 — TEAL #4EBC80 -->
+  <polygon points="212,82 244,98 212,114 180,98" fill="#76D49C"/>
+  <polygon points="212,114 244,98 244,130 212,146" fill="#4EBC80"/>
+  <polygon points="212,114 180,98 180,130 212,146" fill="#267A50"/>
+  <polygon points="212,82 244,98 228,106 196,90" fill="white" opacity="0.22"/>
+
+  <!-- R2C4 cx=276 — YELLOW-GREEN #C6D026 -->
+  <polygon points="276,82 308,98 276,114 244,98" fill="#D8E84C"/>
+  <polygon points="276,114 308,98 308,130 276,146" fill="#C6D026"/>
+  <polygon points="276,114 244,98 244,130 276,146" fill="#7E8810"/>
+  <polygon points="276,82 308,98 292,106 260,90" fill="white" opacity="0.22"/>
+
+  <!-- R2C5 — GAP (artistic empty slot) -->
+
+  <!-- === ROW 3 (cy=178) === -->
+  <!-- R3C1 — GAP (artistic empty slot) -->
+
+  <!-- R3C2 cx=148 — RED #DA4E30 -->
+  <polygon points="148,146 180,162 148,178 116,162" fill="#EE7060"/>
+  <polygon points="148,178 180,162 180,194 148,210" fill="#DA4E30"/>
+  <polygon points="148,178 116,162 116,194 148,210" fill="#8C2A12"/>
+  <polygon points="148,146 180,162 164,170 132,154" fill="white" opacity="0.22"/>
+
+  <!-- R3C3 cx=212 — ORANGE #EE8A1C -->
+  <polygon points="212,146 244,162 212,178 180,162" fill="#FFAA4A"/>
+  <polygon points="212,178 244,162 244,194 212,210" fill="#EE8A1C"/>
+  <polygon points="212,178 180,162 180,194 212,210" fill="#9E5A06"/>
+  <polygon points="212,146 244,162 228,170 196,154" fill="white" opacity="0.22"/>
+
+  <!-- R3C4 cx=276 — GREEN #3AC644 -->
+  <polygon points="276,146 308,162 276,178 244,162" fill="#70EC7C"/>
+  <polygon points="276,178 308,162 308,194 276,210" fill="#3AC644"/>
+  <polygon points="276,178 244,162 244,194 276,210" fill="#1C7026"/>
+  <polygon points="276,146 308,162 292,170 260,154" fill="white" opacity="0.22"/>
+
+  <!-- R3C5 cx=340 — PURPLE #9E3AC6 -->
+  <polygon points="340,146 372,162 340,178 308,162" fill="#C060E0"/>
+  <polygon points="340,178 372,162 372,194 340,210" fill="#9E3AC6"/>
+  <polygon points="340,178 308,162 308,194 340,210" fill="#621880"/>
+  <polygon points="340,146 372,162 356,170 324,154" fill="white" opacity="0.22"/>
+
+  <!-- === ROW 4 (cy=242) === -->
+  <!-- R4C1 cx=84 — GOLD #EEB23A -->
+  <polygon points="84,210 116,226 84,242 52,226" fill="#FFCC68"/>
+  <polygon points="84,242 116,226 116,258 84,274" fill="#EEB23A"/>
+  <polygon points="84,242 52,226 52,258 84,274" fill="#9E7018"/>
+  <polygon points="84,210 116,226 100,234 68,218" fill="white" opacity="0.28"/>
+
+  <!-- R4C2 — GAP -->
+
+  <!-- R4C3 cx=212 — CYAN #30B2C6 -->
+  <polygon points="212,210 244,226 212,242 180,226" fill="#5CCEDE"/>
+  <polygon points="212,242 244,226 244,258 212,274" fill="#30B2C6"/>
+  <polygon points="212,242 180,226 180,258 212,274" fill="#147888"/>
+  <polygon points="212,210 244,226 228,234 196,218" fill="white" opacity="0.22"/>
+
+  <!-- R4C4 cx=276 — LIME #62DA4E -->
+  <polygon points="276,210 308,226 276,242 244,226" fill="#86EC72"/>
+  <polygon points="276,242 308,226 308,258 276,274" fill="#62DA4E"/>
+  <polygon points="276,242 244,226 244,258 276,274" fill="#369424"/>
+  <polygon points="276,210 308,226 292,234 260,218" fill="white" opacity="0.22"/>
+
+  <!-- R4C5 cx=340 — GOLD #D4B030 -->
+  <polygon points="340,210 372,226 340,242 308,226" fill="#FFD864"/>
+  <polygon points="340,242 372,226 372,258 340,274" fill="#D4B030"/>
+  <polygon points="340,242 308,226 308,258 340,274" fill="#8C7418"/>
+  <polygon points="340,210 372,226 356,234 324,218" fill="white" opacity="0.28"/>
+
+  <!-- === ROW 5 (cy=306) — sparser, bottom row === -->
+  <!-- R5C1 cx=84 — LIME #62DA4E -->
+  <polygon points="84,274 116,290 84,306 52,290" fill="#86EC72"/>
+  <polygon points="84,306 116,290 116,322 84,338" fill="#62DA4E"/>
+  <polygon points="84,306 52,290 52,322 84,338" fill="#369424"/>
+  <polygon points="84,274 116,290 100,298 68,282" fill="white" opacity="0.22"/>
+
+  <!-- R5C2 cx=148 — TEAL #4EBC80 -->
+  <polygon points="148,274 180,290 148,306 116,290" fill="#76D49C"/>
+  <polygon points="148,306 180,290 180,322 148,338" fill="#4EBC80"/>
+  <polygon points="148,306 116,290 116,322 148,338" fill="#267A50"/>
+  <polygon points="148,274 180,290 164,298 132,282" fill="white" opacity="0.22"/>
+
+  <!-- R5C3 — GAP -->
+
+  <!-- R5C4 cx=276 — RED #DA4E30 -->
+  <polygon points="276,274 308,290 276,306 244,290" fill="#EE7060"/>
+  <polygon points="276,306 308,290 308,322 276,338" fill="#DA4E30"/>
+  <polygon points="276,306 244,290 244,322 276,338" fill="#8C2A12"/>
+  <polygon points="276,274 308,290 292,298 260,282" fill="white" opacity="0.22"/>
+
+  <!-- R5C5 — GAP -->
+
+  </g>
+
+  <!-- === WORDMARK === -->
+  <!-- Decorative separator line -->
+  <line x1="60" y1="360" x2="452" y2="360" stroke="url(#gold512)" stroke-width="1.5" opacity="0.4"/>
+  <!-- Small decorative diamonds -->
+  <polygon points="256,350 260,354 256,358 252,354" fill="#D4B030" opacity="0.6"/>
+
+  <!-- "BLOCK PUZZLE" main text -->
+  <text x="256" y="410"
+        font-family="'Arial Black','Impact','Arial',sans-serif"
+        font-size="58" font-weight="900"
+        text-anchor="middle"
+        letter-spacing="8"
+        fill="url(#gold512)"
+        filter="url(#goldTextGlow512)">BLOCK PUZZLE</text>
+
+  <!-- "PREMIUM" subtitle -->
+  <text x="256" y="438"
+        font-family="'Arial','Helvetica',sans-serif"
+        font-size="16" font-weight="400"
+        text-anchor="middle"
+        letter-spacing="10"
+        fill="#D4B030" opacity="0.6">PREMIUM</text>
+
+  <!-- Decorative flanking dots -->
+  <circle cx="58" cy="420" r="3.5" fill="#D4B030" opacity="0.5"/>
+  <circle cx="70" cy="420" r="2.2" fill="#D4B030" opacity="0.3"/>
+  <circle cx="454" cy="420" r="3.5" fill="#D4B030" opacity="0.5"/>
+  <circle cx="442" cy="420" r="2.2" fill="#D4B030" opacity="0.3"/>
+
+  <!-- === BORDER SYSTEM === -->
+  <!-- Outer glow -->
+  <rect width="512" height="512" rx="92" ry="92"
+        fill="none" stroke="#D4B030" stroke-width="10" opacity="0.25"
+        filter="url(#outerGlow512)"/>
+  <!-- Crisp gold border -->
+  <rect width="512" height="512" rx="92" ry="92"
+        fill="none" stroke="url(#gold512)" stroke-width="4" opacity="0.95"/>
+  <!-- Inner subtle rim -->
+  <rect x="8" y="8" width="496" height="496" rx="86" ry="86"
+        fill="none" stroke="#D4B030" stroke-width="1" opacity="0.18"/>
+
+  <!-- Top sheen highlight -->
+  <path d="M92,2 Q256,2 420,2 Q510,2 510,92 Q510,10 420,5 Q256,2 92,5 Q2,10 2,92 Q2,2 92,2Z"
+        fill="rgba(255,255,255,0.06)"/>
+</svg>

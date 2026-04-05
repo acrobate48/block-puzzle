@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 800 600" width="100%" height="100%"
+     preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="npBase" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#030C28"/>
+      <stop offset="55%" stop-color="#02081E"/>
+      <stop offset="100%" stop-color="#010510"/>
+    </radialGradient>
+    <linearGradient id="npDiag1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A3888" stop-opacity="0.22"/>
+      <stop offset="50%" stop-color="#081840" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#1A3888" stop-opacity="0.18"/>
+    </linearGradient>
+    <linearGradient id="npDiag2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00DDFF" stop-opacity="0.08"/>
+      <stop offset="50%" stop-color="#A040FF" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#00DDFF" stop-opacity="0.10"/>
+    </linearGradient>
+    <radialGradient id="npVig" cx="50%" cy="50%" r="70%">
+      <stop offset="20%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.82"/>
+    </radialGradient>
+    <filter id="npBlur">
+      <feGaussianBlur stdDeviation="2.0"/>
+    </filter>
+    <filter id="npNeon">
+      <feGaussianBlur stdDeviation="1.2"/>
+    </filter>
+    <!-- Circuit board grid -->
+    <pattern id="npGrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="40" y2="0" stroke="#1A3888" stroke-width="0.5" opacity="0.35"/>
+      <line x1="0" y1="0" x2="0" y2="40" stroke="#1A3888" stroke-width="0.5" opacity="0.35"/>
+      <line x1="0" y1="20" x2="40" y2="20" stroke="#1A3888" stroke-width="0.25" opacity="0.18"/>
+      <line x1="20" y1="0" x2="20" y2="40" stroke="#1A3888" stroke-width="0.25" opacity="0.18"/>
+    </pattern>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#npBase)"/>
+  <rect width="800" height="600" fill="url(#npDiag1)"/>
+  <rect width="800" height="600" fill="url(#npDiag2)"/>
+  <!-- Circuit grid -->
+  <rect width="800" height="600" fill="url(#npGrid)" opacity="0.85"/>
+
+  <!-- City glow blobs -->
+  <ellipse cx="400" cy="550" rx="380" ry="120" fill="#1A3888" opacity="0.18" filter="url(#npBlur)"/>
+  <ellipse cx="200" cy="300" rx="200" ry="150" fill="#081840" opacity="0.22" filter="url(#npBlur)"/>
+  <ellipse cx="650" cy="200" rx="230" ry="160" fill="#00DDFF" opacity="0.06" filter="url(#npBlur)"/>
+
+  <!-- Circuit trace lines (theme-specific - main feature) -->
+  <g opacity="0.30" fill="none" stroke="#00DDFF" stroke-width="0.9">
+    <!-- Horizontal traces -->
+    <path d="M0,100 L120,100 L120,80 L280,80 L280,100 L400,100"/>
+    <path d="M400,100 L400,140 L520,140 L520,100 L680,100 L680,120 L800,120"/>
+    <path d="M0,200 L80,200 L80,180 L200,180 L200,220 L360,220 L360,200 L500,200"/>
+    <path d="M500,200 L500,240 L640,240 L640,200 L800,200"/>
+    <path d="M0,320 L160,320 L160,300 L300,300 L300,340 L460,340 L460,320 L600,320"/>
+    <path d="M600,320 L600,360 L720,360 L720,320 L800,320"/>
+    <path d="M0,440 L100,440 L100,420 L240,420 L240,460 L420,460 L420,440 L560,440"/>
+    <path d="M560,440 L560,480 L680,480 L680,440 L800,440"/>
+    <!-- Vertical traces -->
+    <path d="M150,0 L150,80 L170,80 L170,200 L150,200 L150,320"/>
+    <path d="M450,0 L450,100 L430,100 L430,220 L450,220 L450,360"/>
+    <path d="M650,0 L650,80 L670,80 L670,200 L650,200 L650,320 L670,320 L670,440"/>
+  </g>
+  <g opacity="0.18" fill="none" stroke="#A040FF" stroke-width="0.7">
+    <path d="M0,150 L60,150 L60,130 L180,130 L180,170 L320,170 L320,150 L480,150 L480,170 L800,170"/>
+    <path d="M250,0 L250,80 L270,80 L270,220 L250,220 L250,320 L270,320 L270,460"/>
+    <path d="M550,0 L550,100 L570,100 L570,240 L550,240 L550,360 L570,360 L570,500"/>
+  </g>
+
+  <!-- Circuit nodes/dots -->
+  <g opacity="0.55" fill="#00DDFF">
+    <circle cx="120" cy="100" r="3.0"/>
+    <circle cx="280" cy="80"  r="2.5"/>
+    <circle cx="520" cy="100" r="3.0"/>
+    <circle cx="680" cy="100" r="2.5"/>
+    <circle cx="80"  cy="200" r="3.0"/>
+    <circle cx="200" cy="180" r="2.5"/>
+    <circle cx="360" cy="220" r="3.0"/>
+    <circle cx="640" cy="200" r="2.5"/>
+    <circle cx="160" cy="320" r="3.0"/>
+    <circle cx="300" cy="300" r="2.5"/>
+    <circle cx="460" cy="340" r="3.0"/>
+    <circle cx="720" cy="320" r="2.5"/>
+    <circle cx="100" cy="440" r="3.0"/>
+    <circle cx="240" cy="420" r="2.5"/>
+    <circle cx="560" cy="440" r="3.0"/>
+    <circle cx="680" cy="480" r="2.5"/>
+  </g>
+  <g opacity="0.45" fill="#A040FF">
+    <circle cx="150" cy="80"  r="2.0"/>
+    <circle cx="450" cy="100" r="2.0"/>
+    <circle cx="650" cy="200" r="2.0"/>
+    <circle cx="250" cy="220" r="2.0"/>
+    <circle cx="550" cy="360" r="2.0"/>
+    <circle cx="270" cy="320" r="2.0"/>
+  </g>
+
+  <!-- Neon glow on key nodes -->
+  <g opacity="0.20" filter="url(#npNeon)">
+    <circle cx="120" cy="100" r="6" fill="#00DDFF"/>
+    <circle cx="520" cy="100" r="6" fill="#00DDFF"/>
+    <circle cx="360" cy="220" r="6" fill="#A040FF"/>
+    <circle cx="460" cy="340" r="6" fill="#00DDFF"/>
+    <circle cx="560" cy="440" r="6" fill="#A040FF"/>
+  </g>
+
+  <!-- Particles -->
+  <g opacity="0.50">
+    <circle cx="65"  cy="55"  r="1.5" fill="#00DDFF"/>
+    <circle cx="190" cy="40"  r="1.2" fill="#1A3888"/>
+    <circle cx="330" cy="60"  r="1.8" fill="#A040FF"/>
+    <circle cx="490" cy="35"  r="1.4" fill="#C0F0FF"/>
+    <circle cx="625" cy="58"  r="1.7" fill="#00DDFF"/>
+    <circle cx="760" cy="75"  r="1.1" fill="#1A3888"/>
+    <circle cx="38"  cy="260" r="1.9" fill="#A040FF"/>
+    <circle cx="745" cy="270" r="1.6" fill="#00DDFF"/>
+    <circle cx="38"  cy="385" r="1.8" fill="#C0F0FF"/>
+    <circle cx="765" cy="395" r="1.4" fill="#A040FF"/>
+    <circle cx="55"  cy="520" r="2.0" fill="#00DDFF"/>
+    <circle cx="380" cy="540" r="1.3" fill="#1A3888"/>
+    <circle cx="730" cy="530" r="1.6" fill="#A040FF"/>
+  </g>
+
+  <rect width="800" height="600" fill="url(#npVig)"/>
+</svg>

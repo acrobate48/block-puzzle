@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="60" height="60">
+  <defs>
+    <!-- Blue accent glow -->
+    <filter id="pause-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#40D8FF" flood-opacity="0.7"/>
+    </filter>
+    <!-- Background circle gradient (dark UI) -->
+    <radialGradient id="pause-bg" cx="40%" cy="35%" r="65%">
+      <stop offset="0%"   stop-color="#1A2A3A"/>
+      <stop offset="100%" stop-color="#050D15"/>
+    </radialGradient>
+    <!-- Bar gradient (blue accent) -->
+    <linearGradient id="bar-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#90EEFF"/>
+      <stop offset="40%"  stop-color="#40D8FF"/>
+      <stop offset="100%" stop-color="#0090CC"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── Background circle ── -->
+  <circle cx="30" cy="30" r="28" fill="url(#pause-bg)" stroke="#40D8FF"
+          stroke-width="1.8" stroke-opacity="0.6"/>
+
+  <!-- ── Circle rim glow ── -->
+  <circle cx="30" cy="30" r="28" fill="none" stroke="#40D8FF"
+          stroke-width="1.8" opacity="0.35" filter="url(#pause-glow)"/>
+
+  <!-- ── Left pause bar ── -->
+  <rect x="17" y="16" width="9" height="28" rx="3"
+        fill="url(#bar-grad)" filter="url(#pause-glow)"/>
+
+  <!-- ── Right pause bar ── -->
+  <rect x="34" y="16" width="9" height="28" rx="3"
+        fill="url(#bar-grad)" filter="url(#pause-glow)"/>
+
+  <!-- ── Shine on left bar ── -->
+  <rect x="18" y="17" width="3" height="12" rx="1.5" fill="rgba(255,255,255,0.45)"/>
+  <!-- ── Shine on right bar ── -->
+  <rect x="35" y="17" width="3" height="12" rx="1.5" fill="rgba(255,255,255,0.45)"/>
+</svg>

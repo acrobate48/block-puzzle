@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <!-- Outer flame: deep red → orange -->
+    <linearGradient id="flameOuter" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%"   stop-color="#CC1400"/>
+      <stop offset="35%"  stop-color="#FF4000"/>
+      <stop offset="70%"  stop-color="#FF7020"/>
+      <stop offset="100%" stop-color="#FF9A00"/>
+    </linearGradient>
+    <!-- Mid flame: orange → yellow -->
+    <linearGradient id="flameMid" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%"   stop-color="#FF5500"/>
+      <stop offset="40%"  stop-color="#FF9500"/>
+      <stop offset="75%"  stop-color="#FFCC00"/>
+      <stop offset="100%" stop-color="#FFE840"/>
+    </linearGradient>
+    <!-- Inner core: yellow-white radial from bottom -->
+    <radialGradient id="flameCore" cx="50%" cy="82%" r="55%">
+      <stop offset="0%"   stop-color="#FFFFF0"/>
+      <stop offset="30%"  stop-color="#FFEE60"/>
+      <stop offset="65%"  stop-color="#FFAA00"/>
+      <stop offset="100%" stop-color="#FF6600" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Hot tip: near-white -->
+    <radialGradient id="flameTip" cx="50%" cy="10%" r="40%">
+      <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#FFFFA0" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Orange outer bloom -->
+    <filter id="fireBloom" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Bloom -->
+    <filter id="bloom" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <!-- Soft glow -->
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+    <!-- Ground shadow -->
+    <radialGradient id="groundShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#FF3300" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#FF3300" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ── GROUND AMBIENT GLOW ── -->
+  <ellipse cx="64" cy="120" rx="42" ry="10" fill="url(#groundShadow)"/>
+
+  <!-- ── OUTER GLOW HALO (wide orange bloom) ── -->
+  <path d="M 64,122 C 36,118 14,98 14,76
+           C 14,54 26,42 30,30 C 34,18 30,8 30,8
+           C 36,14 38,24 36,32 C 42,20 46,10 52,4
+           C 52,14 50,24 52,32 C 56,20 62,12 68,6
+           C 66,16 64,26 66,34 C 70,22 76,14 82,12
+           C 80,22 78,32 80,40 C 84,28 90,22 96,22
+           C 94,34 92,44 92,54 C 96,44 102,38 106,38
+           C 106,50 102,62 102,72 C 102,96 86,116 64,122 Z"
+        fill="#FF4400" opacity="0.38" filter="url(#fireBloom)"/>
+
+  <!-- ── OUTER FLAME ── -->
+  <path d="M 64,122 C 36,118 14,98 14,76
+           C 14,54 26,42 30,30 C 34,18 30,8 30,8
+           C 36,14 38,24 36,32 C 42,20 46,10 52,4
+           C 52,14 50,24 52,32 C 56,20 62,12 68,6
+           C 66,16 64,26 66,34 C 70,22 76,14 82,12
+           C 80,22 78,32 80,40 C 84,28 90,22 96,22
+           C 94,34 92,44 92,54 C 96,44 102,38 106,38
+           C 106,50 102,62 102,72 C 102,96 86,116 64,122 Z"
+        fill="url(#flameOuter)"/>
+
+  <!-- ── MID FLAME (slightly inset, brighter) ── -->
+  <path d="M 64,120 C 40,116 22,98 22,78
+           C 22,60 32,50 35,38 C 38,26 35,18 35,18
+           C 40,24 42,32 40,40 C 45,30 48,20 52,14
+           C 52,22 51,32 53,40 C 57,28 62,20 66,15
+           C 64,24 63,34 65,42 C 68,30 73,22 78,20
+           C 77,30 75,40 76,48 C 80,36 85,30 89,30
+           C 88,42 86,52 86,62 C 88,52 92,44 96,44
+           C 96,56 93,66 93,76 C 93,98 80,116 64,120 Z"
+        fill="url(#flameMid)" opacity="0.95"/>
+
+  <!-- ── INNER CORE (hot yellow-white) ── -->
+  <path d="M 64,116 C 46,112 34,96 34,78
+           C 34,64 42,56 44,46 C 46,38 44,30 44,30
+           C 48,36 50,44 49,52 C 52,42 55,34 58,28
+           C 58,36 57,46 59,54 C 62,42 66,34 70,30
+           C 69,40 67,50 68,58 C 71,46 75,40 78,40
+           C 77,52 75,62 76,70 C 80,62 84,56 86,58
+           C 85,70 83,80 83,88 C 83,106 76,114 64,116 Z"
+        fill="url(#flameCore)" opacity="0.90"/>
+
+  <!-- ── FLAME TIP HOT SPOT ── -->
+  <ellipse cx="60" cy="16" rx="12" ry="18" fill="url(#flameTip)" opacity="0.7"/>
+
+  <!-- ── LAYERED FLICKER SHAPES (semi-transparent depth) ── -->
+  <!-- Left secondary flame tongue -->
+  <path d="M 44,80 C 38,68 36,54 38,44 C 40,36 44,28 48,26
+           C 46,34 45,44 46,52 C 48,42 52,34 56,30
+           C 54,40 53,52 54,60 C 54,72 50,80 44,80 Z"
+        fill="#FF6600" opacity="0.35"/>
+  <!-- Right secondary flame tongue -->
+  <path d="M 84,82 C 90,70 92,56 90,46 C 88,38 84,30 80,28
+           C 82,36 83,46 82,54 C 80,44 76,36 72,32
+           C 74,42 75,54 74,62 C 74,74 78,82 84,82 Z"
+        fill="#FF6600" opacity="0.30"/>
+</svg>

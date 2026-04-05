@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+  <defs>
+    <!-- === JUNGLE THEME BACKGROUND === -->
+    <linearGradient id="bgSplash" x1="0%" y1="0%" x2="30%" y2="100%">
+      <stop offset="0%" stop-color="#081508"/>
+      <stop offset="30%" stop-color="#0C1C0C"/>
+      <stop offset="60%" stop-color="#0F2310"/>
+      <stop offset="100%" stop-color="#060E06"/>
+    </linearGradient>
+    <!-- Central cinematic spotlight -->
+    <radialGradient id="spotlight" cx="50%" cy="48%" r="42%">
+      <stop offset="0%" stop-color="#1A3A18" stop-opacity="0.85"/>
+      <stop offset="50%" stop-color="#102010" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#060E06" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Gold aura around center logo -->
+    <radialGradient id="goldAuraSplash" cx="50%" cy="48%" r="30%">
+      <stop offset="0%" stop-color="#D4B030" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#D4B030" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Vignette for cinematic feel -->
+    <radialGradient id="vignetteSplash" cx="50%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#060E06" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.85"/>
+    </radialGradient>
+    <!-- Gold metallic gradient -->
+    <linearGradient id="goldSplash" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFE878"/>
+      <stop offset="30%" stop-color="#F5D060"/>
+      <stop offset="65%" stop-color="#D4B030"/>
+      <stop offset="100%" stop-color="#9A7010"/>
+    </linearGradient>
+    <!-- Loading bar gradient -->
+    <linearGradient id="loadBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3AC644"/>
+      <stop offset="40%" stop-color="#D4B030"/>
+      <stop offset="100%" stop-color="#EE8A1C"/>
+    </linearGradient>
+    <!-- Loading bar glow -->
+    <linearGradient id="loadBarGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3AC644" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#EE8A1C" stop-opacity="0.5"/>
+    </linearGradient>
+    <!-- Block shine -->
+    <linearGradient id="shineSplash" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.60"/>
+      <stop offset="45%" stop-color="white" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Leaf/particle gradient -->
+    <radialGradient id="particleGreen" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#4EBC80" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#4EBC80" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Filters -->
+    <filter id="blockShadowSplash" x="-20%" y="-20%" width="145%" height="145%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.7"/>
+    </filter>
+    <filter id="titleGlowSplash" x="-10%" y="-40%" width="120%" height="180%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="subtitleGlow" x="-15%" y="-60%" width="130%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="loadGlow" x="-5%" y="-200%" width="110%" height="500%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="particleGlowSplash" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="outerBorderGlow" x="-2%" y="-2%" width="104%" height="104%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- === BACKGROUND === -->
+  <rect width="1080" height="1920" fill="url(#bgSplash)"/>
+  <rect width="1080" height="1920" fill="url(#spotlight)"/>
+  <rect width="1080" height="1920" fill="url(#goldAuraSplash)"/>
+
+  <!-- Fine grid texture -->
+  <g opacity="0.035" stroke="#3AC644" stroke-width="1">
+    <line x1="0" y1="120" x2="1080" y2="120"/>
+    <line x1="0" y1="240" x2="1080" y2="240"/>
+    <line x1="0" y1="360" x2="1080" y2="360"/>
+    <line x1="0" y1="480" x2="1080" y2="480"/>
+    <line x1="0" y1="600" x2="1080" y2="600"/>
+    <line x1="0" y1="720" x2="1080" y2="720"/>
+    <line x1="0" y1="840" x2="1080" y2="840"/>
+    <line x1="0" y1="960" x2="1080" y2="960"/>
+    <line x1="0" y1="1080" x2="1080" y2="1080"/>
+    <line x1="0" y1="1200" x2="1080" y2="1200"/>
+    <line x1="0" y1="1320" x2="1080" y2="1320"/>
+    <line x1="0" y1="1440" x2="1080" y2="1440"/>
+    <line x1="0" y1="1560" x2="1080" y2="1560"/>
+    <line x1="0" y1="1680" x2="1080" y2="1680"/>
+    <line x1="0" y1="1800" x2="1080" y2="1800"/>
+    <line x1="120" y1="0" x2="120" y2="1920"/>
+    <line x1="240" y1="0" x2="240" y2="1920"/>
+    <line x1="360" y1="0" x2="360" y2="1920"/>
+    <line x1="480" y1="0" x2="480" y2="1920"/>
+    <line x1="600" y1="0" x2="600" y2="1920"/>
+    <line x1="720" y1="0" x2="720" y2="1920"/>
+    <line x1="840" y1="0" x2="840" y2="1920"/>
+    <line x1="960" y1="0" x2="960" y2="1920"/>
+  </g>
+
+  <!-- === FLOATING PARTICLES === -->
+  <g filter="url(#particleGlowSplash)" opacity="0.7">
+    <!-- Top area particles -->
+    <circle cx="120" cy="160" r="5" fill="#3AC644" opacity="0.65"/>
+    <circle cx="320" cy="80"  r="4" fill="#EEB23A" opacity="0.55"/>
+    <circle cx="540" cy="120" r="3" fill="#30B2C6" opacity="0.5"/>
+    <circle cx="780" cy="90"  r="5" fill="#9E3AC6" opacity="0.55"/>
+    <circle cx="950" cy="200" r="4" fill="#DA4E30" opacity="0.6"/>
+    <circle cx="80"  cy="350" r="3" fill="#EE8A1C" opacity="0.5"/>
+    <circle cx="200" cy="500" r="6" fill="#62DA4E" opacity="0.45"/>
+    <circle cx="1000" cy="350" r="4" fill="#4EBC80" opacity="0.5"/>
+    <circle cx="980" cy="550" r="5" fill="#C6D026" opacity="0.45"/>
+    <!-- Mid-lower particles -->
+    <circle cx="70"  cy="1200" r="5" fill="#3AC644" opacity="0.55"/>
+    <circle cx="180" cy="1350" r="4" fill="#D4B030" opacity="0.5"/>
+    <circle cx="900" cy="1100" r="6" fill="#30B2C6" opacity="0.5"/>
+    <circle cx="1010" cy="1280" r="4" fill="#DA4E30" opacity="0.55"/>
+    <circle cx="360" cy="1500" r="3" fill="#9E3AC6" opacity="0.45"/>
+    <circle cx="780" cy="1450" r="5" fill="#EE8A1C" opacity="0.5"/>
+    <!-- Bottom area -->
+    <circle cx="150" cy="1650" r="4" fill="#62DA4E" opacity="0.5"/>
+    <circle cx="500" cy="1720" r="3" fill="#EEB23A" opacity="0.45"/>
+    <circle cx="820" cy="1700" r="5" fill="#3AC644" opacity="0.55"/>
+    <circle cx="960" cy="1600" r="4" fill="#30B2C6" opacity="0.5"/>
+    <!-- Tiny stars -->
+    <circle cx="430" cy="200" r="2" fill="#FFE878" opacity="0.5"/>
+    <circle cx="650" cy="450" r="2" fill="#FFE878" opacity="0.4"/>
+    <circle cx="200" cy="800" r="2" fill="#FFE878" opacity="0.45"/>
+    <circle cx="880" cy="750" r="2" fill="#FFE878" opacity="0.4"/>
+    <circle cx="550" cy="1600" r="2" fill="#FFE878" opacity="0.45"/>
+  </g>
+
+  <!-- === CENTER LOGO AREA ===
+       Vertical center at y=960 (half of 1920)
+       Logo block arrangement from y≈700 to y≈1050
+       Text from y≈1100 to y≈1200
+  -->
+
+  <!-- Decorative arc / halo behind logo -->
+  <ellipse cx="540" cy="860" rx="380" ry="200"
+           fill="none" stroke="#D4B030" stroke-width="1.5" opacity="0.12"/>
+  <ellipse cx="540" cy="860" rx="340" ry="170"
+           fill="none" stroke="#3AC644" stroke-width="0.8" opacity="0.1"/>
+
+  <!-- === 3×3 ISOMETRIC BLOCK CLUSTER (logo) ===
+       s=70, centered at 540
+       Rows arranged: top cluster forming a tight diamond
+       cx cols: 400, 540, 680  (step=140 = 2s)
+       cy: row1=700, row2=770, row3=840  (step=70=s)
+  -->
+
+  <g filter="url(#blockShadowSplash)">
+
+  <!-- ROW 1, COL 1 — cx=400, cy=700, s=70 — GREEN #3AC644 -->
+  <polygon points="400,630 470,665 400,700 330,665" fill="#70EC7C"/>
+  <polygon points="400,700 470,665 470,735 400,770" fill="#3AC644"/>
+  <polygon points="400,700 330,665 330,735 400,770" fill="#1E7228"/>
+  <polygon points="400,630 470,665 435,682.5 365,647.5" fill="white" opacity="0.22"/>
+
+  <!-- ROW 1, COL 2 — cx=540, cy=700, s=70 — GOLD #D4B030 (center top) -->
+  <polygon points="540,630 610,665 540,700 470,665" fill="#FFD864"/>
+  <polygon points="540,700 610,665 610,735 540,770" fill="#D4B030"/>
+  <polygon points="540,700 470,665 470,735 540,770" fill="#8C7418"/>
+  <polygon points="540,630 610,665 575,682.5 505,647.5" fill="white" opacity="0.30"/>
+
+  <!-- ROW 1, COL 3 — cx=680, cy=700, s=70 — RED #DA4E30 -->
+  <polygon points="680,630 750,665 680,700 610,665" fill="#EE7060"/>
+  <polygon points="680,700 750,665 750,735 680,770" fill="#DA4E30"/>
+  <polygon points="680,700 610,665 610,735 680,770" fill="#8C2A12"/>
+  <polygon points="680,630 750,665 715,682.5 645,647.5" fill="white" opacity="0.22"/>
+
+  <!-- ROW 2, COL 1 — cx=400, cy=840, s=70 — ORANGE #EE8A1C -->
+  <polygon points="400,770 470,805 400,840 330,805" fill="#FFAA4A"/>
+  <polygon points="400,840 470,805 470,875 400,910" fill="#EE8A1C"/>
+  <polygon points="400,840 330,805 330,875 400,910" fill="#9E5A06"/>
+  <polygon points="400,770 470,805 435,822.5 365,787.5" fill="white" opacity="0.22"/>
+
+  <!-- ROW 2, COL 2 — cx=540, cy=840, s=70 — CYAN #30B2C6 (center) -->
+  <polygon points="540,770 610,805 540,840 470,805" fill="#5CCEDE"/>
+  <polygon points="540,840 610,805 610,875 540,910" fill="#30B2C6"/>
+  <polygon points="540,840 470,805 470,875 540,910" fill="#147888"/>
+  <polygon points="540,770 610,805 575,822.5 505,787.5" fill="white" opacity="0.22"/>
+
+  <!-- ROW 2, COL 3 — cx=680, cy=840, s=70 — PURPLE #9E3AC6 -->
+  <polygon points="680,770 750,805 680,840 610,805" fill="#C060E0"/>
+  <polygon points="680,840 750,805 750,875 680,910" fill="#9E3AC6"/>
+  <polygon points="680,840 610,805 610,875 680,910" fill="#621880"/>
+  <polygon points="680,770 750,805 715,822.5 645,787.5" fill="white" opacity="0.22"/>
+
+  <!-- ROW 3, COL 1 — cx=400, cy=980, s=70 — LIME #62DA4E -->
+  <polygon points="400,910 470,945 400,980 330,945" fill="#86EC72"/>
+  <polygon points="400,980 470,945 470,1015 400,1050" fill="#62DA4E"/>
+  <polygon points="400,980 330,945 330,1015 400,1050" fill="#369424"/>
+  <polygon points="400,910 470,945 435,962.5 365,927.5" fill="white" opacity="0.22"/>
+
+  <!-- ROW 3, COL 2 — cx=540, cy=980, s=70 — YELLOW-GREEN #C6D026 -->
+  <polygon points="540,910 610,945 540,980 470,945" fill="#DCE84E"/>
+  <polygon points="540,980 610,945 610,1015 540,1050" fill="#C6D026"/>
+  <polygon points="540,980 470,945 470,1015 540,1050" fill="#828A14"/>
+  <polygon points="540,910 610,945 575,962.5 505,927.5" fill="white" opacity="0.22"/>
+
+  <!-- ROW 3, COL 3 — cx=680, cy=980, s=70 — TEAL #4EBC80 -->
+  <polygon points="680,910 750,945 680,980 610,945" fill="#76D49C"/>
+  <polygon points="680,980 750,945 750,1015 680,1050" fill="#4EBC80"/>
+  <polygon points="680,980 610,945 610,1015 680,1050" fill="#267A50"/>
+  <polygon points="680,910 750,945 715,962.5 645,927.5" fill="white" opacity="0.22"/>
+
+  </g>
+
+  <!-- === GAME TITLE TEXT === -->
+  <!-- Decorative lines flanking title -->
+  <line x1="80" y1="1095" x2="370" y2="1095" stroke="#D4B030" stroke-width="2" opacity="0.4"/>
+  <line x1="710" y1="1095" x2="1000" y2="1095" stroke="#D4B030" stroke-width="2" opacity="0.4"/>
+  <circle cx="395" cy="1095" r="5" fill="#D4B030" opacity="0.5"/>
+  <circle cx="685" cy="1095" r="5" fill="#D4B030" opacity="0.5"/>
+
+  <!-- "BLOCK PUZZLE" title -->
+  <text x="540" y="1175"
+        font-family="'Arial Black','Impact','Arial',sans-serif"
+        font-size="104" font-weight="900"
+        text-anchor="middle"
+        letter-spacing="8"
+        fill="url(#goldSplash)"
+        filter="url(#titleGlowSplash)">BLOCK PUZZLE</text>
+
+  <!-- "PREMIUM" subtitle -->
+  <text x="540" y="1228"
+        font-family="'Arial','Helvetica',sans-serif"
+        font-size="26" font-weight="300"
+        text-anchor="middle"
+        letter-spacing="16"
+        fill="#D4B030" opacity="0.65"
+        filter="url(#subtitleGlow)">PREMIUM</text>
+
+  <!-- Decorative separator -->
+  <line x1="240" y1="1258" x2="840" y2="1258" stroke="#D4B030" stroke-width="1" opacity="0.25"/>
+
+  <!-- Tagline / studio name -->
+  <text x="540" y="1298"
+        font-family="'Arial','Helvetica',sans-serif"
+        font-size="22" font-weight="300"
+        text-anchor="middle"
+        letter-spacing="6"
+        fill="#7AC870" opacity="0.60">Place. Clear. Conquer.</text>
+
+  <!-- === LOADING BAR === -->
+  <!-- Loading bar container -->
+  <rect x="190" y="1830" width="700" height="8" rx="4" fill="rgba(255,255,255,0.08)"/>
+  <!-- Loading bar fill -->
+  <rect x="190" y="1830" width="700" height="8" rx="4"
+        fill="url(#loadBar)" filter="url(#loadGlow)" opacity="0.92"/>
+  <!-- Loading bar glow layer -->
+  <rect x="190" y="1828" width="700" height="12" rx="6"
+        fill="url(#loadBarGlow)" opacity="0.5"/>
+  <!-- Progress indicator dot -->
+  <circle cx="890" cy="1834" r="6" fill="#FFE878" opacity="0.9"
+          filter="url(#loadGlow)"/>
+
+  <!-- "LOADING..." text -->
+  <text x="540" y="1870"
+        font-family="'Arial','Helvetica',sans-serif"
+        font-size="18" font-weight="300"
+        text-anchor="middle"
+        letter-spacing="8"
+        fill="#D4B030" opacity="0.45">LOADING...</text>
+
+  <!-- === VIGNETTE OVERLAY (cinematic) === -->
+  <rect width="1080" height="1920" fill="url(#vignetteSplash)"/>
+
+  <!-- === BORDER GLOW CORNERS === -->
+  <rect width="1080" height="1920"
+        fill="none" stroke="#D4B030" stroke-width="6" opacity="0.15"
+        filter="url(#outerBorderGlow)"/>
+  <rect x="3" y="3" width="1074" height="1914"
+        fill="none" stroke="url(#goldSplash)" stroke-width="2" opacity="0.4"/>
+</svg>

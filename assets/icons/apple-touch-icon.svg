@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <defs>
+    <!-- Warm dark iOS-quality background -->
+    <linearGradient id="bgApple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10190C"/>
+      <stop offset="50%" stop-color="#0D1A0E"/>
+      <stop offset="100%" stop-color="#060C06"/>
+    </linearGradient>
+    <!-- Radial center warmth -->
+    <radialGradient id="warmGlow" cx="50%" cy="44%" r="55%">
+      <stop offset="0%" stop-color="#1E3A14" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#060C06" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Gold metallic gradient -->
+    <linearGradient id="goldApple" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFE878"/>
+      <stop offset="40%" stop-color="#F0CC44"/>
+      <stop offset="70%" stop-color="#D4B030"/>
+      <stop offset="100%" stop-color="#9A7018"/>
+    </linearGradient>
+    <!-- Metallic sheen overlay for whole icon -->
+    <linearGradient id="metalSheen" x1="0%" y1="0%" x2="30%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.10)"/>
+      <stop offset="30%" stop-color="rgba(255,255,255,0.02)"/>
+      <stop offset="70%" stop-color="rgba(0,0,0,0.0)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.08)"/>
+    </linearGradient>
+    <!-- Glass sheen on block tops -->
+    <linearGradient id="shineApple" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.55"/>
+      <stop offset="45%" stop-color="white" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Block shadow -->
+    <filter id="shadowApple" x="-15%" y="-15%" width="135%" height="135%">
+      <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+    <!-- Text glow -->
+    <filter id="textGlowApple" x="-20%" y="-60%" width="140%" height="220%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Border glow -->
+    <filter id="borderGlowApple" x="-6%" y="-6%" width="112%" height="112%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- === BACKGROUND === -->
+  <rect width="180" height="180" rx="38" ry="38" fill="url(#bgApple)"/>
+  <rect width="180" height="180" rx="38" ry="38" fill="url(#warmGlow)"/>
+
+  <!-- Subtle background grid lines -->
+  <g opacity="0.04" stroke="#4EBC80" stroke-width="0.5">
+    <line x1="0" y1="22.5" x2="180" y2="22.5"/>
+    <line x1="0" y1="45" x2="180" y2="45"/>
+    <line x1="0" y1="67.5" x2="180" y2="67.5"/>
+    <line x1="0" y1="90" x2="180" y2="90"/>
+    <line x1="0" y1="112.5" x2="180" y2="112.5"/>
+    <line x1="0" y1="135" x2="180" y2="135"/>
+    <line x1="0" y1="157.5" x2="180" y2="157.5"/>
+    <line x1="22.5" y1="0" x2="22.5" y2="180"/>
+    <line x1="45" y1="0" x2="45" y2="180"/>
+    <line x1="67.5" y1="0" x2="67.5" y2="180"/>
+    <line x1="90" y1="0" x2="90" y2="180"/>
+    <line x1="112.5" y1="0" x2="112.5" y2="180"/>
+    <line x1="135" y1="0" x2="135" y2="180"/>
+    <line x1="157.5" y1="0" x2="157.5" y2="180"/>
+  </g>
+
+  <!-- === 4×4 ISOMETRIC BLOCK GRID ===
+       s=16, cx cols: 34, 68, 102, 136, cy rows: 28, 60, 92, 124
+       Top:   (cx,cy-s)(cx+s,cy-s/2)(cx,cy)(cx-s,cy-s/2)
+       Right: (cx,cy)(cx+s,cy-s/2)(cx+s,cy+s/2)(cx,cy+s)
+       Left:  (cx,cy)(cx-s,cy-s/2)(cx-s,cy+s/2)(cx,cy+s)
+  -->
+
+  <g filter="url(#shadowApple)">
+
+  <!-- ROW 1, cy=30 -->
+  <!-- R1C1 cx=34 — GREEN #3AC644 -->
+  <polygon points="34,14 50,22 34,30 18,22" fill="#70EC7C"/>
+  <polygon points="34,30 50,22 50,38 34,46" fill="#3AC644"/>
+  <polygon points="34,30 18,22 18,38 34,46" fill="#1E7228"/>
+  <polygon points="34,14 50,22 42,26 26,18" fill="white" opacity="0.20"/>
+
+  <!-- R1C2 cx=68 — ORANGE #EE8A1C -->
+  <polygon points="68,14 84,22 68,30 52,22" fill="#FFAA4A"/>
+  <polygon points="68,30 84,22 84,38 68,46" fill="#EE8A1C"/>
+  <polygon points="68,30 52,22 52,38 68,46" fill="#9E5A06"/>
+  <polygon points="68,14 84,22 76,26 60,18" fill="white" opacity="0.20"/>
+
+  <!-- R1C3 cx=102 — GOLD #D4B030 -->
+  <polygon points="102,14 118,22 102,30 86,22" fill="#FFD864"/>
+  <polygon points="102,30 118,22 118,38 102,46" fill="#D4B030"/>
+  <polygon points="102,30 86,22 86,38 102,46" fill="#8C7418"/>
+  <polygon points="102,14 118,22 110,26 94,18" fill="white" opacity="0.26"/>
+
+  <!-- R1C4 cx=136 — RED #DA4E30 -->
+  <polygon points="136,14 152,22 136,30 120,22" fill="#EE7060"/>
+  <polygon points="136,30 152,22 152,38 136,46" fill="#DA4E30"/>
+  <polygon points="136,30 120,22 120,38 136,46" fill="#8C2A12"/>
+  <polygon points="136,14 152,22 144,26 128,18" fill="white" opacity="0.20"/>
+
+  <!-- ROW 2, cy=62 -->
+  <!-- R2C1 cx=34 — CYAN #30B2C6 -->
+  <polygon points="34,46 50,54 34,62 18,54" fill="#5CCEDE"/>
+  <polygon points="34,62 50,54 50,70 34,78" fill="#30B2C6"/>
+  <polygon points="34,62 18,54 18,70 34,78" fill="#147888"/>
+  <polygon points="34,46 50,54 42,58 26,50" fill="white" opacity="0.20"/>
+
+  <!-- R2C2 cx=68 — PURPLE #9E3AC6 -->
+  <polygon points="68,46 84,54 68,62 52,54" fill="#C060E0"/>
+  <polygon points="68,62 84,54 84,70 68,78" fill="#9E3AC6"/>
+  <polygon points="68,62 52,54 52,70 68,78" fill="#621880"/>
+  <polygon points="68,46 84,54 76,58 60,50" fill="white" opacity="0.20"/>
+
+  <!-- R2C3 cx=102 — LIME #62DA4E -->
+  <polygon points="102,46 118,54 102,62 86,54" fill="#86EC72"/>
+  <polygon points="102,62 118,54 118,70 102,78" fill="#62DA4E"/>
+  <polygon points="102,62 86,54 86,70 102,78" fill="#369424"/>
+  <polygon points="102,46 118,54 110,58 94,50" fill="white" opacity="0.20"/>
+
+  <!-- R2C4 cx=136 — GOLD #EEB23A -->
+  <polygon points="136,46 152,54 136,62 120,54" fill="#FFCC68"/>
+  <polygon points="136,62 152,54 152,70 136,78" fill="#EEB23A"/>
+  <polygon points="136,62 120,54 120,70 136,78" fill="#A07618"/>
+  <polygon points="136,46 152,54 144,58 128,50" fill="white" opacity="0.25"/>
+
+  <!-- ROW 3, cy=94 -->
+  <!-- R3C1 cx=34 — YELLOW-GREEN #C6D026 -->
+  <polygon points="34,78 50,86 34,94 18,86" fill="#DCE84E"/>
+  <polygon points="34,94 50,86 50,102 34,110" fill="#C6D026"/>
+  <polygon points="34,94 18,86 18,102 34,110" fill="#828A14"/>
+  <polygon points="34,78 50,86 42,90 26,82" fill="white" opacity="0.20"/>
+
+  <!-- R3C2 cx=68 — TEAL #4EBC80 -->
+  <polygon points="68,78 84,86 68,94 52,86" fill="#76D49C"/>
+  <polygon points="68,94 84,86 84,102 68,110" fill="#4EBC80"/>
+  <polygon points="68,94 52,86 52,102 68,110" fill="#267A50"/>
+  <polygon points="68,78 84,86 76,90 60,82" fill="white" opacity="0.20"/>
+
+  <!-- R3C3 cx=102 — RED #DA4E30 -->
+  <polygon points="102,78 118,86 102,94 86,86" fill="#EE7060"/>
+  <polygon points="102,94 118,86 118,102 102,110" fill="#DA4E30"/>
+  <polygon points="102,94 86,86 86,102 102,110" fill="#8C2A12"/>
+  <polygon points="102,78 118,86 110,90 94,82" fill="white" opacity="0.20"/>
+
+  <!-- R3C4 cx=136 — GREEN #3AC644 -->
+  <polygon points="136,78 152,86 136,94 120,86" fill="#70EC7C"/>
+  <polygon points="136,94 152,86 152,102 136,110" fill="#3AC644"/>
+  <polygon points="136,94 120,86 120,102 136,110" fill="#1E7228"/>
+  <polygon points="136,78 152,86 144,90 128,82" fill="white" opacity="0.20"/>
+
+  <!-- ROW 4, cy=126 -->
+  <!-- R4C1 cx=34 — ORANGE #EE8A1C -->
+  <polygon points="34,110 50,118 34,126 18,118" fill="#FFAA4A"/>
+  <polygon points="34,126 50,118 50,134 34,142" fill="#EE8A1C"/>
+  <polygon points="34,126 18,118 18,134 34,142" fill="#9E5A06"/>
+  <polygon points="34,110 50,118 42,122 26,114" fill="white" opacity="0.20"/>
+
+  <!-- R4C2 cx=68 — CYAN #30B2C6 -->
+  <polygon points="68,110 84,118 68,126 52,118" fill="#5CCEDE"/>
+  <polygon points="68,126 84,118 84,134 68,142" fill="#30B2C6"/>
+  <polygon points="68,126 52,118 52,134 68,142" fill="#147888"/>
+  <polygon points="68,110 84,118 76,122 60,114" fill="white" opacity="0.20"/>
+
+  <!-- R4C3 cx=102 — PURPLE #9E3AC6 -->
+  <polygon points="102,110 118,118 102,126 86,118" fill="#C060E0"/>
+  <polygon points="102,126 118,118 118,134 102,142" fill="#9E3AC6"/>
+  <polygon points="102,126 86,118 86,134 102,142" fill="#621880"/>
+  <polygon points="102,110 118,118 110,122 94,114" fill="white" opacity="0.20"/>
+
+  <!-- R4C4 cx=136 — YELLOW-GREEN #C6D026 -->
+  <polygon points="136,110 152,118 136,126 120,118" fill="#DCE84E"/>
+  <polygon points="136,126 152,118 152,134 136,142" fill="#C6D026"/>
+  <polygon points="136,126 120,118 120,134 136,142" fill="#828A14"/>
+  <polygon points="136,110 152,118 144,122 128,114" fill="white" opacity="0.20"/>
+
+  </g>
+
+  <!-- Metallic sheen overlay -->
+  <rect width="180" height="180" rx="38" ry="38" fill="url(#metalSheen)"/>
+
+  <!-- === APP NAME === -->
+  <text x="90" y="162"
+        font-family="'Arial Black','Impact','Arial',sans-serif"
+        font-size="14" font-weight="900"
+        text-anchor="middle"
+        letter-spacing="2.5"
+        fill="url(#goldApple)"
+        filter="url(#textGlowApple)">BLOCK PUZZLE</text>
+
+  <!-- === BORDER === -->
+  <!-- Glow layer -->
+  <rect width="180" height="180" rx="38" ry="38"
+        fill="none" stroke="#D4B030" stroke-width="5" opacity="0.22"
+        filter="url(#borderGlowApple)"/>
+  <!-- Crisp border -->
+  <rect width="180" height="180" rx="38" ry="38"
+        fill="none" stroke="url(#goldApple)" stroke-width="2.5" opacity="0.88"/>
+  <!-- Inner rim -->
+  <rect x="5" y="5" width="170" height="170" rx="34" ry="34"
+        fill="none" stroke="#D4B030" stroke-width="0.7" opacity="0.18"/>
+
+  <!-- iOS-style top sheen -->
+  <path d="M38,1.5 Q90,1.5 142,1.5 Q178.5,1.5 178.5,38 Q178.5,8 142,4 Q90,1.5 38,4 Q1.5,8 1.5,38 Q1.5,1.5 38,1.5Z"
+        fill="rgba(255,255,255,0.08)"/>
+</svg>

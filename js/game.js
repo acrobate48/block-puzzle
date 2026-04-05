@@ -494,6 +494,89 @@ function _drawElectricityBorder(t){
   ctx.restore();
 }
 
+// ─── 20. GOD RAYS — outdoor themes (Jungle, Désert, Plage) ──────────────────
+let _godRays=[]; // {x, angle, born, color}
+let _godRayTimer=0;
+function _spawnGodRay(){
+  const outThemes=[0,1,8]; // Jungle, Désert, Plage
+  if(!outThemes.includes(curTheme))return;
+  if(Math.random()>0.004)return; // rare
+  const th=THEMES[curTheme];
+  _godRays.push({x:rnd(0,W),angle:rnd(Math.PI/2-0.4,Math.PI/2+0.4),born:Date.now(),color:th.hi||th.tm});
+  if(_godRays.length>3)_godRays.shift();
+}
+function _drawGodRays(){
+  if(!_godRays.length)return;
+  const now=Date.now();
+  ctx.save();
+  _godRays=_godRays.filter(gr=>{
+    const age=now-gr.born;const dur=3000;
+    const p=age/dur;if(p>=1)return false;
+    const a=(p<0.2?p/0.2:p>0.7?(1-p)/0.3:1)*0.10;
+    ctx.save();
+    const len=H*2;
+    const bw=W*0.08;
+    ctx.translate(gr.x,0);
+    const sg=ctx.createLinearGradient(0,0,0,len);
+    sg.addColorStop(0,hexA(gr.color,a));
+    sg.addColorStop(0.3,hexA(gr.color,a*0.6));
+    sg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=sg;
+    ctx.beginPath();
+    ctx.moveTo(-bw/2,0);ctx.lineTo(bw/2,0);
+    ctx.lineTo(bw/2+len*Math.sin(gr.angle-Math.PI/2)*0.4,len);
+    ctx.lineTo(-bw/2+len*Math.sin(gr.angle-Math.PI/2)*0.4,len);
+    ctx.closePath();ctx.fill();
+    ctx.restore();
+    return true;
+  });
+  ctx.restore();
+}
+
+// ─── 21. LIGHTNING GRID (score ≥ 100 000) ───────────────────────────────────
+let _lightningTimer=0;
+let _lightnings=[]; // {pts:[{x,y}..], born, color}
+function _maybeSpawnLightning(t){
+  if(score<100000||over)return;
+  if(Math.random()>0.003)return;
+  // Diagonal bolt from random top edge to bottom
+  const x0=rnd(GRID_X,GRID_X+GW),y0=GRID_Y;
+  const x1=x0+rnd(-GW*0.4,GW*0.4),y1=GRID_Y+GH;
+  const pts=[{x:x0,y:y0}];
+  const segs=8+Math.floor(Math.random()*5);
+  for(let s=1;s<segs;s++){
+    const f=s/segs;
+    pts.push({x:lerp(x0,x1,f)+rnd(-CELL*0.8,CELL*0.8),y:lerp(y0,y1,f)});
+  }
+  pts.push({x:x1,y:y1});
+  const th=THEMES[curTheme];
+  _lightnings.push({pts,born:Date.now(),color:th.hi||'#FFFFFF'});
+  if(_lightnings.length>4)_lightnings.shift();
+}
+function _drawLightnings(){
+  if(!_lightnings.length)return;
+  const now=Date.now();
+  ctx.save();
+  _lightnings=_lightnings.filter(ln=>{
+    const age=now-ln.born;const dur=350;
+    const p=age/dur;if(p>=1)return false;
+    const a=(1-p)*(1-p)*0.85;
+    ctx.strokeStyle=hexA(ln.color,a);ctx.lineWidth=1.5*(1-p)+0.5;
+    ctx.shadowColor=ln.color;ctx.shadowBlur=8*(1-p);
+    ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(ln.pts[0].x,ln.pts[0].y);
+    ln.pts.slice(1).forEach(pt=>ctx.lineTo(pt.x,pt.y));
+    ctx.stroke();
+    // Bright white core
+    ctx.strokeStyle=`rgba(255,255,255,${(a*0.7).toFixed(3)})`;ctx.lineWidth=0.8*(1-p);
+    ctx.beginPath();ctx.moveTo(ln.pts[0].x,ln.pts[0].y);
+    ln.pts.slice(1).forEach(pt=>ctx.lineTo(pt.x,pt.y));
+    ctx.stroke();
+    return true;
+  });
+  ctx.shadowBlur=0;ctx.restore();
+}
+
 // ─── 8. PARALLAX OVERLAY LAYERS ──────────────────────────────────────────────
 function _drawParallax(t){
   const th=THEMES[curTheme];
@@ -556,6 +639,8 @@ function drawGame(t){
   if(!drawThemeVideo(curTheme,shakeX,shakeY)&&!drawThemeBg(curTheme,shakeX,shakeY)){ctx.drawImage(gameBg,shakeX,shakeY);}
   if(typeof drawThemeTransition==='function')drawThemeTransition();
   _drawParallax(t);
+  // God rays (Jungle, Désert, Plage)
+  _spawnGodRay();_drawGodRays();
   drawFx(ctx,gameFx,t);
   _drawWeather(t);
   // ── DUST MOTES — lazy-initialized ambient floating particles ──────────────
@@ -913,7 +998,8 @@ function drawGame(t){
   // Rotation flash rings
   _drawRotFlashes();
   // Drag trail — spawn energy particles + render behind piece each frame
-  if(drag&&!over){const _dtp=tray[drag.idx];if(_dtp&&Math.random()<0.50)dragTrail.push({x:mouseX+rnd(-CELL*0.18,CELL*0.18),y:mouseY+rnd(-CELL*0.10,CELL*0.10),vx:rnd(-0.30,0.30),vy:rnd(-0.90,-0.10),life:20,ml:20,color:_dtp.color,sz:rnd(1.5,3.5)});}
+  // Combo fire trail at combo ≥ 5
+  if(drag&&!over){const _dtp=tray[drag.idx];const _trailRate=combo>=5?0.72:0.50;if(_dtp&&Math.random()<_trailRate){const _trailCol=combo>=5?rndc(['#FF6020','#FF9020','#FFCC40','#FF3010']):_dtp.color;dragTrail.push({x:mouseX+rnd(-CELL*0.18,CELL*0.18),y:mouseY+rnd(-CELL*0.10,CELL*0.10),vx:rnd(-0.30,0.30),vy:rnd(-0.90,-0.10),life:combo>=5?28:20,ml:combo>=5?28:20,color:_trailCol,sz:rnd(combo>=5?2:1.5,combo>=5?5:3.5)});}}
   dragTrail=dragTrail.filter(dt=>{dt.x+=dt.vx;dt.y+=dt.vy;dt.vy-=0.05;dt.life--;if(dt.life<=0)return false;const _da=dt.life/dt.ml;ctx.fillStyle=hexA(dt.color,_da*0.60);ctx.beginPath();ctx.arc(dt.x,dt.y,Math.max(1,dt.sz*_da),0,Math.PI*2);ctx.fill();return true;});
   // Dragged piece (on top, no shake) + speed timer indicator
   if(drag&&!over){
@@ -981,6 +1067,8 @@ function drawGame(t){
   }
   // Combo color grading
   _drawComboGrade();
+  // Lightning grid at 100K+
+  _maybeSpawnLightning(t);_drawLightnings();
   // Rainbow hue-shift glory overlay at 100K+
   _drawRainbowGlory(t);
   // Electricity arcs on grid border at combo ≥ 4

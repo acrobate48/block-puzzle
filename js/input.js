@@ -20,7 +20,12 @@ function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;_ta
     if(Date.now()-overT>1200)gameState='menu';return;}
   // Block tray drag only when in choix PICKING phase; all other modes allow normal drag
   const _inChoixPick=(currentMode==='choix'||_getHistoireSubMode()==='choix')&&choixState==='picking';
-  if(gameState==='playing'&&!over&&!showSecondChance&&!showBonusPicker&&!_inChoixPick){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};break;}}}}
+  if(gameState==='playing'&&!over&&!showSecondChance&&!showBonusPicker&&!_inChoixPick){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};
+    // Pickup ripple + dust burst from tray slot
+    const _pcx=GRID_X+(i+0.5)*pw,_pcy=TRAY_Y+TRAY_H/2;
+    ripples.push({x:_pcx,y:_pcy,life:16,ml:16,maxR:CELL*1.1,color:tray[i].color});
+    for(let _dp=0;_dp<6;_dp++){const _da=_dp/6*Math.PI*2;particles.push({x:_pcx,y:_pcy,vx:Math.cos(_da)*rnd(0.8,2.2),vy:Math.sin(_da)*rnd(0.8,2.2)-0.5,color:tray[i].color,size:rnd(1.5,3),life:rnd(12,22),ml:22,circle:true});}
+    break;}}}}
 function onMove(e){e.preventDefault();const{x,y}=getPos(e);
   // Fix A: Only commit the new pointer position (and let the ghost piece follow)
   // once the finger has moved beyond the dead-zone threshold.  Until then we
@@ -57,9 +62,13 @@ function onUp(e){
   if(_hudBtnHit&&(_nowTap-_lastTapT)<_TAP_DEBOUNCE){drag=null;return;}
   if(_hudBtnHit)_lastTapT=_nowTap;
   // Pause HUD button
-  if(gameState==='playing'&&_pauseHudRect&&x>=_pauseHudRect.x&&x<_pauseHudRect.x+_pauseHudRect.w&&y>=_pauseHudRect.y&&y<_pauseHudRect.y+_pauseHudRect.h){gameState='pause';_pauseStartTime=Date.now();return;}
+  if(gameState==='playing'&&_pauseHudRect&&x>=_pauseHudRect.x&&x<_pauseHudRect.x+_pauseHudRect.w&&y>=_pauseHudRect.y&&y<_pauseHudRect.y+_pauseHudRect.h){
+    if(typeof _addUiRipple==='function')_addUiRipple(_pauseHudRect.x+_pauseHudRect.w/2,_pauseHudRect.y+_pauseHudRect.h/2,THEMES[curTheme]?.ta||'#FFFFFF',_pauseHudRect.w);
+    gameState='pause';_pauseStartTime=Date.now();return;}
   // Sound toggle (in-game bar only — menu has its own handler in handleMenuTap)
-  if(gameState==='playing'&&_soundRect&&x>=_soundRect.x&&x<_soundRect.x+_soundRect.w&&y>=_soundRect.y&&y<_soundRect.y+_soundRect.h){_soundEnabled=!_soundEnabled;return;}
+  if(gameState==='playing'&&_soundRect&&x>=_soundRect.x&&x<_soundRect.x+_soundRect.w&&y>=_soundRect.y&&y<_soundRect.y+_soundRect.h){
+    if(typeof _addUiRipple==='function')_addUiRipple(_soundRect.x+_soundRect.w/2,_soundRect.y+_soundRect.h/2,_soundEnabled?'#FF6060':'#40D8FF',_soundRect.w);
+    _soundEnabled=!_soundEnabled;return;}
   // ── MODE taps ──
   if(gameState==='playing'){
     const subMode=_getHistoireSubMode();
@@ -99,6 +108,7 @@ function onUp(e){
   }
   // ── Undo last placement ──────────────────────────────────────────────────────
   if(gameState==='playing'&&!over&&_undoHudRect&&x>=_undoHudRect.x&&x<_undoHudRect.x+_undoHudRect.w&&y>=_undoHudRect.y&&y<_undoHudRect.y+_undoHudRect.h){
+    if(typeof _addUiRipple==='function')_addUiRipple(_undoHudRect.x+_undoHudRect.w/2,_undoHudRect.y+_undoHudRect.h/2,'#60D0FF',_undoHudRect.w*0.6);
     if(_undoCount>0&&placeHistory.length>0){
       const last=placeHistory.pop();
       last.cells.forEach(({r,c})=>{grid[r][c]=null;gridStars[r][c]=false;gridBonus[r][c]=null;});
@@ -116,6 +126,7 @@ function onUp(e){
   }
   // ── Quick restart ─────────────────────────────────────────────────────────────
   if(gameState==='playing'&&!over&&_restartHudRect&&x>=_restartHudRect.x&&x<_restartHudRect.x+_restartHudRect.w&&y>=_restartHudRect.y&&y<_restartHudRect.y+_restartHudRect.h){
+    if(typeof _addUiRipple==='function')_addUiRipple(_restartHudRect.x+_restartHudRect.w/2,_restartHudRect.y+_restartHudRect.h/2,'#FF8040',_restartHudRect.w*0.6);
     if(score>best){best=score;try{localStorage.setItem('blockpuzzle_best',String(best));}catch(e2){}}
     resetGame();drag=null;return;
   }
@@ -200,8 +211,17 @@ function onUp(e){
       sndPlace();
       // Placement impact — spring shake + expanding ripple ring
       shake=Math.max(shake,3+Math.min(combo,3));shakePow=Math.max(shakePow,1.5+Math.min(combo,2)*0.5);
-      {const _rcx=GRID_X+(gc+piece.shape[0].length*0.5)*CELL,_rcy=GRID_Y+(gr+piece.shape.length*0.5)*CELL;
-       ripples.push({x:_rcx,y:_rcy,life:32,ml:32,maxR:CELL*(1.4+piece.shape.flat().filter(Boolean).length*0.09),color:piece.color});}
+      const _rcx=GRID_X+(gc+piece.shape[0].length*0.5)*CELL,_rcy=GRID_Y+(gr+piece.shape.length*0.5)*CELL;
+      ripples.push({x:_rcx,y:_rcy,life:32,ml:32,maxR:CELL*(1.4+piece.shape.flat().filter(Boolean).length*0.09),color:piece.color});
+      // Impact dust puff — tiny particles bursting outward from each placed cell edge
+      piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){
+        const _ix=GRID_X+(gc+cc+0.5)*CELL,_iy=GRID_Y+(gr+rr+0.5)*CELL;
+        for(let _d=0;_d<5;_d++){
+          const _da=rnd(0,Math.PI*2);
+          const _spd=rnd(1.2,3.5);
+          particles.push({x:_ix,y:_iy,vx:Math.cos(_da)*_spd,vy:Math.sin(_da)*_spd-0.8,color:piece.color,size:rnd(1,2.5),life:rnd(10,18),ml:18,circle:true});
+        }
+      }}));
       // ── Speed mechanic ───────────────────────────────────────────────────
       const now2=Date.now();
       const thinkMs=lastPlaceTime>0?now2-lastPlaceTime:4000;
@@ -357,8 +377,14 @@ function onUp(e){
 }
 function handleMenuTap(x,y){
   layoutMenu();
-  for(let i=0;i<skinRects.length;i++){const{x:rx,y:ry,w,h}=skinRects[i];if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){selSkin=i;return;}}
-  for(let i=0;i<themeRects.length;i++){const{x:rx,y:ry,w,h}=themeRects[i];if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){selTheme=i;menuBg=buildBg(i);menuFx=initFx(i);return;}}
+  for(let i=0;i<skinRects.length;i++){const{x:rx,y:ry,w,h}=skinRects[i];if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){selSkin=i;if(typeof _addMenuRipple==='function')_addMenuRipple(rx+w/2,ry+h/2,COLORS[i%COLORS.length],Math.max(w,h)*1.4);return;}}
+  for(let i=0;i<themeRects.length;i++){const{x:rx,y:ry,w,h}=themeRects[i];if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){selTheme=i;menuBg=buildBg(i);menuFx=initFx(i);
+    if(typeof _addMenuRipple==='function'){
+      _addMenuRipple(rx+w/2,ry+h/2,THEMES[i].tm,Math.max(w,h)*1.6);
+      // Burst 8 particles in theme color from card center
+      for(let _bp=0;_bp<8;_bp++){const _bang=_bp/8*Math.PI*2;menuParts.push({x:rx+w/2,y:ry+h/2,vx:Math.cos(_bang)*rnd(1.8,4),vy:Math.sin(_bang)*rnd(1.8,4),color:THEMES[i].tm,size:rnd(2,5),life:rnd(22,40),ml:40,star:true});}
+    }
+    return;}}
   if(playRect){const{x:rx,y:ry,w,h}=playRect;if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){gameState='modeselect';return;}}
   if(hasSave&&resumeRect){const{x:rx,y:ry,w,h}=resumeRect;if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){if(loadSave())return;}}
   if(_lbRect){const{x:rx,y:ry,w,h}=_lbRect;if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){gameState='leaderboard';return;}}

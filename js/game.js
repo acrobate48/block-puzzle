@@ -731,6 +731,52 @@ function _drawSnowAccum(){
   ctx.restore();
 }
 
+// ─── 39. AURORA BOREALIS — Night & Cosmos themes ────────────────────────────
+let _auroraT=0;
+function _drawAurora(t){
+  if(curTheme!==4&&curTheme!==6)return; // Night=4, Cosmos=6
+  _auroraT+=0.00035;
+  ctx.save();
+  const cols=curTheme===4
+    ?['rgba(100,40,200,','rgba(40,100,200,','rgba(60,200,160,']
+    :['rgba(180,40,255,','rgba(40,80,255,','rgba(255,40,200,'];
+  const aH=H*0.28; // ribbon height at top
+  for(let ai=0;ai<3;ai++){
+    const ax=W*(0.1+ai*0.3+Math.sin(_auroraT+ai*2.1)*0.2);
+    const ayw=aH*(0.4+Math.sin(_auroraT*0.7+ai*1.3)*0.3);
+    const ang=ctx.createLinearGradient(ax-W*0.15,0,ax+W*0.15,0);
+    ang.addColorStop(0,'rgba(0,0,0,0)');
+    ang.addColorStop(0.5,cols[ai]+`${(0.055+0.03*Math.sin(_auroraT*1.1+ai)).toFixed(3)})`);
+    ang.addColorStop(1,'rgba(0,0,0,0)');
+    const ag=ctx.createLinearGradient(0,0,0,ayw);
+    ag.addColorStop(0,cols[ai]+'0.05)');
+    ag.addColorStop(0.6,cols[ai]+'0.028)');
+    ag.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.save();ctx.globalCompositeOperation='screen';
+    ctx.fillStyle=ang;ctx.fillRect(ax-W*0.22,0,W*0.44,ayw);
+    ctx.fillStyle=ag;ctx.fillRect(0,0,W,ayw);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+// ─── 40. TRAY SLOT PIECE RADIANCE ────────────────────────────────────────────
+function _drawTrayRadiance(){
+  if(!tray||over)return;
+  const pw=GW/3;
+  ctx.save();
+  for(let i=0;i<3;i++){
+    const piece=tray[i];if(!piece||!piece.color)continue;
+    if(drag&&drag.idx===i)continue;
+    const cx=GRID_X+i*pw+pw/2,cy=TRAY_Y+TRAY_H/2;
+    const rg=ctx.createRadialGradient(cx,cy,0,cx,cy,pw*0.62);
+    rg.addColorStop(0,hexA(piece.color,0.12));
+    rg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=rg;ctx.fillRect(GRID_X+i*pw,TRAY_Y,pw,TRAY_H);
+  }
+  ctx.restore();
+}
+
 // ─── 36. DEPTH FOG AT GRID BOTTOM — Ocean & Arctic ──────────────────────────
 function _drawDepthFog(t){
   if(curTheme!==2&&curTheme!==5)return;
@@ -1014,6 +1060,8 @@ function drawGame(t){
   if(!drawThemeVideo(curTheme,shakeX,shakeY)&&!drawThemeBg(curTheme,shakeX,shakeY)){ctx.drawImage(gameBg,shakeX,shakeY);}
   if(typeof drawThemeTransition==='function')drawThemeTransition();
   _drawParallax(t);
+  // Aurora borealis (Night, Cosmos)
+  _drawAurora(t);
   // God rays (Jungle, Désert, Plage)
   _spawnGodRay();_drawGodRays();
   // Lensflare at 100K+
@@ -1320,6 +1368,8 @@ function drawGame(t){
   const _trayEased=1-Math.pow(1-_trayT,3);
   const _trayFade=_trayEased;
   const _traySlideY=((1-_trayEased)*TRAY_H*0.45)|0;
+  // Tray slot piece color radiance
+  _drawTrayRadiance();
   // Tray speed glow (color border based on think time)
   _drawTraySpeedGlow(t);
   // Danger tray pulse — extra red glow when grid is near-full

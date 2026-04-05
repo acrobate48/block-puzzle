@@ -49,7 +49,9 @@ function drawGame(t){
   const b2=Math.max(4,CELL*0.1|0);
   const fg3=ctx.createLinearGradient(GRID_X-b2,GRID_Y-b2,GRID_X-b2,GRID_Y+GH+b2);
   fg3.addColorStop(0,hexA(th.sl,0.9));fg3.addColorStop(1,hexA(th.dc,0.9));
-  rrect(ctx,GRID_X-b2,GRID_Y-b2,GW+b2*2,GH+b2*2,CR+b2,fg3,null);
+  ctx.save();ctx.shadowColor=th.gridGlow||th.ta;ctx.shadowBlur=8+4*Math.sin(t*0.001);
+  rrect(ctx,GRID_X-b2,GRID_Y-b2,GW+b2*2,GH+b2*2,CR+b2,fg3,th.gridBorder||th.sl,1.5);
+  ctx.restore();
   // Grid glass inner
   const gig=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X,GRID_Y+GH);
   gig.addColorStop(0,hexA(th.gbg,0.90));gig.addColorStop(1,hexA(th.ge,0.90));
@@ -220,9 +222,7 @@ function drawGame(t){
   const _trayFade=_trayEased;
   const _traySlideY=((1-_trayEased)*TRAY_H*0.45)|0;
   // Tray (glass)
-  const tbg2=ctx.createLinearGradient(GRID_X,TRAY_Y,GRID_X,TRAY_Y+TRAY_H);
-  tbg2.addColorStop(0,hexA(th.gbg,0.55));tbg2.addColorStop(1,hexA(th.ge,0.4));
-  rrect(ctx,GRID_X,TRAY_Y,GW,TRAY_H,CR,tbg2,hexA(th.dc,0.5),1);
+  rrect(ctx,GRID_X,TRAY_Y,GW,TRAY_H,CR,th.trayBg||hexA(th.gbg,0.55),hexA(th.dc,0.5),1);
   const topShine=ctx.createLinearGradient(GRID_X,TRAY_Y,GRID_X,TRAY_Y+TRAY_H*0.4);
   topShine.addColorStop(0,'rgba(255,255,255,0.08)');topShine.addColorStop(1,'rgba(255,255,255,0)');
   rrect(ctx,GRID_X,TRAY_Y,GW,TRAY_H,CR,topShine,null);
@@ -859,10 +859,8 @@ function drawHUD(th){
   if(portrait){
     // Glass top bar
     const bh=GRID_Y-3;
-    const hg2=ctx.createLinearGradient(0,0,0,bh);
-    hg2.addColorStop(0,'rgba(0,0,0,0.60)');hg2.addColorStop(1,'rgba(0,0,0,0.38)');
-    ctx.fillStyle=hg2;ctx.fillRect(0,0,W,bh);
-    ctx.strokeStyle=hexA(th.sl,0.35);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,bh);ctx.lineTo(W,bh);ctx.stroke();
+    ctx.fillStyle=th.hudBg||'rgba(0,0,0,0.88)';ctx.fillRect(0,0,W,bh);
+    ctx.strokeStyle=th.hudBorder||hexA(th.sl,0.35);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,bh);ctx.lineTo(W,bh);ctx.stroke();
     // Thin combo accent bar along bottom of HUD strip
     if(combo>=2&&!over){const _cbFrac=Math.min(1,combo/8);const _cbCol=combo>=6?'#FF40A0':combo>=4?'#FFA020':th.tm;const _cbW=Math.round(W*_cbFrac);const _cbX=(W-_cbW)/2|0;const _cbg=ctx.createLinearGradient(_cbX,bh-2,_cbX+_cbW,bh-2);_cbg.addColorStop(0,hexA(th.ta,0));_cbg.addColorStop(0.3,_cbCol);_cbg.addColorStop(0.7,_cbCol);_cbg.addColorStop(1,hexA(th.ta,0));ctx.fillStyle=_cbg;ctx.fillRect(_cbX,bh-2,_cbW,2);}
     // Score centré avec animation de pulsation

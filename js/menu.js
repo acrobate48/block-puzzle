@@ -8,6 +8,11 @@ let menuParts=Array.from({length:70},(_,i)=>{
     color:rndc(COLORS),size:big?rnd(4,9):rnd(1.5,4),life:rnd(0,big?240:180),ml:big?240:180,star:big};
 });
 let skinRects=[],themeRects=[],playRect=null;
+// ─── MENU CLICK RIPPLES ───────────────────────────────────────────────────────
+let _menuRipples=[];
+function _addMenuRipple(x,y,col,maxR){
+  _menuRipples.push({x,y,r:0,maxR:maxR||90,col,born:Date.now()});
+}
 
 function layoutMenu(){
   // Compact mode for small/medium screens (height < 750px) to prevent layout overflow
@@ -73,6 +78,25 @@ function drawMenu(t){
   const th=THEMES[selTheme];
   if(!drawThemeVideo(selTheme,0,0)&&!drawThemeBg(selTheme,0,0)){ctx.drawImage(menuBg,0,0);}
   drawFx(ctx,menuFx,t);
+  // ── Menu click ripples ──────────────────────────────────────────────────────
+  _menuRipples=_menuRipples.filter(_mr=>{
+    const _mp=Math.min(1,(Date.now()-_mr.born)/380);
+    if(_mp>=1)return false;
+    const _mrad=_mr.maxR*Math.pow(_mp,0.45);
+    const _ma=(1-_mp)*(1-_mp)*0.85;
+    ctx.save();
+    ctx.strokeStyle=hexA(_mr.col,_ma);ctx.lineWidth=2.5-_mp*2;
+    ctx.shadowColor=_mr.col;ctx.shadowBlur=18*(1-_mp);
+    ctx.beginPath();ctx.arc(_mr.x,_mr.y,_mrad,0,Math.PI*2);ctx.stroke();
+    if(_mp>0.18){
+      const _mp2=(_mp-0.18)/0.82;
+      ctx.strokeStyle=hexA(_mr.col,(1-_mp2)*(1-_mp2)*0.4);
+      ctx.lineWidth=1.5*(1-_mp2);ctx.shadowBlur=8*(1-_mp2);
+      ctx.beginPath();ctx.arc(_mr.x,_mr.y,_mr.maxR*0.55*Math.pow(_mp2,0.45),0,Math.PI*2);ctx.stroke();
+    }
+    ctx.restore();
+    return true;
+  });
   // Animated dot grid overlay (subtle premium texture)
   {const _gs=Math.round(Math.min(W,H)*0.088);const _gt=t*0.00045;ctx.save();ctx.fillStyle=hexA(th.tm,0.055);for(let _gy=_gs*0.5;_gy<H+_gs;_gy+=_gs){for(let _gx=_gs*0.5;_gx<W+_gs;_gx+=_gs){const _ox=Math.sin(_gt+_gy*0.014)*9,_oy=Math.cos(_gt+_gx*0.012)*9;ctx.beginPath();ctx.arc(_gx+_ox,_gy+_oy,1.3,0,Math.PI*2);ctx.fill();}}ctx.restore();}
   // Deco blocks

@@ -2,6 +2,8 @@
 // ─── GAME RENDER ─────────────────────────────────────────────────────────────
 // Premium UI state
 let _goDisplayScore=0,_goRecBurst=false,_goReplayRect=null,_goMenuRect=null,_hudScorePulse=0;
+let _uiRipples=[];
+function _addUiRipple(x,y,col,maxR){_uiRipples.push({x,y,col:col||'#FFFFFF',maxR:maxR||32,born:Date.now()});}
 function drawGame(t){
   const newTh=getCurTheme();
   if(newTh!==curTheme){const _prevTh=curTheme;curTheme=newTh;gameBg=buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=180;screenFlashCol=THEMES[curTheme].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));if(typeof _ensureVidPlaying==='function')_ensureVidPlaying(curTheme);}
@@ -199,6 +201,24 @@ function drawGame(t){
         if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS)drawCell(ctx,ghostColor,GRID_X+pc2*CELL,GRID_Y+pr2*CELL,CELL,selSkin,t);
       }}));
       ctx.globalAlpha=1;
+      // ── Snap lock indicator — pulsing corner brackets on valid drop zone ──────
+      if(valid){
+        const _slT=0.55+0.45*Math.sin(Date.now()*0.009);
+        const _slSz=Math.max(4,CELL*0.22)|0;
+        ctx.save();ctx.strokeStyle=hexA(piece.color,0.85*_slT);ctx.lineWidth=2;
+        ctx.shadowColor=piece.color;ctx.shadowBlur=8*_slT;
+        piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;
+          if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS){
+            const _sx=GRID_X+pc2*CELL,_sy=GRID_Y+pr2*CELL,_sc=CELL;
+            // Four corner L-brackets
+            ctx.beginPath();ctx.moveTo(_sx+_slSz,_sy);ctx.lineTo(_sx,_sy);ctx.lineTo(_sx,_sy+_slSz);ctx.stroke();
+            ctx.beginPath();ctx.moveTo(_sx+_sc-_slSz,_sy);ctx.lineTo(_sx+_sc,_sy);ctx.lineTo(_sx+_sc,_sy+_slSz);ctx.stroke();
+            ctx.beginPath();ctx.moveTo(_sx,_sy+_sc-_slSz);ctx.lineTo(_sx,_sy+_sc);ctx.lineTo(_sx+_slSz,_sy+_sc);ctx.stroke();
+            ctx.beginPath();ctx.moveTo(_sx+_sc-_slSz,_sy+_sc);ctx.lineTo(_sx+_sc,_sy+_sc);ctx.lineTo(_sx+_sc,_sy+_sc-_slSz);ctx.stroke();
+          }
+        }}));
+        ctx.restore();
+      }
     }
   }
   // ── Phase badge — subtle indicator of current engagement phase ──────────────
@@ -980,5 +1000,17 @@ function drawHUD(th){
     _restartHudRect={x:hx,y:cy,w:_lbW,h:_lbH};}
     ctx.textBaseline='alphabetic';
   }
+  // ── UI ripples (HUD button press feedback) ──────────────────────────────────
+  _uiRipples=_uiRipples.filter(_ur=>{
+    const _up=Math.min(1,(Date.now()-_ur.born)/220);
+    if(_up>=1)return false;
+    const _ura=(1-_up)*(1-_up)*0.75;
+    ctx.save();
+    ctx.strokeStyle=hexA(_ur.col,_ura);ctx.lineWidth=2*(1-_up)+0.5;
+    ctx.shadowColor=_ur.col;ctx.shadowBlur=10*(1-_up);
+    ctx.beginPath();ctx.arc(_ur.x,_ur.y,_ur.maxR*Math.pow(_up,0.4),0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+    return true;
+  });
 }
 

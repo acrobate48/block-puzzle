@@ -731,6 +731,81 @@ function _drawSnowAccum(){
   ctx.restore();
 }
 
+// ─── 36. DEPTH FOG AT GRID BOTTOM — Ocean & Arctic ──────────────────────────
+function _drawDepthFog(t){
+  if(curTheme!==2&&curTheme!==5)return;
+  const fh=CELL*1.8;
+  const fy=GRID_Y+GH-fh;
+  ctx.save();
+  const pulse=0.5+0.5*Math.sin(t*0.0009);
+  const fg=ctx.createLinearGradient(GRID_X,fy,GRID_X,fy+fh);
+  if(curTheme===2){// Ocean: deep blue-green fog
+    fg.addColorStop(0,'rgba(0,0,0,0)');
+    fg.addColorStop(0.4,`rgba(0,30,80,${(0.18*pulse).toFixed(3)})`);
+    fg.addColorStop(1,`rgba(0,10,50,${(0.32*pulse).toFixed(3)})`);
+  }else{// Arctic: white ice mist
+    fg.addColorStop(0,'rgba(0,0,0,0)');
+    fg.addColorStop(0.4,`rgba(160,210,255,${(0.12*pulse).toFixed(3)})`);
+    fg.addColorStop(1,`rgba(200,230,255,${(0.22*pulse).toFixed(3)})`);
+  }
+  ctx.fillStyle=fg;ctx.fillRect(GRID_X,fy,GW,fh);
+  ctx.restore();
+}
+
+// ─── 37. ALMOST-FULL COLUMN DRIP — Ocean theme ──────────────────────────────
+let _colDrips=[]; // {c,born,col}
+function _updateColDrips(){
+  if(curTheme!==2||!grid||over)return;
+  for(let c=0;c<COLS;c++){
+    const filled=grid.filter(row=>row[c]).length;
+    if(filled>=ROWS-2&&Math.random()<0.025){
+      _colDrips.push({c,born:Date.now(),col:rndc(['#40C8FF','#80F0FF','#FFFFFF','#20A8FF'])});
+      if(_colDrips.length>20)_colDrips.shift();
+    }
+  }
+}
+function _drawColDrips(){
+  if(!_colDrips.length)return;
+  const now=Date.now();
+  ctx.save();
+  _colDrips=_colDrips.filter(d=>{
+    const p=Math.min(1,(now-d.born)/500);if(p>=1)return false;
+    const x=GRID_X+d.c*CELL+CELL/2+rnd(-CELL*0.25,CELL*0.25);
+    const y=GRID_Y+p*GH;
+    const a=(1-p)*(1-p)*0.7;
+    // Droplet
+    ctx.fillStyle=hexA(d.col,a);
+    ctx.beginPath();ctx.arc(x,y,Math.max(1.5,CELL*0.08),0,Math.PI*2);ctx.fill();
+    // Streak
+    ctx.strokeStyle=hexA(d.col,a*0.45);ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x,y-CELL*0.3*p);ctx.lineTo(x,y);ctx.stroke();
+    return true;
+  });
+  ctx.restore();
+}
+
+// ─── 38. HEAT SHIMMER — Volcano theme ───────────────────────────────────────
+let _heatT=0;
+function _drawHeatShimmer(t){
+  if(curTheme!==3||!grid||over)return;
+  _heatT+=0.018;
+  // Subtle upward wavy bands in columns with filled cells
+  ctx.save();ctx.globalAlpha=0.045;
+  for(let c=0;c<COLS;c++){
+    const hasCell=grid.some(row=>row[c]);
+    if(!hasCell)continue;
+    const x=GRID_X+c*CELL;
+    // Wavy gradient strip
+    const hs=Math.sin(_heatT+c*0.7)*CELL*0.18;
+    const hg=ctx.createLinearGradient(x,GRID_Y,x+hs,GRID_Y+GH);
+    hg.addColorStop(0,'rgba(255,80,0,0)');
+    hg.addColorStop(0.5,'rgba(255,120,20,1)');
+    hg.addColorStop(1,'rgba(255,80,0,0)');
+    ctx.fillStyle=hg;ctx.fillRect(x,GRID_Y,CELL,GH);
+  }
+  ctx.globalAlpha=1;ctx.restore();
+}
+
 // ─── 34. NÉOPOLIS HOLOGRAPHIC DEPTH LINES ───────────────────────────────────
 function _drawHolographic(t){
   if(curTheme!==9||over)return;
@@ -1083,6 +1158,12 @@ function drawGame(t){
   _drawLandingFlashes();
   // Snow accumulation display (Arctic theme)
   _drawSnowAccum();
+  // Depth fog at grid bottom (Ocean/Arctic)
+  _drawDepthFog(t);
+  // Ocean column drips
+  _updateColDrips();_drawColDrips();
+  // Heat shimmer (Volcano)
+  _drawHeatShimmer(t);
   // Floor glow effect below grid
   _drawFloorEffect(t);
   // Stress cracks on overcrowded grid

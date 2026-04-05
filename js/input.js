@@ -204,6 +204,7 @@ function onUp(e){
     // Short tap (minimal finger movement) → rotate piece 90° clockwise
     if(piece&&Math.hypot(x-_tapStartX,y-_tapStartY)<CELL*0.45){
       tray[drag.idx]={...piece,shape:rotateShape(piece.shape)};
+      if(typeof _triggerRotFlash==='function')_triggerRotFlash(x,y,piece.color);
       drag=null;return;
     }
     if(piece){const{gr,gc}=snapPos(x,y,piece.shape);if(_modeCanPlace(grid,piece.shape,gr,gc)){
@@ -327,7 +328,11 @@ function onUp(e){
         combo++;
         // Achievement #2 (combo×3) + #9 (combo×5)
         if(typeof _unlockAchieve==='function'){if(combo>=3)_unlockAchieve(1);if(combo>=5)_unlockAchieve(8);}
-        if(combo>bestCombo){bestCombo=combo;try{localStorage.setItem('bp_bestcombo',String(bestCombo));}catch(e2){}}
+        if(combo>bestCombo){bestCombo=combo;try{localStorage.setItem('bp_bestcombo',String(bestCombo));}catch(e2){}
+          // New best combo — 2-ring burst from grid center
+          ripples.push({x:GRID_X+GW/2,y:GRID_Y+GH/2,life:55,ml:55,maxR:Math.max(GW,GH)*1.1,color:combo>=5?'#FF40FF':combo>=3?'#FFA020':THEMES[ti].tm});
+          setTimeout(()=>ripples.push({x:GRID_X+GW/2,y:GRID_Y+GH/2,life:45,ml:45,maxR:Math.max(GW,GH)*0.7,color:'#FFFFFF'}),100);
+        }
         maxComboGame=Math.max(maxComboGame,combo);
         if(combo>=2){sndCombo(combo);
           // Sparkle burst — star-shaped particles scatter across grid on combos
@@ -352,7 +357,10 @@ function onUp(e){
         if(!_newBestTriggered&&score>best){_newBestTriggered=true;best=score;try{localStorage.setItem('blockpuzzle_best',String(best));}catch(e2){}
           screenFlash=255;screenFlashCol='#FFD700';shake=Math.max(shake,16);shakePow=Math.max(shakePow,7);
           floats.push(new FloatText('🏆 NOUVEAU RECORD !',W/2,H*0.38,'#FFD700',2.0,180));
-          spawnParticles(Array.from({length:12},(_,i)=>({r:rndI(0,ROWS-1),c:i})),5,2,['#FFD700','#FFF0A0','#FFA500']);}
+          spawnParticles(Array.from({length:12},(_,i)=>({r:rndI(0,ROWS-1),c:i})),5,2,['#FFD700','#FFF0A0','#FFA500']);
+        // Milestone ring cascade — 3 expanding rings from grid center
+        const _mcx=GRID_X+GW/2,_mcy=GRID_Y+GH/2;
+        [1,1.6,2.3].forEach((mul,ri)=>{setTimeout(()=>{ripples.push({x:_mcx,y:_mcy,life:60,ml:60,maxR:Math.max(GW,GH)*mul,color:'#FFD700'});},ri*120);});}
         spawnParticles(cells,6,1.2,THEMES[ti].pc);spawnDebris(colors,ti,8);
       // Combo energy beam
       if(combo>=3&&typeof _triggerComboBeam==='function'){const _bcx=GRID_X+(gc+piece.shape[0].length/2)*CELL,_bcy=GRID_Y+(gr+piece.shape.length/2)*CELL;_triggerComboBeam(_bcx,_bcy);}

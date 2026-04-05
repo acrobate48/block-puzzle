@@ -212,6 +212,38 @@ function _drawScanlines(){
   ctx.restore();
 }
 
+// ─── 16. GHOST SNAP BOUNCE ────────────────────────────────────────────────────
+let _lastSnapGr=-1,_lastSnapGc=-1,_snapBounce=0;
+function _updateSnapBounce(gr,gc){
+  if(gr!==_lastSnapGr||gc!==_lastSnapGc){_snapBounce=1.0;_lastSnapGr=gr;_lastSnapGc=gc;}
+  else{_snapBounce=Math.max(0,_snapBounce*0.72);}
+  return 1+_snapBounce*0.14;
+}
+
+// ─── 17. ROTATION SPIN FLASH ─────────────────────────────────────────────────
+let _rotFlashes=[]; // {x,y,born,color}
+function _triggerRotFlash(x,y,color){_rotFlashes.push({x,y,born:Date.now(),color:color||'#FFFFFF'});}
+function _drawRotFlashes(){
+  if(!_rotFlashes.length)return;
+  const now=Date.now();
+  ctx.save();
+  _rotFlashes=_rotFlashes.filter(rf=>{
+    const p=Math.min(1,(now-rf.born)/380);
+    if(p>=1)return false;
+    const a=(1-p)*(1-p)*0.75;
+    const sz=CELL*(0.5+p*1.2);
+    // Expanding ring
+    ctx.strokeStyle=hexA(rf.color,a);ctx.lineWidth=2*(1-p)+0.5;
+    ctx.shadowColor=rf.color;ctx.shadowBlur=10*(1-p);
+    ctx.beginPath();ctx.arc(rf.x,rf.y,sz,0,Math.PI*2);ctx.stroke();
+    // Rotation arc sweep
+    ctx.strokeStyle=hexA(rf.color,a*0.5);ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(rf.x,rf.y,sz*0.6,-Math.PI/2,-Math.PI/2+p*Math.PI*2);ctx.stroke();
+    return true;
+  });
+  ctx.shadowBlur=0;ctx.restore();
+}
+
 // ─── 15. COMBO ENERGY BEAM ───────────────────────────────────────────────────
 let _lastPlaceCx=0,_lastPlaceCy=0; // set from input.js on placement
 let _comboBeamBorn=0;
@@ -679,10 +711,19 @@ function drawGame(t){
       piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;
         if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS){const er=Math.max(2,CELL/6|0);rrect(ctx,GRID_X+pc2*CELL+2,GRID_Y+pr2*CELL+2,CELL-4,CELL-4,er,ghostColor,null);}
       }}));ctx.restore();
-      // Ghost cells (translucent)
+      // Ghost cells (translucent) with snap bounce scale
+      const _snapSc=valid?_updateSnapBounce(gr,gc):1;
       ctx.globalAlpha=valid?0.38:0.28;
       piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;
-        if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS)drawCell(ctx,ghostColor,GRID_X+pc2*CELL,GRID_Y+pr2*CELL,CELL,selSkin,t);
+        if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS){
+          if(_snapSc>1.001){
+            const _gx=GRID_X+pc2*CELL+CELL/2,_gy=GRID_Y+pr2*CELL+CELL/2;
+            const _gOff=CELL*(_snapSc-1)/2;
+            ctx.save();ctx.translate(_gx,_gy);ctx.scale(_snapSc,_snapSc);ctx.translate(-_gx,-_gy);
+            drawCell(ctx,ghostColor,GRID_X+pc2*CELL-_gOff,GRID_Y+pr2*CELL-_gOff,CELL*_snapSc,selSkin,t);
+            ctx.restore();
+          }else drawCell(ctx,ghostColor,GRID_X+pc2*CELL,GRID_Y+pr2*CELL,CELL,selSkin,t);
+        }
       }}));
       ctx.globalAlpha=1;
       // ── Snap lock indicator — pulsing corner brackets on valid drop zone ──────
@@ -801,6 +842,8 @@ function drawGame(t){
     } // end if(pvH>12)
   }
   ctx.restore();
+  // Rotation flash rings
+  _drawRotFlashes();
   // Drag trail — spawn energy particles + render behind piece each frame
   if(drag&&!over){const _dtp=tray[drag.idx];if(_dtp&&Math.random()<0.50)dragTrail.push({x:mouseX+rnd(-CELL*0.18,CELL*0.18),y:mouseY+rnd(-CELL*0.10,CELL*0.10),vx:rnd(-0.30,0.30),vy:rnd(-0.90,-0.10),life:20,ml:20,color:_dtp.color,sz:rnd(1.5,3.5)});}
   dragTrail=dragTrail.filter(dt=>{dt.x+=dt.vx;dt.y+=dt.vy;dt.vy-=0.05;dt.life--;if(dt.life<=0)return false;const _da=dt.life/dt.ml;ctx.fillStyle=hexA(dt.color,_da*0.60);ctx.beginPath();ctx.arc(dt.x,dt.y,Math.max(1,dt.sz*_da),0,Math.PI*2);ctx.fill();return true;});

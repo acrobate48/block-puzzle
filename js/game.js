@@ -566,7 +566,10 @@ function drawGame(t){
   // ── 3D Perspective tilt when dragging ────────────────────────────────────────
   if(drag&&!over){_tiltX+=((mouseX-W/2)/W*0.018-_tiltX)*0.08;_tiltY+=((mouseY-H/2)/H*0.012-_tiltY)*0.06;}
   else{_tiltX*=0.88;_tiltY*=0.88;}
+  // Subtle grid heartbeat scale (±0.8% breath)
+  const _breathSc=1+0.008*Math.sin(t*0.0028);
   ctx.save();ctx.translate(shakeX,shakeY);
+  {const _gCx=GRID_X+GW/2,_gCy=GRID_Y+GH/2;ctx.translate(_gCx,_gCy);ctx.scale(_breathSc,_breathSc);ctx.translate(-_gCx,-_gCy);}
   if(Math.abs(_tiltX)>0.0005||Math.abs(_tiltY)>0.0005){
     const _gCx=GRID_X+GW/2,_gCy=GRID_Y+GH/2;
     ctx.translate(_gCx,_gCy);ctx.transform(1,_tiltY,_tiltX,1,0,0);ctx.translate(-_gCx,-_gCy);
@@ -735,6 +738,10 @@ function drawGame(t){
     }
   }
   if(drag&&gameState==='playing'&&!over){
+    // Spotlight: subtle radial darkening outside dragged piece focus area
+    {const sg=ctx.createRadialGradient(mouseX,mouseY,CELL*1.2,mouseX,mouseY,Math.max(W,H)*0.7);
+    sg.addColorStop(0,'rgba(0,0,0,0)');sg.addColorStop(1,'rgba(0,0,0,0.22)');
+    ctx.save();ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);ctx.restore();}
     const piece=tray[drag.idx];
     if(piece){
       const{gr,gc}=snapPos(mouseX,mouseY,piece.shape);

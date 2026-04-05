@@ -1611,6 +1611,22 @@ function drawHUD(th){
     ctx.strokeStyle=th.hudBorder||hexA(th.sl,0.35);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,bh);ctx.lineTo(W,bh);ctx.stroke();
     // Thin combo accent bar along bottom of HUD strip
     if(combo>=2&&!over){const _cbFrac=Math.min(1,combo/8);const _cbCol=combo>=6?'#FF40A0':combo>=4?'#FFA020':th.tm;const _cbW=Math.round(W*_cbFrac);const _cbX=(W-_cbW)/2|0;const _cbg=ctx.createLinearGradient(_cbX,bh-2,_cbX+_cbW,bh-2);_cbg.addColorStop(0,hexA(th.ta,0));_cbg.addColorStop(0.3,_cbCol);_cbg.addColorStop(0.7,_cbCol);_cbg.addColorStop(1,hexA(th.ta,0));ctx.fillStyle=_cbg;ctx.fillRect(_cbX,bh-2,_cbW,2);}
+    // Milestone progress bar — top edge of HUD strip (1px, shows progress to next milestone)
+    if(!over){
+      const _prevMs=_nextMilestoneIdx>0?_MILESTONES[_nextMilestoneIdx-1]:0;
+      const _nextMs=_nextMilestoneIdx<_MILESTONES.length?_MILESTONES[_nextMilestoneIdx]:null;
+      if(_nextMs){
+        const _mFrac=Math.min(1,(score-_prevMs)/(_nextMs-_prevMs));
+        const _mPulse=0.8+0.2*Math.abs(Math.sin(Date.now()*0.003));
+        const _mCol=_nextMs>=100000?`hsl(${(Date.now()*0.05)%360|0},100%,65%)`:'#FFD700';
+        const _mg=ctx.createLinearGradient(0,0,W*_mFrac,0);
+        _mg.addColorStop(0,hexA(_mCol,0.18));_mg.addColorStop(0.7,hexA(_mCol,0.38*_mPulse));_mg.addColorStop(1,hexA(_mCol,0.55*_mPulse));
+        ctx.fillStyle=_mg;ctx.fillRect(0,0,Math.round(W*_mFrac),2);
+        // Sparkle at tip of progress bar
+        ctx.save();ctx.shadowColor=_mCol;ctx.shadowBlur=4;ctx.fillStyle=hexA(_mCol,_mPulse);ctx.fillRect(Math.round(W*_mFrac)-2,0,2,2);ctx.restore();
+      }else{// All milestones passed — rainbow fill
+        const _rh=(Date.now()*0.04)%360|0;ctx.fillStyle=`hsl(${_rh},100%,60%)`;ctx.fillRect(0,0,W,2);}
+    }
     // Score centré avec animation de pulsation + rainbow glow at 100K
     const fz=cl(bh*0.55|0,11,24);
     // New record indicator — subtle golden crown above score

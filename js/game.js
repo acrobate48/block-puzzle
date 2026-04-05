@@ -731,6 +731,56 @@ function _drawSnowAccum(){
   ctx.restore();
 }
 
+// ─── 34. NÉOPOLIS HOLOGRAPHIC DEPTH LINES ───────────────────────────────────
+function _drawHolographic(t){
+  if(curTheme!==9||over)return;
+  const _nf=getNeonFlicker();
+  ctx.save();
+  // Perspective lines from bottom to vanishing point above grid
+  const vx=GRID_X+GW/2,vy=GRID_Y-GH*0.55;
+  const pulse=0.45+0.45*Math.abs(Math.sin(t*0.004));
+  ctx.strokeStyle=`rgba(0,220,255,${(0.055*pulse*_nf).toFixed(3)})`;
+  ctx.lineWidth=0.5;
+  for(let c=0;c<=COLS;c+=2){
+    const bx=GRID_X+c*CELL,by=GRID_Y+GH;
+    ctx.beginPath();ctx.moveTo(lerp(vx,bx,0.18),lerp(vy,by,0.18));ctx.lineTo(bx,by);ctx.stroke();
+  }
+  // Horizontal scan sweep
+  const scanY=GRID_Y+((t*0.028)%GH);
+  const scanG=ctx.createLinearGradient(GRID_X,scanY-8,GRID_X,scanY+8);
+  scanG.addColorStop(0,'rgba(0,220,255,0)');
+  scanG.addColorStop(0.5,`rgba(0,220,255,${(0.10*_nf*pulse).toFixed(3)})`);
+  scanG.addColorStop(1,'rgba(0,220,255,0)');
+  ctx.fillStyle=scanG;ctx.fillRect(GRID_X,scanY-8,GW,16);
+  ctx.restore();
+}
+
+// ─── 35. CORNER SPARKS ON FRESHLY PLACED CELLS ──────────────────────────────
+function _drawFreshCornerSparks(){
+  if(!placedCellsMap.size)return;
+  ctx.save();
+  placedCellsMap.forEach((f,k)=>{
+    if(f>=5)return; // only first 5 animation frames
+    const r=Math.floor(k/100),c=k%100;
+    if(r<0||r>=ROWS||c<0||c>=COLS||!grid||!grid[r][c])return;
+    const x=GRID_X+c*CELL,y=GRID_Y+r*CELL;
+    const col=grid[r][c];const csf=1-f/5;
+    ctx.globalAlpha=csf*0.72;ctx.fillStyle=col;
+    ctx.shadowColor=col;ctx.shadowBlur=CELL*0.12;
+    const csz=Math.max(1.5,CELL*0.055);
+    [[0,0],[CELL,0],[0,CELL],[CELL,CELL]].forEach(([ox,oy])=>{
+      const oa=f*CELL*0.055;
+      const px2=x+ox+(ox?oa:-oa),py2=y+oy+(oy?oa:-oa);
+      ctx.beginPath();ctx.arc(px2,py2,csz,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle=hexA(col,csf*0.52);ctx.lineWidth=0.7;
+      const sl=CELL*0.11*csf;
+      ctx.beginPath();ctx.moveTo(px2-sl,py2);ctx.lineTo(px2+sl,py2);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(px2,py2-sl);ctx.lineTo(px2,py2+sl);ctx.stroke();
+    });
+  });
+  ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();
+}
+
 // ─── 31. PRISMATIC CRYSTAL SHIMMER — skin 1 (CRISTAL) ───────────────────────
 function _drawCrystalShimmer(t){
   if(selSkin!==1||!grid||over)return;
@@ -959,6 +1009,8 @@ function drawGame(t){
   for(let _gr2=0;_gr2<=ROWS;_gr2++){ctx.beginPath();ctx.moveTo(GRID_X,GRID_Y+_gr2*CELL);ctx.lineTo(GRID_X+GW,GRID_Y+_gr2*CELL);ctx.stroke();}
   for(let _gc2=0;_gc2<=COLS;_gc2++){ctx.beginPath();ctx.moveTo(GRID_X+_gc2*CELL,GRID_Y);ctx.lineTo(GRID_X+_gc2*CELL,GRID_Y+GH);ctx.stroke();}
   ctx.restore();
+  // Néopolis holographic depth lines (behind cells)
+  _drawHolographic(t);
   // Cells
   const _parasiteSet=new Set(parasites.map(p=>p.r*100+p.c));
   for(let r=0;r<ROWS;r++){for(let c=0;c<COLS;c++){
@@ -1000,6 +1052,8 @@ function drawGame(t){
       ctx.fillStyle=hexA(th.sl,0.15);ctx.beginPath();ctx.arc(x+CELL/2,y+CELL/2,Math.max(1,CELL*0.055),0,Math.PI*2);ctx.fill();
     }
   }}
+  // Corner sparks on freshly placed cells
+  _drawFreshCornerSparks();
   // Prismatic shimmer — Crystal skin
   _drawCrystalShimmer(t);
   // Combo fire cell overlay (combo ≥ 5)
@@ -1934,6 +1988,17 @@ function drawHUD(th){
     else{
       if(_scoreTierCol){ctx.save();ctx.shadowColor=_scoreTierCol;ctx.shadowBlur=6;drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);ctx.restore();}
       else drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);
+    }
+    // New best — rotating golden orbit ring around score
+    if(_newBestTriggered&&!over){
+      const _orR=fz*0.92;
+      const _orA=0.45+0.25*Math.abs(Math.sin(Date.now()*0.003));
+      ctx.save();ctx.translate(W/2,bh/2);ctx.rotate(Date.now()*0.0018);
+      ctx.strokeStyle=hexA('#FFD700',_orA);ctx.lineWidth=1.2;
+      ctx.shadowColor='#FFD700';ctx.shadowBlur=7;
+      ctx.setLineDash([_orR*0.38,_orR*0.16]);
+      ctx.beginPath();ctx.arc(0,0,_orR,0,Math.PI*2);ctx.stroke();
+      ctx.setLineDash([]);ctx.restore();
     }
     // Left: mode badge pill + record
     const modeInfo=MODES[currentMode]||MODES.survie;

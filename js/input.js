@@ -255,8 +255,14 @@ function onUp(e){
         placeHistory.push({cells:hCells,piece:{shape:piece.shape,color:piece.color},trayIdx:drag.idx});
         if(placeHistory.length>5)placeHistory.shift();
       }
-      // Petites particules de placement
-      {const pcells2=[];piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)pcells2.push({r:gr+rr,c:gc+cc});}));spawnParticles(pcells2,2,0.45,[piece.color]);}
+      // Petites particules de placement + impact flash ripple
+      {const pcells2=[];piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)pcells2.push({r:gr+rr,c:gc+cc});}));spawnParticles(pcells2,2,0.45,[piece.color]);
+      // Impact flash: single white ripple from piece centroid
+      const _icx=GRID_X+(gc+piece.shape[0].length/2)*CELL,_icy=GRID_Y+(gr+piece.shape.length/2)*CELL;
+      ripples.push({x:_icx,y:_icy,life:20,ml:20,maxR:CELL*(0.8+piece.shape[0].length*0.3),color:'#FFFFFF'});
+      ripples.push({x:_icx,y:_icy,life:14,ml:14,maxR:CELL*(0.5+piece.shape[0].length*0.2),color:piece.color});
+      // Landing column flash
+      if(typeof _addLandingFlash==='function'){const _lcols=new Set();piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)_lcols.add(gc+cc);}));_addLandingFlash([..._lcols],piece.color);}}
       tray[drag.idx]=null;placed++;
       // Fresh cell halos
       if(typeof _addFreshCell==='function')piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)_addFreshCell(gr+rr,gc+cc,piece.color);}));
@@ -273,6 +279,31 @@ function onUp(e){
         if(typeof _unlockAchieve==='function'&&totalLinesCleared>=10)_unlockAchieve(2);
         // Animation sweep
         clearAnims.push({cells:[...cells],born:Date.now(),color:THEMES[ti].tm});
+        // ── CINEMATIC SHATTER — shockwave rings + directional debris ────────────
+        {const _cCx=cells.reduce((s,{c})=>s+c,0)/cells.length;
+        const _cCy=cells.reduce((s,{r})=>s+r,0)/cells.length;
+        const _cPx=GRID_X+(_cCx+0.5)*CELL,_cPy=GRID_Y+(_cCy+0.5)*CELL;
+        const _maxR=Math.max(GW,GH)*0.9;
+        ripples.push({x:_cPx,y:_cPy,life:55,ml:55,maxR:_maxR,color:THEMES[ti].tm});
+        ripples.push({x:_cPx,y:_cPy,life:40,ml:40,maxR:_maxR*0.6,color:'#FFFFFF'});
+        if(n>=2)ripples.push({x:_cPx,y:_cPy,life:28,ml:28,maxR:_maxR*0.38,color:THEMES[ti].ta||THEMES[ti].hi||'#FFFF80'});
+        // Directional shards fly outward from centroid
+        cells.forEach(({r,c})=>{
+          const cx2=GRID_X+(c+0.5)*CELL,cy2=GRID_Y+(r+0.5)*CELL;
+          const dx=cx2-_cPx,dy=cy2-_cPy;
+          const dist=Math.sqrt(dx*dx+dy*dy)||1;
+          const ndx=dx/dist,ndy=dy/dist;
+          const col=(colors&&colors[r*100+c])||THEMES[ti].tm;
+          const ns=3+Math.floor(Math.random()*3);
+          for(let si=0;si<ns;si++){
+            const spd=rnd(3,7+n);const spr=rnd(-0.8,0.8);
+            particles.push({x:cx2+rnd(-CELL*0.3,CELL*0.3),y:cy2+rnd(-CELL*0.3,CELL*0.3),
+              vx:ndx*spd+spr,vy:ndy*spd+spr-2.8,
+              color:col,size:rnd(1.8,4.5),life:rnd(28,48)|0,ml:48,circle:Math.random()>0.4});
+          }
+          // Two directional square shards per cell
+          for(let di=0;di<2;di++){const d=new Debris(cx2+rnd(-CELL*0.25,CELL*0.25),cy2+rnd(-CELL*0.25,CELL*0.25),col,ti);d.vx=ndx*rnd(2,5+n)+rnd(-1,1);d.vy=ndy*rnd(1.5,4)-rnd(1,3.5);d.circ=false;debris.push(d);}
+        });}
         let starPts=0;const bombList=[];let hasX2=false;
         // Kill parasites in cleared lines
         const clearedSet=new Set(cells.map(({r,c})=>r*100+c));

@@ -191,6 +191,16 @@ function drawMenu(t){
     if(!(typeof drawSkinPreview==='function'&&drawSkinPreview(i,_spX,_spY,_spW,_spH))){
       drawCell(ctx,COLORS[i%COLORS.length],(x+w/2-psz/2)|0,y+5,psz,i,t);
     }
+    // Shimmer sweep on selected card
+    if(sel){
+      const shimT=(Date.now()*0.0015)%(1.6);const shimP=Math.max(0,shimT-0.3);const shimX=x-w*0.25+shimP*(w*1.5);
+      ctx.save();rp(ctx,x+1,y+1,w-2,h-2,h/5);ctx.clip();
+      const sg=ctx.createLinearGradient(shimX-w*0.18,y,shimX+w*0.18,y+h);
+      sg.addColorStop(0,'rgba(255,255,255,0)');sg.addColorStop(0.5,'rgba(255,255,255,0.22)');sg.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=sg;ctx.fillRect(shimX-w*0.25,y,w*0.5,h);ctx.restore();
+      // Occasional sparkle from selected card
+      if(Math.random()<0.045)menuParts.push({x:rnd(x,x+w),y:rnd(y,y+h),vx:rnd(-0.4,0.4),vy:rnd(-1.8,-0.5),color:th.tm,size:rnd(1.5,3.5),life:rnd(40,80),ml:80,star:true});
+    }
     // Name
     const nfz=cl(Math.floor(h*0.19),7,14);
     ctx.save();ctx.font=`bold ${nfz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -204,6 +214,9 @@ function drawMenu(t){
   // Theme buttons
   themeRects.forEach((tr,i)=>{
     const sth=THEMES[i],sel=i===selTheme;const{x,y,w,h}=tr;
+    // Hover aura (non-selected)
+    const _isThHov=!sel&&mouseX>=x-3&&mouseX<x+w+3&&mouseY>=y-3&&mouseY<y+h+3;
+    if(_isThHov){const _hA=0.55+0.15*Math.sin(Date.now()*0.006);ctx.save();ctx.shadowColor=sth.tm;ctx.shadowBlur=12*_hA;rp(ctx,x-1,y-1,w+2,h+2,h/3+1);ctx.strokeStyle=hexA(sth.tm,_hA*0.7);ctx.lineWidth=1.5;ctx.stroke();ctx.restore();}
     if(sel){ctx.save();ctx.shadowColor=sth.tm;ctx.shadowBlur=9;rp(ctx,x,y,w,h,h/3);ctx.strokeStyle=sth.tm;ctx.lineWidth=2;ctx.stroke();ctx.restore();}
     // Full color theme bg
     const tg=ctx.createLinearGradient(x,y,x,y+h);

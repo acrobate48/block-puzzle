@@ -212,6 +212,106 @@ function _drawScanlines(){
   ctx.restore();
 }
 
+// ─── 9. LANDING COLUMN FLASH ─────────────────────────────────────────────────
+let _landingFlashes=[]; // {cols:[c,..], born, color}
+function _addLandingFlash(cols,color){_landingFlashes.push({cols:[...cols],born:Date.now(),color:color||'#FFFFFF'});}
+function _drawLandingFlashes(){
+  if(!_landingFlashes.length)return;
+  const now=Date.now();
+  ctx.save();
+  _landingFlashes=_landingFlashes.filter(lf=>{
+    const p=Math.min(1,(now-lf.born)/320);
+    if(p>=1)return false;
+    const a=(1-p)*(1-p)*0.45;
+    lf.cols.forEach(c=>{
+      if(c<0||c>=COLS)return;
+      const x=GRID_X+c*CELL;
+      const fg=ctx.createLinearGradient(x,GRID_Y,x,GRID_Y+GH);
+      fg.addColorStop(0,hexA(lf.color,a*1.6));
+      fg.addColorStop(0.5,hexA(lf.color,a*0.8));
+      fg.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=fg;ctx.fillRect(x,GRID_Y,CELL,GH);
+    });
+    return true;
+  });
+  ctx.restore();
+}
+
+// ─── 10. TRAY SPEED GLOW ─────────────────────────────────────────────────────
+function _drawTraySpeedGlow(t){
+  if(!lastPlaceTime||over)return;
+  const elapsed=Date.now()-lastPlaceTime;
+  let rc,gc2,bc2,glowA;
+  if(elapsed<SPEED_TURBO){rc=40;gc2=220;bc2=100;glowA=0.70;}
+  else if(elapsed<SPEED_FAST){rc=255;gc2=220;bc2=40;glowA=0.55;}
+  else if(elapsed<SPEED_SLOW){rc=255;gc2=120;bc2=20;glowA=0.40;}
+  else{rc=220;gc2=30;bc2=20;glowA=0.30;}
+  const pulse=0.7+0.3*Math.abs(Math.sin(t*0.009));
+  const a=(glowA*pulse).toFixed(3);
+  ctx.save();
+  ctx.shadowColor=`rgba(${rc},${gc2},${bc2},${a})`;
+  ctx.shadowBlur=12*pulse;
+  ctx.strokeStyle=`rgba(${rc},${gc2},${bc2},${a})`;
+  ctx.lineWidth=1.5;
+  rp(ctx,GRID_X,TRAY_Y,GW,TRAY_H,CR);ctx.stroke();
+  ctx.restore();
+}
+
+// ─── 11. RAINBOW GLORY — score ≥ 100 000 ─────────────────────────────────────
+function _drawRainbowGlory(t){
+  if(score<100000||over)return;
+  const speed=0.00045*(1+Math.min((score-100000)/400000,3));
+  const hue=(t*speed*180/Math.PI)%360;
+  const a=0.055+0.025*Math.sin(t*0.0022);
+  ctx.save();
+  ctx.fillStyle=`hsla(${hue|0},100%,60%,${a.toFixed(3)})`;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=`hsla(${(hue+120)|0},100%,60%,${(a*0.6).toFixed(3)})`;ctx.fillRect(0,0,W,H);
+  // Radial shimmer at grid center
+  const rg=ctx.createRadialGradient(GRID_X+GW/2,GRID_Y+GH/2,0,GRID_X+GW/2,GRID_Y+GH/2,Math.max(GW,GH)*0.7);
+  rg.addColorStop(0,`hsla(${(hue+60)|0},100%,75%,${(a*0.9).toFixed(3)})`);
+  rg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=rg;ctx.fillRect(0,0,W,H);
+  ctx.restore();
+}
+
+// ─── 12. ELECTRICITY ARCS ON GRID BORDER (combo ≥ 4) ────────────────────────
+let _arcPhase=0;
+function _drawElectricityBorder(t){
+  if(combo<4||over)return;
+  const intensity=cl((combo-4)/4,0,1);
+  const th=THEMES[curTheme];
+  _arcPhase+=0.18+intensity*0.12;
+  ctx.save();
+  ctx.shadowColor=th.gridGlow||th.tm;ctx.shadowBlur=6+4*intensity;
+  ctx.strokeStyle=hexA(th.gridGlow||th.tm,0.55+0.35*intensity);
+  ctx.lineWidth=1+intensity;ctx.lineCap='round';
+  const arcCount=Math.floor(3+combo*0.8);
+  for(let ai=0;ai<arcCount;ai++){
+    const seed=ai*137.5;
+    const perimeter=2*(GW+GH);
+    const startPos=((_arcPhase*15+seed)%perimeter+perimeter)%perimeter;
+    // Convert perimeter position to (x,y)
+    function _perimPt(pos){
+      if(pos<GW)return{x:GRID_X+pos,y:GRID_Y};
+      pos-=GW;if(pos<GH)return{x:GRID_X+GW,y:GRID_Y+pos};
+      pos-=GH;if(pos<GW)return{x:GRID_X+GW-pos,y:GRID_Y+GH};
+      pos-=GW;return{x:GRID_X,y:GRID_Y+GH-pos};}
+    const arcLen=CELL*(1.5+Math.sin(seed)*0.8);
+    const p0=_perimPt(startPos),p1=_perimPt((startPos+arcLen)%perimeter);
+    ctx.beginPath();ctx.moveTo(p0.x,p0.y);
+    // Jagged arc via 3-4 midpoints
+    const segs=3+Math.floor(Math.sin(seed*0.7+_arcPhase)*1.5+1.5);
+    for(let s=1;s<=segs;s++){
+      const frac=s/(segs+1);
+      const mx=lerp(p0.x,p1.x,frac)+(Math.sin(_arcPhase*2.3+ai*77+s*13)*CELL*(0.06+0.12*intensity));
+      const my=lerp(p0.y,p1.y,frac)+(Math.cos(_arcPhase*1.9+ai*53+s*17)*CELL*(0.06+0.12*intensity));
+      ctx.lineTo(mx,my);
+    }
+    ctx.lineTo(p1.x,p1.y);ctx.stroke();
+  }
+  ctx.restore();
+}
+
 // ─── 8. PARALLAX OVERLAY LAYERS ──────────────────────────────────────────────
 function _drawParallax(t){
   const th=THEMES[curTheme];
@@ -293,9 +393,24 @@ function drawGame(t){
   const b2=Math.max(4,CELL*0.1|0);
   const fg3=ctx.createLinearGradient(GRID_X-b2,GRID_Y-b2,GRID_X-b2,GRID_Y+GH+b2);
   fg3.addColorStop(0,hexA(th.sl,0.9));fg3.addColorStop(1,hexA(th.dc,0.9));
-  ctx.save();ctx.shadowColor=th.gridGlow||th.ta;ctx.shadowBlur=8+4*Math.sin(t*0.001);
+  // Score-level glow multiplier: 1× at 0, 2.5× at 100K+
+  const _scoreGlowMul=1+Math.min(1.5,score/66666);
+  // Danger heartbeat: grid pulses brighter when >80% full
+  const _fillNow=grid.reduce((s,row)=>s+row.filter(Boolean).length,0)/(ROWS*COLS);
+  const _dangerBeat=_fillNow>0.80?1+0.5*Math.abs(Math.sin(t*(_fillNow>0.92?0.022:0.014))):1;
+  ctx.save();ctx.shadowColor=th.gridGlow||th.ta;ctx.shadowBlur=(8+4*Math.sin(t*0.001))*_scoreGlowMul*_dangerBeat;
   rrect(ctx,GRID_X-b2,GRID_Y-b2,GW+b2*2,GH+b2*2,CR+b2,fg3,th.gridBorder||th.sl,1.5);
   ctx.restore();
+  // Extra score milestone ring (overlay outside grid frame when score >= 5000)
+  if(score>=5000&&!over){
+    const _tier=score>=100000?4:score>=50000?3:score>=10000?2:score>=5000?1:0;
+    const _tierCols=['#60C0FF','#60FFB0','#FFD060','#FF8020','#FF40FF'];
+    const _tierA=(0.18+0.12*Math.abs(Math.sin(t*0.0014)))*Math.min(1,_tier*0.35+0.35);
+    ctx.save();ctx.shadowColor=_tierCols[_tier-1]||_tierCols[0];ctx.shadowBlur=10*_dangerBeat;
+    rp(ctx,GRID_X-b2-2,GRID_Y-b2-2,GW+b2*4+4,GH+b2*4+4,CR+b2+2);
+    ctx.strokeStyle=hexA(_tierCols[_tier-1]||_tierCols[0],_tierA);ctx.lineWidth=1.5;ctx.stroke();
+    ctx.restore();
+  }
   // Grid corner decorations
   if(typeof drawGridCorner==='function'){const _csz=Math.min(GW,GH)*0.14|0;if(_csz>=10){ctx.save();ctx.globalAlpha=0.72;drawGridCorner(curTheme,GRID_X,GRID_Y,_csz,0);drawGridCorner(curTheme,GRID_X+GW,GRID_Y,_csz,Math.PI/2);drawGridCorner(curTheme,GRID_X,GRID_Y+GH,_csz,-Math.PI/2);drawGridCorner(curTheme,GRID_X+GW,GRID_Y+GH,_csz,Math.PI);ctx.restore();}}
   // Grid glass inner
@@ -363,6 +478,8 @@ function drawGame(t){
   }}
   // Persistent halos on freshly placed cells
   _drawFreshHalos();
+  // Landing column flash (brief streak down columns of placed piece)
+  _drawLandingFlashes();
   // Floor glow effect below grid
   _drawFloorEffect(t);
   // Stress cracks on overcrowded grid
@@ -491,6 +608,8 @@ function drawGame(t){
   const _trayEased=1-Math.pow(1-_trayT,3);
   const _trayFade=_trayEased;
   const _traySlideY=((1-_trayEased)*TRAY_H*0.45)|0;
+  // Tray speed glow (color border based on think time)
+  _drawTraySpeedGlow(t);
   // Tray (glass)
   rrect(ctx,GRID_X,TRAY_Y,GW,TRAY_H,CR,th.trayBg||hexA(th.gbg,0.55),hexA(th.dc,0.5),1);
   const topShine=ctx.createLinearGradient(GRID_X,TRAY_Y,GRID_X,TRAY_Y+TRAY_H*0.4);
@@ -634,6 +753,10 @@ function drawGame(t){
   }
   // Combo color grading
   _drawComboGrade();
+  // Rainbow hue-shift glory overlay at 100K+
+  _drawRainbowGlory(t);
+  // Electricity arcs on grid border at combo ≥ 4
+  _drawElectricityBorder(t);
   // Chromatic aberration on heavy shake
   _drawChromaticAb();
   // Néopolis CRT scanlines
@@ -1170,10 +1293,24 @@ function drawHUD(th){
     ctx.strokeStyle=th.hudBorder||hexA(th.sl,0.35);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,bh);ctx.lineTo(W,bh);ctx.stroke();
     // Thin combo accent bar along bottom of HUD strip
     if(combo>=2&&!over){const _cbFrac=Math.min(1,combo/8);const _cbCol=combo>=6?'#FF40A0':combo>=4?'#FFA020':th.tm;const _cbW=Math.round(W*_cbFrac);const _cbX=(W-_cbW)/2|0;const _cbg=ctx.createLinearGradient(_cbX,bh-2,_cbX+_cbW,bh-2);_cbg.addColorStop(0,hexA(th.ta,0));_cbg.addColorStop(0.3,_cbCol);_cbg.addColorStop(0.7,_cbCol);_cbg.addColorStop(1,hexA(th.ta,0));ctx.fillStyle=_cbg;ctx.fillRect(_cbX,bh-2,_cbW,2);}
-    // Score centré avec animation de pulsation
+    // Score centré avec animation de pulsation + rainbow glow at 100K
     const fz=cl(bh*0.55|0,11,24);
-    if(_hudScorePulse>0.01){const _sc=1+_hudScorePulse*0.22;ctx.save();ctx.translate(W/2,bh/2);ctx.scale(_sc,_sc);ctx.translate(-W/2,-bh/2);drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);ctx.restore();}
-    else{drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);}
+    // New record indicator — subtle golden crown above score
+    if(_newBestTriggered&&!over){
+      const _crPulse=0.7+0.3*Math.abs(Math.sin(Date.now()*0.004));
+      ctx.save();ctx.font=`${fz*0.6|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle=`rgba(255,215,0,${(_crPulse*0.9).toFixed(3)})`;ctx.shadowColor='#FFD700';ctx.shadowBlur=8*_crPulse;
+      ctx.fillText('♛',W/2,bh*0.12);ctx.restore();
+    }
+    // Score display with tier tint
+    const _scoreTierCol=score>=100000?`hsl(${(Date.now()*0.06)%360|0},100%,70%)`:score>=50000?'#FFD700':score>=10000?'#FFA040':null;
+    if(_hudScorePulse>0.01){const _sc=1+_hudScorePulse*0.22;ctx.save();ctx.translate(W/2,bh/2);ctx.scale(_sc,_sc);ctx.translate(-W/2,-bh/2);
+      if(_scoreTierCol){ctx.shadowColor=_scoreTierCol;ctx.shadowBlur=10*_hudScorePulse;}
+      drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);ctx.restore();}
+    else{
+      if(_scoreTierCol){ctx.save();ctx.shadowColor=_scoreTierCol;ctx.shadowBlur=6;drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);ctx.restore();}
+      else drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);
+    }
     // Left: mode badge pill + record
     const modeInfo=MODES[currentMode]||MODES.survie;
     const _mbH=Math.min(bh*0.46|0,26),_mbW=cl(fz*4.4|0,60,118);

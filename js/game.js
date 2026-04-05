@@ -1,10 +1,12 @@
 'use strict';
 // ─── GAME RENDER ─────────────────────────────────────────────────────────────
+// Premium UI state
+let _goDisplayScore=0,_goRecBurst=false,_goReplayRect=null,_goMenuRect=null,_hudScorePulse=0;
 function drawGame(t){
   const newTh=getCurTheme();
   if(newTh!==curTheme){const _prevTh=curTheme;curTheme=newTh;gameBg=buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=180;screenFlashCol=THEMES[curTheme].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));}
   // Score animé
-  if(displayScore<score){const _gap=score-displayScore;const _rate=_gap>5000?0.22:_gap>1000?0.16:0.12;displayScore=Math.min(score,displayScore+Math.max(1,Math.ceil(_gap*_rate)));}
+  if(displayScore<score){const _gap=score-displayScore;const _rate=_gap>5000?0.22:_gap>1000?0.16:0.12;displayScore=Math.min(score,displayScore+Math.max(1,Math.ceil(_gap*_rate)));_hudScorePulse=Math.min(1,_hudScorePulse+0.15);}else if(!over){_hudScorePulse=Math.max(0,_hudScorePulse-0.05);}
   // Milestone celebration
   if(!over&&_nextMilestoneIdx<_MILESTONES.length&&score>=_MILESTONES[_nextMilestoneIdx]){
     const _msLbls=['1K','5K','10K','50K','100K'];const _msL=_msLbls[_nextMilestoneIdx]||String(_MILESTONES[_nextMilestoneIdx]);
@@ -37,6 +39,11 @@ function drawGame(t){
   if(shake>0){shake--;shakeX=rnd(-shakePow,shakePow)|0;shakeY=rnd(-shakePow,shakePow)|0;}else{shakeX=0;shakeY=0;}
   ctx.drawImage(gameBg,shakeX,shakeY);
   drawFx(ctx,gameFx,t);
+  // ── DUST MOTES — lazy-initialized ambient floating particles ──────────────
+  if(!dustMotes.length){for(let _di=0;_di<30;_di++)dustMotes.push({x:rnd(0,W),y:rnd(0,H),vx:rnd(-0.14,0.14),vy:rnd(-0.28,-0.04),a:rnd(0.03,0.13),sz:rnd(0.6,1.8),ph:rnd(0,Math.PI*2)});}
+  ctx.save();
+  dustMotes.forEach(dm=>{dm.x=(dm.x+dm.vx+W)%W;dm.y=(dm.y+dm.vy+H)%H;const _dp=0.5+0.5*Math.sin(t*0.0013+dm.ph);ctx.fillStyle=`rgba(255,255,255,${(dm.a*_dp).toFixed(3)})`;ctx.beginPath();ctx.arc(dm.x,dm.y,dm.sz,0,Math.PI*2);ctx.fill();});
+  ctx.restore();
   ctx.save();ctx.translate(shakeX,shakeY);
   // Grid frame (glass effect)
   const b2=Math.max(4,CELL*0.1|0);
@@ -54,6 +61,17 @@ function drawGame(t){
   const rimL=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X+GW*0.06,GRID_Y);
   rimL.addColorStop(0,'rgba(255,255,255,0.09)');rimL.addColorStop(1,'rgba(255,255,255,0)');
   ctx.fillStyle=rimL;ctx.fillRect(GRID_X,GRID_Y,GW*0.06,GH);
+  // Animated grid atmosphere — ambient pulse + subtle grid lines
+  ctx.save();
+  const _ambP=0.06+0.04*Math.sin(t*0.0012);
+  const _ambG=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X,GRID_Y+GH*0.45);
+  _ambG.addColorStop(0,hexA(th.ta,_ambP));_ambG.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=_ambG;ctx.fillRect(GRID_X,GRID_Y,GW,GH*0.45);
+  const _glP=0.022+0.012*Math.sin(t*0.0018);
+  ctx.strokeStyle=hexA(th.sl,_glP);ctx.lineWidth=0.5;
+  for(let _gr2=0;_gr2<=ROWS;_gr2++){ctx.beginPath();ctx.moveTo(GRID_X,GRID_Y+_gr2*CELL);ctx.lineTo(GRID_X+GW,GRID_Y+_gr2*CELL);ctx.stroke();}
+  for(let _gc2=0;_gc2<=COLS;_gc2++){ctx.beginPath();ctx.moveTo(GRID_X+_gc2*CELL,GRID_Y);ctx.lineTo(GRID_X+_gc2*CELL,GRID_Y+GH);ctx.stroke();}
+  ctx.restore();
   // Cells
   const _parasiteSet=new Set(parasites.map(p=>p.r*100+p.c));
   for(let r=0;r<ROWS;r++){for(let c=0;c<COLS;c++){
@@ -63,6 +81,9 @@ function drawGame(t){
     if(color){
       if(popF!==undefined&&popF<_SPRING.length){
         const sc=_SPRING[popF];const off=(CELL*(1-sc)/2)|0;
+        // Placement glow halo — fades with spring animation
+        const _glA=(1-popF/_SPRING.length)*0.52;
+        if(_glA>0.03){const _gx=x+CELL/2,_gy=y+CELL/2;const _gg2=ctx.createRadialGradient(_gx,_gy,0,_gx,_gy,CELL*0.78);_gg2.addColorStop(0,hexA(color,_glA*0.9));_gg2.addColorStop(0.5,hexA(color,_glA*0.35));_gg2.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=_gg2;ctx.fillRect(x-CELL*0.3,y-CELL*0.3,CELL*1.6,CELL*1.6);}
         drawCell(ctx,color,x+off,y+off,Math.ceil(CELL*sc),selSkin,t);
       } else drawCell(ctx,color,x,y,CELL,selSkin,t);
       // Star overlay
@@ -72,11 +93,24 @@ function drawGame(t){
       // Parasite overlay (if this cell is an active parasite source)
       if(_parasiteSet.has(r*100+c)){drawParasiteOverlay(ctx,x,y,CELL,t,r*17+c*31);}
     }else{
-      // Empty cell — subtle rounded inset with center dot (Apple style)
+      // Empty cell — frosted glass with animated inner glow
       const er=Math.max(2,CELL/6|0);
-      rrect(ctx,x+2,y+2,CELL-4,CELL-4,er,hexA(th.ge,0.30),hexA(th.sl,0.10),1);
-      ctx.fillStyle=hexA(th.sl,0.14);
-      ctx.beginPath();ctx.arc(x+CELL/2,y+CELL/2,Math.max(1,CELL*0.055),0,Math.PI*2);ctx.fill();
+      // Base: diagonal frosted fill
+      const _efg=ctx.createLinearGradient(x+2,y+2,x+CELL-2,y+CELL-2);
+      _efg.addColorStop(0,hexA(th.sl,0.10));_efg.addColorStop(1,hexA(th.ge,0.24));
+      rp(ctx,x+2,y+2,CELL-4,CELL-4,er);ctx.fillStyle=_efg;ctx.fill();
+      // Animated inner glow (position-offset phase for ripple feel)
+      const _eig=ctx.createRadialGradient(x+CELL*0.38,y+CELL*0.32,0,x+CELL/2,y+CELL/2,CELL*0.52);
+      _eig.addColorStop(0,hexA(th.sl,0.07+0.04*Math.abs(Math.sin(t*0.0016+(x+y)*0.002))));_eig.addColorStop(1,'rgba(0,0,0,0)');
+      rp(ctx,x+2,y+2,CELL-4,CELL-4,er);ctx.fillStyle=_eig;ctx.fill();
+      // Top-left glass reflection
+      const _etg=ctx.createLinearGradient(x+2,y+2,x+CELL*0.55,y+CELL*0.42);
+      _etg.addColorStop(0,'rgba(255,255,255,0.07)');_etg.addColorStop(1,'rgba(255,255,255,0)');
+      rp(ctx,x+2,y+2,CELL-4,CELL-4,er);ctx.fillStyle=_etg;ctx.fill();
+      // Border with subtle glow
+      rp(ctx,x+2,y+2,CELL-4,CELL-4,er);ctx.strokeStyle=hexA(th.sl,0.16);ctx.lineWidth=1;ctx.stroke();
+      // Center dot
+      ctx.fillStyle=hexA(th.sl,0.15);ctx.beginPath();ctx.arc(x+CELL/2,y+CELL/2,Math.max(1,CELL*0.055),0,Math.PI*2);ctx.fill();
     }
   }}
   // Update pop animations (O(1) per entry)
@@ -88,7 +122,16 @@ function drawGame(t){
     if(p>=1)return false;
     const eased=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2; // ease-in-out quad
     const ring=Math.sin(p*Math.PI);
-    // Phase 1 (0-0.4): cells flash white then fade out
+    // ── IMPACT FLASH — full-row/column white blaze at moment of clear ─────────
+    if(p<0.22){
+      const _sf=1-(p/0.22);
+      const _fRows=[...new Set(a.cells.map(_fc=>_fc.r))],_fCols=[...new Set(a.cells.map(_fc=>_fc.c))];
+      ctx.save();ctx.shadowColor='#FFFFFF';ctx.shadowBlur=CELL*0.9*_sf;
+      _fRows.forEach(_r=>{const _fg=ctx.createLinearGradient(GRID_X,0,GRID_X+GW,0);_fg.addColorStop(0,'rgba(255,255,255,0)');_fg.addColorStop(0.1,`rgba(255,255,255,${(_sf*0.95).toFixed(3)})`);_fg.addColorStop(0.5,`rgba(255,255,255,${_sf.toFixed(3)})`);_fg.addColorStop(0.9,`rgba(255,255,255,${(_sf*0.95).toFixed(3)})`);_fg.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=_fg;ctx.fillRect(GRID_X,GRID_Y+_r*CELL,GW,CELL);});
+      _fCols.forEach(_c=>{const _fg=ctx.createLinearGradient(0,GRID_Y,0,GRID_Y+GH);_fg.addColorStop(0,'rgba(255,255,255,0)');_fg.addColorStop(0.1,`rgba(255,255,255,${(_sf*0.82).toFixed(3)})`);_fg.addColorStop(0.5,`rgba(255,255,255,${(_sf*0.88).toFixed(3)})`);_fg.addColorStop(0.9,`rgba(255,255,255,${(_sf*0.82).toFixed(3)})`);_fg.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=_fg;ctx.fillRect(GRID_X+_c*CELL,GRID_Y,CELL,GH);});
+      ctx.shadowBlur=0;ctx.restore();
+    }
+    // Phase 1 (0-0.5): individual cells pulse + glow
     if(p<0.5){
       const flashA=ring*0.9;
       a.cells.forEach(({r,c})=>{
@@ -169,6 +212,13 @@ function drawGame(t){
     ctx.fillText(_ph2.label,GRID_X+GW-4,TRAY_Y-3);
     ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();
   }
+  // Tray slide-in animation — pieces slide up + fade in when a new tray appears
+  const _trayAge=trayRefreshT>0?Date.now()-trayRefreshT:99999;
+  const _trayT=Math.min(1,_trayAge/380);
+  // Ease-out cubic: 1-(1-t)^3
+  const _trayEased=1-Math.pow(1-_trayT,3);
+  const _trayFade=_trayEased;
+  const _traySlideY=((1-_trayEased)*TRAY_H*0.45)|0;
   // Tray (glass)
   const tbg2=ctx.createLinearGradient(GRID_X,TRAY_Y,GRID_X,TRAY_Y+TRAY_H);
   tbg2.addColorStop(0,hexA(th.gbg,0.55));tbg2.addColorStop(1,hexA(th.ge,0.4));
@@ -207,7 +257,10 @@ function drawGame(t){
       ctx.fillStyle=`rgba(0,${(200+55*pulse)|0},60,0.95)`;ctx.shadowColor='#00FF60';ctx.shadowBlur=6;
       ctx.fillText('☠ PARASITE',GRID_X+i*pw+pw/2,TRAY_Y+TRAY_H-lsz*0.75);ctx.shadowBlur=0;ctx.restore();
     }else{
-      sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox+cc*PIECE_CELL,oy+rr*PIECE_CELL,PIECE_CELL,selSkin,t,dim?0.3:1);}));
+      // Slide-in: fade + rise from below tray
+      ctx.save();ctx.globalAlpha=_trayFade*(dim?0.3:1);
+      sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox+cc*PIECE_CELL,(oy+rr*PIECE_CELL+_traySlideY)|0,PIECE_CELL,selSkin,t);}));
+      ctx.restore();
     }
   }
   // ── Aperçu 2 prochains blocs ─────────────────────────────────────────────
@@ -238,14 +291,23 @@ function drawGame(t){
     }
   }
   ctx.restore();
+  // Drag trail — spawn energy particles + render behind piece each frame
+  if(drag&&!over){const _dtp=tray[drag.idx];if(_dtp&&Math.random()<0.50)dragTrail.push({x:mouseX+rnd(-CELL*0.18,CELL*0.18),y:mouseY+rnd(-CELL*0.10,CELL*0.10),vx:rnd(-0.30,0.30),vy:rnd(-0.90,-0.10),life:20,ml:20,color:_dtp.color,sz:rnd(1.5,3.5)});}
+  dragTrail=dragTrail.filter(dt=>{dt.x+=dt.vx;dt.y+=dt.vy;dt.vy-=0.05;dt.life--;if(dt.life<=0)return false;const _da=dt.life/dt.ml;ctx.fillStyle=hexA(dt.color,_da*0.60);ctx.beginPath();ctx.arc(dt.x,dt.y,Math.max(1,dt.sz*_da),0,Math.PI*2);ctx.fill();return true;});
   // Dragged piece (on top, no shake) + speed timer indicator
   if(drag&&!over){
     const piece=tray[drag.idx];
     if(piece){
       const _liftScale=1.08;const _liftCell=Math.ceil(CELL*_liftScale);
       const sh=piece.shape,ox=(mouseX-sh[0].length*_liftCell/2)|0,oy=(mouseY-sh.length*_liftCell/2-CELL*0.22)|0;
-      // Drop shadow
-      ctx.save();ctx.shadowColor='rgba(0,0,0,0.55)';ctx.shadowBlur=CELL*0.5;ctx.shadowOffsetY=CELL*0.25;
+      // Drop shadow — layered: color aura glow + dark drop shadow
+      ctx.save();
+      // Color aura behind lifted piece (drawn first, below piece)
+      ctx.globalAlpha=0.20;
+      sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const _ax=ox+cc*_liftCell+_liftCell/2,_ay=oy+rr*_liftCell+_liftCell/2+CELL*0.20;const _ag=ctx.createRadialGradient(_ax,_ay,0,_ax,_ay,_liftCell*0.70);_ag.addColorStop(0,piece.isParasite?'#00FF50':piece.color);_ag.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=_ag;ctx.fillRect(_ax-_liftCell,_ay-_liftCell,_liftCell*2,_liftCell*2);}}));
+      ctx.globalAlpha=1;
+      // Dark drop shadow + draw piece
+      ctx.shadowColor='rgba(0,0,0,0.62)';ctx.shadowBlur=CELL*0.58;ctx.shadowOffsetX=CELL*0.04;ctx.shadowOffsetY=CELL*0.28;
       sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){if(piece.isParasite)drawParasiteCell(ctx,ox+cc*_liftCell,oy+rr*_liftCell,_liftCell,t,rr*17+cc*31);else drawCell(ctx,piece.color,ox+cc*_liftCell,oy+rr*_liftCell,_liftCell,selSkin,t);}}));
       ctx.restore();
       // Speed ring indicator (arc showing elapsed think time)
@@ -273,6 +335,8 @@ function drawGame(t){
       }
     }
   }
+  // Impact ripples — expanding rings from block placements and bomb blasts
+  ripples=ripples.filter(ri=>{ri.life--;if(ri.life<=0)return false;const _rp=1-ri.life/ri.ml;ri.r=ri.maxR*_rp;const _ra=(ri.life/ri.ml)*0.55;ctx.save();ctx.strokeStyle=hexA(ri.color,_ra);ctx.lineWidth=Math.max(1,3.5*(1-_rp));ctx.shadowColor=ri.color;ctx.shadowBlur=12;ctx.beginPath();ctx.arc(ri.x,ri.y,ri.r,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.restore();return true;});
   // Particles + Debris
   particles=particles.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.13;p.life--;if(p.life<=0)return false;const ratio=p.life/p.ml,sz=Math.max(1,p.size*ratio);ctx.fillStyle=hexA(p.color,0.82*ratio);if(p.circle){ctx.beginPath();ctx.arc(p.x,p.y,sz,0,Math.PI*2);ctx.fill();}else ctx.fillRect(p.x-sz,p.y-sz,sz*2,sz*2);return true;});
   debris=debris.filter(d=>{d.draw(ctx);return d.update();});
@@ -418,56 +482,110 @@ function drawGame(t){
   // Game Over
   if(over){
     const el=Date.now()-overT;
-    ctx.fillStyle=`rgba(0,0,0,${Math.min(0.78,el/600*0.78).toFixed(3)})`;ctx.fillRect(0,0,W,H);
+    // Reset animated score counter when panel first appears
+    if(el<80){_goDisplayScore=0;_goRecBurst=false;}
+    const isRec=score>=best&&score>0;
+    // Count up score display on game over screen
+    if(_goDisplayScore<score){const _gg=score-_goDisplayScore;_goDisplayScore=Math.min(score,_goDisplayScore+Math.max(1,Math.ceil(_gg*(el<1400?0.055:0.20))));}
+    // New record particle burst (one-time when count reaches final score)
+    if(_goDisplayScore>=score&&!_goRecBurst&&isRec){_goRecBurst=true;for(let _i=0;_i<70;_i++){particles.push({x:W/2,y:H*0.42,vx:rnd(-7,7),vy:rnd(-9,-1),color:rndc(['#FFD700','#FF8C00','#FFEE60','#FFA020','#FFFFFF','#FF4080']),size:rnd(3,7),life:rnd(50,90),ml:90,circle:Math.random()>0.35});}}
+    ctx.fillStyle=`rgba(0,0,0,${Math.min(0.84,el/600*0.84).toFixed(3)})`;ctx.fillRect(0,0,W,H);
     if(el>350){
-      const pw2=Math.min(W-24,390),ph2=Math.round(H*0.52);
+      const pw2=Math.min(W-24,390),ph2=Math.round(H*0.62);
       const px=(W-pw2)/2,py=(H-ph2)/2-10;
       // Panel glass
       const pg2=ctx.createLinearGradient(px,py,px,py+ph2);
-      pg2.addColorStop(0,hexA(th.gbg,0.95));pg2.addColorStop(1,hexA(th.bg,0.92));
-      rrect(ctx,px,py,pw2,ph2,18,pg2,null);
+      pg2.addColorStop(0,hexA(th.gbg,0.97));pg2.addColorStop(1,hexA(th.bg,0.94));
+      rrect(ctx,px,py,pw2,ph2,20,pg2,null);
       // Panel shine
-      const psg=ctx.createLinearGradient(px,py,px,py+ph2*0.4);
-      psg.addColorStop(0,'rgba(255,255,255,0.1)');psg.addColorStop(1,'rgba(255,255,255,0)');
-      rp(ctx,px,py,pw2,ph2*0.4,18);ctx.fillStyle=psg;ctx.fill();
-      rp(ctx,px,py,pw2,ph2,18);ctx.strokeStyle=hexA(th.dc,0.7);ctx.lineWidth=2;ctx.stroke();
+      const psg=ctx.createLinearGradient(px,py,px,py+ph2*0.35);
+      psg.addColorStop(0,'rgba(255,255,255,0.13)');psg.addColorStop(1,'rgba(255,255,255,0)');
+      rp(ctx,px,py,pw2,ph2*0.35,20);ctx.fillStyle=psg;ctx.fill();
+      // Border: gold pulse on record, subtle otherwise
+      if(isRec){ctx.save();ctx.shadowColor='#FFD700';ctx.shadowBlur=18+7*Math.abs(Math.sin(Date.now()*0.003));rp(ctx,px,py,pw2,ph2,20);ctx.strokeStyle=hexA('#FFD700',0.60);ctx.lineWidth=2;ctx.stroke();ctx.restore();}
+      else{rp(ctx,px,py,pw2,ph2,20);ctx.strokeStyle=hexA(th.dc,0.7);ctx.lineWidth=2;ctx.stroke();}
       // Title
       const goSz=cl(pw2*0.12|0,16,40);
-      drawPremText(ctx,'GAME OVER',W/2,py+ph2*0.20,`bold ${goSz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`,'#FF6040','#CC2010','rgba(0,0,0,0.6)','#FF4020',18,3);
+      drawPremText(ctx,'GAME OVER',W/2,py+ph2*0.14,`bold ${goSz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`,'#FF6040','#CC2010','rgba(0,0,0,0.6)','#FF4020',18,3);
       ctx.textAlign='center';ctx.textBaseline='middle';
-      // Score
-      const scSz=cl(pw2*0.075|0,12,26);
-      const isRec=score>=best&&score>0;
-      if(isRec){drawPremText(ctx,`★  ${score}  ★`,W/2,py+ph2*0.39,`bold ${scSz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`,'#FFEE60','#FFA020','rgba(0,0,0,0.5)','#FFCC00',12,2.5);}
-      else{ctx.font=`bold ${scSz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tm;ctx.fillText(`Score : ${score}`,W/2,py+ph2*0.39);}
-      ctx.font=`bold ${scSz*0.88}px system-ui,-apple-system,"SF Pro Display",Arial`;
-      ctx.fillStyle=isRec?th.hi||th.ta:th.ta;ctx.fillText(isRec?'NOUVEAU RECORD !':` Record : ${best}`,W/2,py+ph2*0.54);
-      // Stats détaillées
-      const stSz=cl(scSz*0.65|0,8,14);
-      ctx.font=`${stSz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tg;
+      // Animated score reveal (fades in + counts up)
+      const _revealA=Math.min(1,(el-350)/500);
+      const scSz=cl(pw2*0.088|0,14,32);
+      ctx.globalAlpha=_revealA;
+      if(isRec){
+        const _rpulse=0.94+0.06*Math.abs(Math.sin(Date.now()*0.005));
+        ctx.save();ctx.translate(W/2,py+ph2*0.33);ctx.scale(1,_rpulse);ctx.translate(-W/2,0);
+        drawPremText(ctx,`★  ${_goDisplayScore}  ★`,W/2,0,`bold ${scSz*1.15}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`,'#FFEE60','#FFA020','rgba(0,0,0,0.5)','#FFCC00',16,2.5);
+        ctx.restore();
+      }else{
+        ctx.font=`bold ${scSz*1.1}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;
+        const _sg2=ctx.createLinearGradient(0,py+ph2*0.26,0,py+ph2*0.40);
+        _sg2.addColorStop(0,th.tm);_sg2.addColorStop(1,th.ta);
+        ctx.fillStyle=_sg2;ctx.shadowColor=th.tm;ctx.shadowBlur=10;
+        ctx.fillText(`${_goDisplayScore}`,W/2,py+ph2*0.33);ctx.shadowBlur=0;
+      }
+      ctx.globalAlpha=1;
+      // Record label / best score
+      const recSz=cl(scSz*0.78|0,9,20);
+      ctx.font=`bold ${recSz}px system-ui,-apple-system,"SF Pro Display",Arial`;
+      if(isRec){
+        ctx.save();ctx.shadowColor='#FFD700';ctx.shadowBlur=10+4*Math.abs(Math.sin(Date.now()*0.004));
+        ctx.fillStyle='#FFD700';ctx.fillText('✨ NOUVEAU RECORD !',W/2,py+ph2*0.46);
+        ctx.shadowBlur=0;ctx.restore();
+      }else{
+        ctx.fillStyle=hexA(th.ta,0.85);ctx.fillText(`Meilleur : ${best}`,W/2,py+ph2*0.46);
+      }
+      // Stats line
+      const stSz=cl(scSz*0.60|0,7,13);
+      ctx.font=`${stSz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=hexA(th.tg,0.80);
       const elapsed=Date.now()-gameStartTime;
-      ctx.fillText(`⏱ ${Math.floor(elapsed/60000)}:${String(Math.floor(elapsed%60000/1000)).padStart(2,'0')}  |  📊 ${totalLinesCleared} lignes  |  ×${maxComboGame} max`,W/2,py+ph2*0.73);
-      // Mini bar chart — last 5 scores
+      ctx.fillText(`⏱ ${Math.floor(elapsed/60000)}:${String(Math.floor(elapsed%60000/1000)).padStart(2,'0')}  ·  📊 ${totalLinesCleared} lignes  ·  ×${maxComboGame} max`,W/2,py+ph2*0.56);
+      // Mini bar chart
       if(scoreHistory.length>1){
-        const barsH=ph2*0.10,barsW=pw2*0.58,barsX=px+(pw2-barsW)/2,barsY=py+ph2*0.805;
+        const barsH=ph2*0.08,barsW=pw2*0.52,barsX=px+(pw2-barsW)/2,barsY=py+ph2*0.65;
         const maxV=Math.max(...scoreHistory,1);
-        const bw2=Math.floor(barsW/scoreHistory.length)-3;
+        const bw3=Math.floor(barsW/scoreHistory.length)-3;
         scoreHistory.forEach((sv,si)=>{
           const bh3=Math.max(3,Math.round(barsH*(sv/maxV)));
-          const bx2=barsX+si*(bw2+3);const by2=barsY+barsH-bh3;
+          const bx3=barsX+si*(bw3+3);const by3=barsY+barsH-bh3;
           const isCur=si===scoreHistory.length-1;
-          ctx.fillStyle=isCur?th.tm:hexA(th.tg,0.5);
-          rrect(ctx,bx2,by2,bw2,bh3,2,ctx.fillStyle,null);
+          ctx.fillStyle=isCur?th.tm:hexA(th.tg,0.42);
+          rrect(ctx,bx3,by3,bw3,bh3,2,ctx.fillStyle,null);
         });
-        const lsz2=Math.max(7,stSz*0.85)|0;
-        ctx.font=`${lsz2}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=hexA(th.tg,0.6);
-        ctx.textAlign='left';ctx.fillText('historique',barsX,barsY-3);ctx.textAlign='center';
+        const lsz3=Math.max(6,stSz*0.85)|0;
+        ctx.font=`${lsz3}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=hexA(th.tg,0.50);
+        ctx.textAlign='left';ctx.fillText('historique',barsX,barsY-2);ctx.textAlign='center';
       }
-      if(el>1200){
-        const tapA=0.5+0.5*Math.abs(Math.sin(Date.now()*0.004));
-        ctx.globalAlpha=tapA;ctx.font=`bold ${scSz*0.85}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='#A0E8A0';ctx.shadowColor='#A0E8A0';ctx.shadowBlur=6;
-        ctx.fillText('Toucher pour continuer',W/2,py+ph2*0.94);ctx.shadowBlur=0;ctx.globalAlpha=1;
-      }
+      // ── Boutons REJOUER + MENU ────────────────────────────────────────────────
+      const _btnH=cl(Math.round(ph2*0.115),36,52),_btnW=Math.floor((pw2-48)/2);
+      const _btn1X=px+14,_btn2X=px+pw2-14-_btnW,_btnY=py+ph2-_btnH-14;
+      // REJOUER button
+      const _r1g=ctx.createLinearGradient(_btn1X,_btnY,_btn1X,_btnY+_btnH);
+      _r1g.addColorStop(0,lerpC(th.ta,'#ffffff',0.15));_r1g.addColorStop(1,lerpC(th.ta,'#000000',0.40));
+      ctx.save();ctx.shadowColor=th.ta;ctx.shadowBlur=10+5*Math.abs(Math.sin(Date.now()*0.004));
+      rrect(ctx,_btn1X,_btnY,_btnW,_btnH,_btnH/2,_r1g,null);
+      const _rsh1=ctx.createLinearGradient(_btn1X,_btnY,_btn1X,_btnY+_btnH*0.45);
+      _rsh1.addColorStop(0,'rgba(255,255,255,0.28)');_rsh1.addColorStop(1,'rgba(255,255,255,0)');
+      rp(ctx,_btn1X+2,_btnY+2,_btnW-4,_btnH*0.45,_btnH/2);ctx.fillStyle=_rsh1;ctx.fill();
+      rp(ctx,_btn1X,_btnY,_btnW,_btnH,_btnH/2);ctx.strokeStyle=hexA(th.tm,0.60);ctx.lineWidth=1.5;ctx.stroke();
+      ctx.shadowBlur=0;
+      const _bfsz=cl(Math.floor(_btnH*0.44),10,19);
+      drawPremText(ctx,'▶ REJOUER',_btn1X+_btnW/2,_btnY+_btnH/2,`bold ${_bfsz}px system-ui,-apple-system,"SF Pro Display",Arial`,'#FFFFFF',hexA(th.tm,0.7),'rgba(0,0,0,0.4)',th.ta,6,1.5);
+      ctx.restore();
+      _goReplayRect={x:_btn1X,y:_btnY,w:_btnW,h:_btnH};
+      // MENU button
+      const _r2g=ctx.createLinearGradient(_btn2X,_btnY,_btn2X,_btnY+_btnH);
+      _r2g.addColorStop(0,'#2c2c3e');_r2g.addColorStop(1,'#14141f');
+      ctx.save();
+      rrect(ctx,_btn2X,_btnY,_btnW,_btnH,_btnH/2,_r2g,null);
+      const _rsh2=ctx.createLinearGradient(_btn2X,_btnY,_btn2X,_btnY+_btnH*0.45);
+      _rsh2.addColorStop(0,'rgba(255,255,255,0.13)');_rsh2.addColorStop(1,'rgba(255,255,255,0)');
+      rp(ctx,_btn2X+2,_btnY+2,_btnW-4,_btnH*0.45,_btnH/2);ctx.fillStyle=_rsh2;ctx.fill();
+      rp(ctx,_btn2X,_btnY,_btnW,_btnH,_btnH/2);ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.shadowBlur=0;
+      drawPremText(ctx,'🏠 MENU',_btn2X+_btnW/2,_btnY+_btnH/2,`bold ${_bfsz}px system-ui,-apple-system,"SF Pro Display",Arial`,'rgba(255,255,255,0.92)','rgba(200,200,220,0.70)','rgba(0,0,0,0.4)','rgba(200,200,255,0.45)',4,1.5);
+      ctx.restore();
+      _goMenuRect={x:_btn2X,y:_btnY,w:_btnW,h:_btnH};
       ctx.textAlign='left';ctx.textBaseline='alphabetic';
     }
   }
@@ -476,14 +594,55 @@ function drawGame(t){
     const _cbPulse=0.88+0.12*Math.abs(Math.sin(t*0.016));
     const _cbfsz=cl(Math.floor(CELL*0.72*_cbPulse),16,36)|0;
     const _cbtxt=`🔥 COMBO ×${combo}`;
+    const _cbX=GRID_X+GW/2,_cbY=GRID_Y-_cbfsz*0.7;
+    const _cbCol=combo>=6?'#FF40A0':combo>=4?'#FFA020':th.hi||th.tm;
+    const _cbShad=combo>=6?'#FF2080':combo>=4?'#FF8000':th.tm;
     ctx.save();
+    ctx.translate(_cbX,_cbY);
+    // Scale bounce for big combos
+    const _cbScale=combo>=6?1.0+0.08*Math.abs(Math.sin(t*0.022)):1.0;
+    ctx.scale(_cbScale,_cbScale);
+    // Starburst rays behind text (combo >= 5)
+    if(combo>=5){
+      const _cbRays=combo>=8?12:8;
+      const _cbRayLen=_cbfsz*(combo>=8?2.2:1.6);
+      ctx.save();ctx.rotate(t*0.008);
+      for(let ri=0;ri<_cbRays;ri++){
+        const ang=ri*(Math.PI*2/_cbRays);
+        const rl=_cbRayLen*(ri%2===0?1:0.6);
+        const ra=(combo>=8?0.35:0.22)*_cbPulse;
+        const rg=ctx.createLinearGradient(0,0,Math.cos(ang)*rl,Math.sin(ang)*rl);
+        rg.addColorStop(0,combo>=6?`rgba(255,40,128,${ra})`:`rgba(255,128,0,${ra})`);
+        rg.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.strokeStyle=rg;ctx.lineWidth=combo>=8?2.5:1.8;
+        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(ang)*rl,Math.sin(ang)*rl);ctx.stroke();
+      }
+      ctx.restore();
+      // Outer glow ring
+      const _cbRing=ctx.createRadialGradient(0,0,_cbfsz*0.4,0,0,_cbfsz*1.4);
+      _cbRing.addColorStop(0,combo>=6?'rgba(255,40,128,0.18)':'rgba(255,128,0,0.15)');
+      _cbRing.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=_cbRing;ctx.beginPath();ctx.arc(0,0,_cbfsz*1.4,0,Math.PI*2);ctx.fill();
+    }
     ctx.font=`bold ${_cbfsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;
     ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.shadowColor=combo>=6?'#FF2080':combo>=4?'#FF8000':th.tm;ctx.shadowBlur=_cbfsz*0.7;
-    ctx.globalAlpha=0.92;
-    ctx.fillStyle=combo>=6?'#FF40A0':combo>=4?'#FFA020':th.hi||th.tm;
-    ctx.fillText(_cbtxt,GRID_X+GW/2,GRID_Y-_cbfsz*0.7);
+    ctx.shadowColor=_cbShad;ctx.shadowBlur=_cbfsz*(combo>=6?1.1:0.7);
+    ctx.globalAlpha=0.94;
+    ctx.fillStyle=_cbCol;
+    ctx.fillText(_cbtxt,0,0);
     ctx.restore();
+  }
+  // ── PLACEMENT STREAK BADGE ──────────────────────────────────────────────────
+  if(_placementStreak>=2&&!over&&gameState==='playing'){
+    const _stfsz=Math.max(9,CELL*0.34)|0;
+    const _stxt=`🎯 ×${_placementStreak}`;
+    const _stCol=_placementStreak>=5?'#FF40D0':_placementStreak>=3?'#FFD700':'#60D0FF';
+    ctx.save();ctx.globalAlpha=0.88;
+    ctx.font=`bold ${_stfsz}px system-ui,-apple-system,"SF Pro Display",Arial`;
+    ctx.textAlign='left';ctx.textBaseline='bottom';
+    ctx.fillStyle=_stCol;ctx.shadowColor=_stCol;ctx.shadowBlur=6;
+    ctx.fillText(_stxt,GRID_X+4,TRAY_Y-2);
+    ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();
   }
   // ── MODE OVERLAYS ────────────────────────────────────────────────────────────
   _drawModeOverlays(t,th);
@@ -672,6 +831,8 @@ function _drawModeOverlays(t,th){
 }
 
 function drawHUD(th){
+  // Reset HUD button rects each frame so stale rects from previous layout aren't used
+  _undoHudRect=null;_restartHudRect=null;
   const portrait=H>W;
   if(portrait){
     // Glass top bar
@@ -680,21 +841,39 @@ function drawHUD(th){
     hg2.addColorStop(0,'rgba(0,0,0,0.60)');hg2.addColorStop(1,'rgba(0,0,0,0.38)');
     ctx.fillStyle=hg2;ctx.fillRect(0,0,W,bh);
     ctx.strokeStyle=hexA(th.sl,0.35);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,bh);ctx.lineTo(W,bh);ctx.stroke();
-    // Score centré
+    // Thin combo accent bar along bottom of HUD strip
+    if(combo>=2&&!over){const _cbFrac=Math.min(1,combo/8);const _cbCol=combo>=6?'#FF40A0':combo>=4?'#FFA020':th.tm;const _cbW=Math.round(W*_cbFrac);const _cbX=(W-_cbW)/2|0;const _cbg=ctx.createLinearGradient(_cbX,bh-2,_cbX+_cbW,bh-2);_cbg.addColorStop(0,hexA(th.ta,0));_cbg.addColorStop(0.3,_cbCol);_cbg.addColorStop(0.7,_cbCol);_cbg.addColorStop(1,hexA(th.ta,0));ctx.fillStyle=_cbg;ctx.fillRect(_cbX,bh-2,_cbW,2);}
+    // Score centré avec animation de pulsation
     const fz=cl(bh*0.55|0,11,24);
-    drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);
-    // Left: mode + record
+    if(_hudScorePulse>0.01){const _sc=1+_hudScorePulse*0.18;ctx.save();ctx.translate(W/2,bh/2);ctx.scale(_sc,_sc);ctx.translate(-W/2,-bh/2);drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);ctx.restore();}
+    else{drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);}
+    // Left: mode badge pill + record
     const modeInfo=MODES[currentMode]||MODES.survie;
-    ctx.font=`bold ${fz*0.62}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=modeInfo.color;ctx.textAlign='left';ctx.textBaseline='middle';
-    ctx.shadowColor=modeInfo.color;ctx.shadowBlur=4;ctx.fillText(modeInfo.icon+' '+modeInfo.name,8,bh*0.3);ctx.shadowBlur=0;
-    ctx.font=`${fz*0.62}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tg;ctx.fillText(`REC: ${best}`,8,bh*0.72);
-    // Right: deux boutons icônes carrés — ⏸ pause | 🔊 son
+    const _mbH=Math.min(bh*0.46|0,26),_mbW=cl(fz*4.4|0,60,118);
+    const _mbX=4,_mbY=(bh-_mbH)/2|0;
+    const _mbg=ctx.createLinearGradient(_mbX,_mbY,_mbX,_mbY+_mbH);
+    _mbg.addColorStop(0,hexA(modeInfo.color,0.28));_mbg.addColorStop(1,hexA(modeInfo.color,0.10));
+    rrect(ctx,_mbX,_mbY,_mbW,_mbH,_mbH/2,_mbg,hexA(modeInfo.color,0.55),1);
+    const _mbsh=ctx.createLinearGradient(_mbX,_mbY,_mbX,_mbY+_mbH*0.48);
+    _mbsh.addColorStop(0,'rgba(255,255,255,0.16)');_mbsh.addColorStop(1,'rgba(255,255,255,0)');
+    rp(ctx,_mbX+1,_mbY+1,_mbW-2,_mbH*0.48,_mbH/2);ctx.fillStyle=_mbsh;ctx.fill();
+    ctx.save();ctx.font=`bold ${fz*0.52|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=modeInfo.color;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.shadowColor=modeInfo.color;ctx.shadowBlur=5;ctx.fillText(modeInfo.icon+' '+modeInfo.name,_mbX+_mbW/2,_mbY+_mbH/2);ctx.shadowBlur=0;ctx.restore();
+    // Record below badge
+    ctx.font=`${fz*0.48|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=hexA(th.tg,0.65);ctx.textAlign='left';ctx.textBaseline='bottom';
+    ctx.fillText(`REC: ${best}`,_mbX+4,bh-1);ctx.textBaseline='alphabetic';
+    // Right: quatre boutons icônes — 🔄 restart | ↩ undo | ⏸ pause | 🔊 son
     const iconSz=cl(bh-4,24,44);
+    const smSz=Math.max(18,iconSz*0.70|0); // smaller undo/restart icons
     const soundX=W-(iconSz+2)-4;
-    const pauseX=soundX-(iconSz+4)-4;
+    const pauseX=soundX-(iconSz+5)-4;
+    const undoX=pauseX-(smSz+5)-3;
+    const restartX=undoX-(smSz+4)-2;
     const btnY=2;
     _soundRect={x:soundX,y:btnY,w:iconSz,h:iconSz};
     _pauseHudRect={x:pauseX,y:btnY,w:iconSz,h:iconSz};
+    _undoHudRect={x:undoX,y:(bh-smSz)/2|0,w:smSz,h:smSz};
+    _restartHudRect={x:restartX,y:(bh-smSz)/2|0,w:smSz,h:smSz};
     // ── Pause button ──
     ctx.save();
     ctx.shadowColor=th.ta;ctx.shadowBlur=5;
@@ -716,8 +895,29 @@ function drawHUD(th){
     ctx.shadowBlur=0;ctx.font=`${iconSz*0.58|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle='rgba(255,255,255,0.92)';ctx.fillText(sOn?'🔊':'🔇',soundX+iconSz/2,btnY+iconSz/2);
     ctx.restore();
-    // Theme name + combo — calé à gauche des deux boutons
-    const rightEdge=pauseX-8;
+    // ── Undo button ──
+    {const _uav=_undoCount>0&&placeHistory.length>0;const _uby=(bh-smSz)/2|0;
+    ctx.save();ctx.shadowColor=_uav?'#60D0FF':'rgba(0,0,0,0)';ctx.shadowBlur=_uav?5:0;
+    const _ubg=ctx.createLinearGradient(undoX,_uby,undoX,_uby+smSz);
+    _ubg.addColorStop(0,_uav?'rgba(0,55,110,0.82)':'rgba(20,20,22,0.60)');_ubg.addColorStop(1,_uav?'rgba(0,28,60,0.82)':'rgba(10,10,12,0.60)');
+    rrect(ctx,undoX,_uby,smSz,smSz,smSz/4,_ubg,null);
+    rp(ctx,undoX,_uby,smSz,smSz,smSz/4);ctx.strokeStyle=_uav?hexA('#60D0FF',0.70):'rgba(70,70,70,0.38)';ctx.lineWidth=1;ctx.stroke();
+    ctx.shadowBlur=0;ctx.font=`${smSz*0.50|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=_uav?'rgba(255,255,255,0.92)':'rgba(90,90,90,0.70)';ctx.fillText('↩',undoX+smSz/2,_uby+smSz/2);
+    if(_undoCount>0){const _ub=Math.max(6,smSz*0.30)|0;ctx.font=`bold ${_ub}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=_uav?'#60D0FF':'#555';ctx.textAlign='right';ctx.textBaseline='top';ctx.fillText(_undoCount,undoX+smSz-1,_uby+1);}
+    ctx.restore();}
+    // ── Restart button ──
+    {const _rby=(bh-smSz)/2|0;
+    ctx.save();ctx.shadowColor='rgba(255,100,40,0.45)';ctx.shadowBlur=4;
+    const _rbg=ctx.createLinearGradient(restartX,_rby,restartX,_rby+smSz);
+    _rbg.addColorStop(0,'rgba(72,18,0,0.82)');_rbg.addColorStop(1,'rgba(36,9,0,0.82)');
+    rrect(ctx,restartX,_rby,smSz,smSz,smSz/4,_rbg,null);
+    rp(ctx,restartX,_rby,smSz,smSz,smSz/4);ctx.strokeStyle='rgba(255,100,40,0.55)';ctx.lineWidth=1;ctx.stroke();
+    ctx.shadowBlur=0;ctx.font=`${smSz*0.52|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(255,255,255,0.92)';ctx.fillText('🔄',restartX+smSz/2,_rby+smSz/2);
+    ctx.restore();}
+    // Theme name + combo — calé à gauche des boutons
+    const rightEdge=restartX-8;
     ctx.font=`${fz*0.62}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='right';ctx.fillStyle=th.ta;ctx.textBaseline='middle';
     ctx.fillText(THEMES[curTheme].name,rightEdge,bh*0.38);
     if(combo>1){ctx.save();ctx.font=`bold ${fz*0.88}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;ctx.fillText(`×${combo}`,rightEdge,bh*0.72);ctx.restore();}
@@ -739,7 +939,20 @@ function drawHUD(th){
     if(combo>1){ctx.save();ctx.font=`bold ${fz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;ctx.fillText(`★ ×${combo}`,hx,cy);ctx.restore();cy+=fz*1.2;}
     ctx.font=`${fz*0.72}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tg;ctx.fillText(THEMES[curTheme].name,hx,cy);cy+=fz;
     if(doublePointsUntil>Date.now()){const rem=Math.ceil((doublePointsUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${fz*0.72}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='#30FFAA';ctx.shadowColor='#00FFB0';ctx.shadowBlur=4;ctx.fillText(`×2 ${rem}s`,hx,cy);ctx.shadowBlur=0;ctx.restore();cy+=fz;}
-    if(_enduranceBonusUntil>Date.now()){const erem=Math.ceil((_enduranceBonusUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${fz*0.72}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='#60FFD0';ctx.shadowColor='#40EAB0';ctx.shadowBlur=4;ctx.fillText(`🏅×1.5 ${erem}s`,hx,cy);ctx.shadowBlur=0;ctx.restore();}
+    if(_enduranceBonusUntil>Date.now()){const erem=Math.ceil((_enduranceBonusUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${fz*0.72}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='#60FFD0';ctx.shadowColor='#40EAB0';ctx.shadowBlur=4;ctx.fillText(`🏅×1.5 ${erem}s`,hx,cy);ctx.shadowBlur=0;ctx.restore();cy+=fz;}
+    cy+=fz*0.4; // gap before action buttons
+    // ── Undo button (landscape) ──
+    {const _lbH=Math.max(20,fz*1.05)|0,_lbW=hw;const _uavL=_undoCount>0&&placeHistory.length>0;
+    rrect(ctx,hx,cy,_lbW,_lbH,5,_uavL?'rgba(0,45,90,0.80)':'rgba(18,18,18,0.55)',_uavL?hexA('#60D0FF',0.60):'rgba(60,60,60,0.35)',1);
+    ctx.save();ctx.font=`bold ${(_lbH*0.54)|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=_uavL?'#60D0FF':'#505050';ctx.fillText(`↩ ANNULER (${_undoCount})`,hx+_lbW/2,cy+_lbH/2);ctx.restore();
+    _undoHudRect={x:hx,y:cy,w:_lbW,h:_lbH};cy+=_lbH+3;}
+    // ── Restart button (landscape) ──
+    {const _lbH=Math.max(20,fz*1.05)|0,_lbW=hw;
+    rrect(ctx,hx,cy,_lbW,_lbH,5,'rgba(60,14,0,0.80)',hexA('#FF8040',0.50),1);
+    ctx.save();ctx.font=`bold ${(_lbH*0.54)|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='#FF8040';ctx.fillText('🔄 RESTART',hx+_lbW/2,cy+_lbH/2);ctx.restore();
+    _restartHudRect={x:hx,y:cy,w:_lbW,h:_lbH};}
     ctx.textBaseline='alphabetic';
   }
 }

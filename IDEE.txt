@@ -1,0 +1,11 @@
+a modifier :
+1) faire ne sorte que les theme (ocean,desert,jungle,etc) soit plein en couleur pas a moitier rempli 
+2) centrer le texte jouer
+3) quand game over enlever le texte appuyez sur r pour recommancer
+
+idée :
+1) ajouter des etoile dans certain block et quand la ligne est complete les etoile font plus de point 
+2) ajouté une option qui spawn aléatoirement en disant BONUS: cliquez pour ajouter deux cases a block (ce qui rajoute une fois avoir cliqué dessus 2 slot de block)
+3) ajouté une option en fin de parti au game over disant "voulez vous une seconde chance ?" avec une case OUI et NON ( si oui dernier block posé disparait si non game over)
+4) si 2 colonne ou ligne fini simultanément = message animé disant "COMBO X2 POINT". si 3 ligne ou colonne fini simultanément = "COMBO X3 point".si 4 ligne ou colonne fini simultanément = "COMBO X4 point".
+5) rajouter des bonus dans certain block comme les etoile (des le bloc contenant le bonus detruit le bonus s'active ( proposition de bonus : bombe = explosion de 3x3 block. point doublé = point doublé pendant 1 minute.)

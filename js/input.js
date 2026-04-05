@@ -1,12 +1,15 @@
 'use strict';
 // ─── INPUT ───────────────────────────────────────────────────────────────────
 function getPos(e){if(e.touches&&e.touches.length>0)return{x:e.touches[0].clientX,y:e.touches[0].clientY};if(e.changedTouches&&e.changedTouches.length>0)return{x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};return{x:e.clientX,y:e.clientY};}
-function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;
+function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;_tapStartX=x;_tapStartY=y;
   if(gameState==='menu'){handleMenuTap(x,y);return;}
   if(gameState==='modeselect'){handleModeSelectTap(x,y);return;}
   if(gameState==='pause'){return;}
   if(gameState==='leaderboard'){if(_backLbRect&&x>=_backLbRect.x&&x<_backLbRect.x+_backLbRect.w&&y>=_backLbRect.y&&y<_backLbRect.y+_backLbRect.h){gameState='menu';}return;}
-  if(gameState==='gameover'){if(Date.now()-overT>1200)gameState='menu';return;}
+  if(gameState==='gameover'){
+    if(_goReplayRect&&x>=_goReplayRect.x&&x<_goReplayRect.x+_goReplayRect.w&&y>=_goReplayRect.y&&y<_goReplayRect.y+_goReplayRect.h){resetGame();gameState='playing';return;}
+    if(_goMenuRect&&x>=_goMenuRect.x&&x<_goMenuRect.x+_goMenuRect.w&&y>=_goMenuRect.y&&y<_goMenuRect.y+_goMenuRect.h){gameState='menu';return;}
+    if(Date.now()-overT>1200)gameState='menu';return;}
   // Block tray drag only when in choix PICKING phase; all other modes allow normal drag
   const _inChoixPick=(currentMode==='choix'||_getHistoireSubMode()==='choix')&&choixState==='picking';
   if(gameState==='playing'&&!over&&!showSecondChance&&!showBonusPicker&&!_inChoixPick){const pw=GW/3;for(let i=0;i<3;i++){if(x>=GRID_X+i*pw&&x<GRID_X+(i+1)*pw&&y>=TRAY_Y&&y<TRAY_Y+TRAY_H&&tray[i]){drag={idx:i};break;}}}}
@@ -65,6 +68,28 @@ function onUp(e){
         resetGame();return;
       }
     }
+  }
+  // ── Undo last placement ──────────────────────────────────────────────────────
+  if(gameState==='playing'&&!over&&_undoHudRect&&x>=_undoHudRect.x&&x<_undoHudRect.x+_undoHudRect.w&&y>=_undoHudRect.y&&y<_undoHudRect.y+_undoHudRect.h){
+    if(_undoCount>0&&placeHistory.length>0){
+      const last=placeHistory.pop();
+      last.cells.forEach(({r,c})=>{grid[r][c]=null;gridStars[r][c]=false;gridBonus[r][c]=null;});
+      parasites=parasites.filter(p=>!last.cells.some(cl=>cl.r===p.r&&cl.c===p.c));
+      // Restore piece to the slot it came from (or first empty slot)
+      const slot=(last.trayIdx!==undefined&&!tray[last.trayIdx])?last.trayIdx:(!tray[0]?0:!tray[1]?1:!tray[2]?2:-1);
+      if(slot>=0&&last.piece)tray[slot]=last.piece;
+      placed=Math.max(0,placed-1);_undoCount--;_placementStreak=0;
+      floats.push(new FloatText(`↩ ANNULÉ (${_undoCount} restant${_undoCount!==1?'s':''})`,W/2,H*0.45,'#60D0FF',1.1,100));
+      screenFlash=80;screenFlashCol='#60D0FF';sndBonus();
+    }else if(_undoCount<=0){
+      floats.push(new FloatText("❌ Plus d'annulations !",W/2,H*0.45,'#FF6060',0.9,80));
+    }
+    drag=null;return;
+  }
+  // ── Quick restart ─────────────────────────────────────────────────────────────
+  if(gameState==='playing'&&!over&&_restartHudRect&&x>=_restartHudRect.x&&x<_restartHudRect.x+_restartHudRect.w&&y>=_restartHudRect.y&&y<_restartHudRect.y+_restartHudRect.h){
+    if(score>best){best=score;try{localStorage.setItem('blockpuzzle_best',String(best));}catch(e2){}}
+    resetGame();drag=null;return;
   }
   // Second chance buttons
   if(showSecondChance){
@@ -137,9 +162,18 @@ function onUp(e){
   }
   if(drag&&gameState==='playing'&&!over&&!showSecondChance){
     const piece=tray[drag.idx];
+    // Short tap (minimal finger movement) → rotate piece 90° clockwise
+    if(piece&&Math.hypot(x-_tapStartX,y-_tapStartY)<CELL*0.45){
+      tray[drag.idx]={...piece,shape:rotateShape(piece.shape)};
+      drag=null;return;
+    }
     if(piece){const{gr,gc}=snapPos(x,y,piece.shape);if(_modeCanPlace(grid,piece.shape,gr,gc)){
       placePiece(grid,piece.shape,piece.color,gr,gc);
       sndPlace();
+      // Placement impact — spring shake + expanding ripple ring
+      shake=Math.max(shake,3+Math.min(combo,3));shakePow=Math.max(shakePow,1.5+Math.min(combo,2)*0.5);
+      {const _rcx=GRID_X+(gc+piece.shape[0].length*0.5)*CELL,_rcy=GRID_Y+(gr+piece.shape.length*0.5)*CELL;
+       ripples.push({x:_rcx,y:_rcy,life:32,ml:32,maxR:CELL*(1.4+piece.shape.flat().filter(Boolean).length*0.09),color:piece.color});}
       // ── Speed mechanic ───────────────────────────────────────────────────
       const now2=Date.now();
       const thinkMs=lastPlaceTime>0?now2-lastPlaceTime:4000;
@@ -169,7 +203,7 @@ function onUp(e){
       {
         const hCells=[];
         piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)hCells.push({r:gr+rr,c:gc+cc,color:piece.color});}));
-        placeHistory.push({cells:hCells});
+        placeHistory.push({cells:hCells,piece:{shape:piece.shape,color:piece.color},trayIdx:drag.idx});
         if(placeHistory.length>5)placeHistory.shift();
       }
       // Petites particules de placement
@@ -192,12 +226,26 @@ function onUp(e){
         cells.forEach(({r,c})=>{if(gridStars[r][c])starPts+=25;if(gridBonus[r][c]==='bomb')bombList.push({r,c});if(gridBonus[r][c]==='x2')hasX2=true;gridStars[r][c]=false;gridBonus[r][c]=null;});
         const bombKilled=[];
         bombList.forEach(({r,c})=>{for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const br=r+dr,bc=c+dc;if(br>=0&&br<ROWS&&bc>=0&&bc<COLS&&grid[br][bc]){bombKilled.push({r:br,c:bc});grid[br][bc]=null;gridStars[br][bc]=false;gridBonus[br][bc]=null;}}});
-        if(bombKilled.length>0){spawnParticles(bombKilled,8,2,['#FF6020','#FFA020','#FF2010']);shake=Math.max(shake,14);shakePow=Math.max(shakePow,6);screenFlash=Math.min(255,screenFlash+120);screenFlashCol='#FF4010';}
+        if(bombKilled.length>0){
+          spawnParticles(bombKilled,10,2.5,['#FF6020','#FFA020','#FF2010','#FFFF60']);
+          // Extra debris shards from bomb
+          const _bClC={};bombKilled.forEach(({r,c})=>{_bClC[r*100+c]='#FF4010';});spawnDebris(_bClC,0,5);
+          // Shockwave ripple from blast center
+          const _bCx=bombKilled.reduce((s,{c})=>s+c,0)/bombKilled.length,_bCy=bombKilled.reduce((s,{r})=>s+r,0)/bombKilled.length;
+          ripples.push({x:GRID_X+(_bCx+0.5)*CELL,y:GRID_Y+(_bCy+0.5)*CELL,life:45,ml:45,maxR:CELL*4.5,color:'#FF8020'});
+          ripples.push({x:GRID_X+(_bCx+0.5)*CELL,y:GRID_Y+(_bCy+0.5)*CELL,life:35,ml:35,maxR:CELL*3,color:'#FFFFFF'});
+          shake=Math.max(shake,14);shakePow=Math.max(shakePow,6);screenFlash=Math.min(255,screenFlash+120);screenFlashCol='#FF4010';
+        }
         if(hasX2)doublePointsUntil=Date.now()+60000;
         combo++;
         if(combo>bestCombo){bestCombo=combo;try{localStorage.setItem('bp_bestcombo',String(bestCombo));}catch(e2){}}
         maxComboGame=Math.max(maxComboGame,combo);
-        if(combo>=2)sndCombo(combo);
+        if(combo>=2){sndCombo(combo);
+          // Sparkle burst — star-shaped particles scatter across grid on combos
+          const _sk=Math.min(combo*5,24);
+          for(let _si=0;_si<_sk;_si++){const _sa=rnd(0,Math.PI*2),_ss=rnd(2.5,6+combo*0.4);
+            particles.push({x:GRID_X+rnd(CELL*0.5,GW-CELL*0.5),y:GRID_Y+rnd(CELL*0.5,GH-CELL*0.5),vx:Math.cos(_sa)*_ss*0.5,vy:Math.sin(_sa)*_ss*0.5-1.8,color:rndc(['#FFD700','#FF80FF','#80FFFF','#FF6060','#FFFFFF']),life:(36+rnd(0,22))|0,ml:60,size:rnd(1.8,3.8),circle:true});}
+        }
         let pts=Math.round(n===1?100*(1+(combo-1)*0.5):n===2?350*(1+(combo-1)*0.5):n*165*(1+(combo-1)*0.5));
         pts+=starPts;
         pts=Math.round(pts*speedMul);
@@ -228,11 +276,26 @@ function onUp(e){
         if(starPts>0)floats.push(new FloatText(`★+${starPts}`,GRID_X+GW/2,GRID_Y+miny*CELL-CELL*1.5,THEMES[ti].hi||'#FFE030',1.2,90));
         if(hasX2)floats.push(new FloatText('×2 POINTS 60s',GRID_X+GW/2,GRID_Y+GH*0.35,'#30FFAA',1.1,100));
         const newTh=getCurTheme();if(newTh!==curTheme){curTheme=newTh;gameBg=buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=200;screenFlashCol=THEMES[newTh].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));}
-      }else combo=0;
+        // ── Perfect Clear bonus — entire board emptied ────────────────────────
+        if(grid.every(row=>row.every(v=>!v||v==='__BLOCKED__'))){
+          const pcPts=500;score+=pcPts;
+          screenFlash=255;screenFlashCol='#FFD700';shake=Math.max(shake,22);shakePow=Math.max(shakePow,10);
+          floats.push(new FloatText('💥 PERFECT CLEAR !',W/2,H*0.30,'#FFD700',2.4,260));
+          floats.push(new FloatText(`+${pcPts} BONUS`,GRID_X+GW/2,GRID_Y+GH*0.4,'#FFF0A0',1.7,210));
+          spawnParticles(Array.from({length:8},()=>({r:rndI(0,9),c:rndI(0,9)})),8,2.0,['#FFD700','#FFF0A0','#FF8040','#FF40D0','#40FFFF']);
+          sndClear4();
+        }
+        // ── Streak: consecutive line-clearing placements ──────────────────────
+        _placementStreak++;
+        if(_placementStreak>=3){
+          const streakBonus=Math.round(pts*0.1*(_placementStreak-2));
+          if(streakBonus>0){score+=streakBonus;floats.push(new FloatText(`🔥 STREAK ×${_placementStreak} +${streakBonus}`,GRID_X+GW/2,GRID_Y+GH*0.12,THEMES[ti].hi||THEMES[ti].tm,0.88,72));}
+        }
+      }else{combo=0;_placementStreak=0;}
       // Speed float (show regardless of line clear)
       if(speedLabel)floats.push(new FloatText(speedLabel,GRID_X+GW/2,GRID_Y+GH*0.25,speedCol,0.85,70));
       const subM=_getHistoireSubMode();const eM=currentMode==='histoire'?subM:currentMode;
-      if(tray.every(p=>p===null)&&eM!=='choix'){tray=nextTrayPreview||newTray();nextTrayPreview=newTray();}
+      if(tray.every(p=>p===null)&&eM!=='choix'){tray=nextTrayPreview||newTray();nextTrayPreview=newTray();trayRefreshT=Date.now();}
       if(tray.every(p=>p===null)&&eM==='choix'){_generateChoixOptions();}
       // Sauvegarde automatique
       try{localStorage.setItem('bp_save',JSON.stringify({v:1,grid,score,placed,combo,curTheme,gridStars,gridBonus,tray:tray.map(p=>p?{shape:p.shape,color:p.color,isParasite:!!p.isParasite}:null),ntp:nextTrayPreview?nextTrayPreview.map(p=>p?{shape:p.shape,color:p.color}:null):null,gameStartTime,totalLinesCleared,maxComboGame}));}catch(e2){}

@@ -71,7 +71,7 @@ function resetGame(){
   gridStars=Array.from({length:ROWS},()=>Array(COLS).fill(false));
   gridBonus=Array.from({length:ROWS},()=>Array(COLS).fill(null));
   secondChanceUsed=false;showSecondChance=false;doublePointsUntil=0;
-  showAddCellsBonus=false;addCellsBonusTimer=Math.floor(rnd(8,15));showBonusPicker=false;bonusPickerPieces=[];bonusPickerRects=[];parasites=[];lastPlaceTime=Date.now();placeHistory=[];
+  showAddCellsBonus=false;addCellsBonusTimer=Math.floor(rnd(8,15));showBonusPicker=false;bonusPickerPieces=[];bonusPickerRects=[];parasites=[];lastPlaceTime=Date.now();placeHistory=[];_placementStreak=0;_undoCount=3;ripples=[];dragTrail=[];
   gameStartTime=Date.now();totalLinesCleared=0;maxComboGame=0;
   // Mode-specific reset
   contraBlocked=[];choixState='picking';choixOptions=[];choixOptionRects=[];choixSelected=-1;

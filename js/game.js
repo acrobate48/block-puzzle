@@ -731,6 +731,56 @@ function _drawSnowAccum(){
   ctx.restore();
 }
 
+// ─── 31. PRISMATIC CRYSTAL SHIMMER — skin 1 (CRISTAL) ───────────────────────
+function _drawCrystalShimmer(t){
+  if(selSkin!==1||!grid||over)return;
+  ctx.save();
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(!grid[r][c])continue;
+    const x=GRID_X+c*CELL,y=GRID_Y+r*CELL;
+    const h=((t*0.05)+(r*22+c*17))%360|0;
+    const a=0.10+0.07*Math.sin(t*0.006+r*0.8+c*0.6);
+    ctx.globalAlpha=a;
+    ctx.fillStyle=`hsl(${h},100%,72%)`;
+    ctx.fillRect(x+2,y+2,CELL-4,CELL-4);
+  }
+  ctx.globalAlpha=1;ctx.restore();
+}
+
+// ─── 32. COMBO FIRE CELL GLOW ────────────────────────────────────────────────
+function _drawComboFireCells(t){
+  if(combo<5||!grid||over)return;
+  const intensity=cl((combo-5)/4,0,1);
+  ctx.save();
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(!grid[r][c])continue;
+    const x=GRID_X+c*CELL,y=GRID_Y+r*CELL;
+    const flicker=0.5+0.5*Math.sin(t*0.022+r*3.7+c*5.1);
+    const a=(0.08+0.12*intensity*flicker);
+    const fg=ctx.createLinearGradient(x,y+CELL,x,y);
+    fg.addColorStop(0,`rgba(255,60,0,${a.toFixed(3)})`);
+    fg.addColorStop(0.4,`rgba(255,180,0,${(a*0.45).toFixed(3)})`);
+    fg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=fg;ctx.fillRect(x,y,CELL,CELL);
+  }
+  ctx.restore();
+}
+
+// ─── 33. COMBO GLOWING GRID LINES ────────────────────────────────────────────
+function _drawComboGridLines(t){
+  if(combo<3||over)return;
+  const intensity=cl((combo-3)/6,0,1);
+  const th=THEMES[curTheme];
+  const col=th.gridGlow||th.ta;
+  const pulse=0.55+0.45*Math.abs(Math.sin(t*0.011+combo*0.4));
+  ctx.save();
+  ctx.strokeStyle=hexA(col,(0.04+0.12*intensity)*pulse);
+  ctx.lineWidth=0.8;ctx.shadowColor=col;ctx.shadowBlur=3*intensity;
+  for(let gr2=1;gr2<ROWS;gr2++){ctx.beginPath();ctx.moveTo(GRID_X,GRID_Y+gr2*CELL);ctx.lineTo(GRID_X+GW,GRID_Y+gr2*CELL);ctx.stroke();}
+  for(let gc2=1;gc2<COLS;gc2++){ctx.beginPath();ctx.moveTo(GRID_X+gc2*CELL,GRID_Y);ctx.lineTo(GRID_X+gc2*CELL,GRID_Y+GH);ctx.stroke();}
+  ctx.shadowBlur=0;ctx.restore();
+}
+
 // ─── 29. GAME OVER BOARD EXPLOSION ──────────────────────────────────────────
 function _triggerBoardExplosion(){
   if(!grid)return;
@@ -950,6 +1000,12 @@ function drawGame(t){
       ctx.fillStyle=hexA(th.sl,0.15);ctx.beginPath();ctx.arc(x+CELL/2,y+CELL/2,Math.max(1,CELL*0.055),0,Math.PI*2);ctx.fill();
     }
   }}
+  // Prismatic shimmer — Crystal skin
+  _drawCrystalShimmer(t);
+  // Combo fire cell overlay (combo ≥ 5)
+  _drawComboFireCells(t);
+  // Combo glowing grid dividers (combo ≥ 3)
+  _drawComboGridLines(t);
   // Cosmos nebula drift
   _drawCosmosnNebula(t);
   // Rhythm heartbeat pulse

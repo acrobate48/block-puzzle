@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 3840 2160" width="100%" height="100%"
+     preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="jAtm1" cx="50%" cy="25%" r="65%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2E4820" stop-opacity="0.7"/>
+      <stop offset="60%" stop-color="#0F2310" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#060E06" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="jAtm2" cx="20%" cy="50%" r="50%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#183810" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#081508" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="jAtm3" cx="80%" cy="60%" r="45%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1A3C12" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#081508" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="jGlow" cx="50%" cy="10%" r="40%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#90FF80" stop-opacity="0.55"/>
+      <stop offset="50%" stop-color="#5DC940" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#081508" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="jGoldGlow" cx="30%" cy="55%" r="30%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#D4B030" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#081508" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="jVignette" cx="50%" cy="50%" r="75%" gradientUnits="userSpaceOnUse">
+      <stop offset="35%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.88"/>
+    </radialGradient>
+    <radialGradient id="jSpecular" cx="22%" cy="6%" r="30%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#90FF80" stop-opacity="0.5"/>
+      <stop offset="55%" stop-color="#5DC940" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#081508" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="jSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#060E06"/>
+      <stop offset="25%" stop-color="#0A180A"/>
+      <stop offset="60%" stop-color="#0F2310"/>
+      <stop offset="85%" stop-color="#183810"/>
+      <stop offset="100%" stop-color="#081508"/>
+    </linearGradient>
+    <linearGradient id="jRay1" x1="48%" y1="0%" x2="52%" y2="100%">
+      <stop offset="0%" stop-color="#90FF80" stop-opacity="0.3"/>
+      <stop offset="70%" stop-color="#5DC940" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#5DC940" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="jRay2" x1="46%" y1="0%" x2="54%" y2="100%">
+      <stop offset="0%" stop-color="#D4B030" stop-opacity="0.2"/>
+      <stop offset="60%" stop-color="#D4B030" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#D4B030" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="jFog" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#2E4820" stop-opacity="0.45"/>
+      <stop offset="25%" stop-color="#5A9048" stop-opacity="0.18"/>
+      <stop offset="75%" stop-color="#5A9048" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#2E4820" stop-opacity="0.45"/>
+    </linearGradient>
+    <linearGradient id="jGround" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#081508" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#030703" stop-opacity="1"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="b1"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="25" result="b2"/>
+      <feColorMatrix in="b1" type="matrix"
+        values="0 0 0 0 0.36  0 0 0 0 0.79  0 0 0 0 0.25  0 0 0 1.8 0" result="c1"/>
+      <feColorMatrix in="b2" type="matrix"
+        values="0 0 0 0 0.36  0 0 0 0 0.79  0 0 0 0 0.25  0 0 0 0.9 0" result="c2"/>
+      <feMerge><feMergeNode in="c2"/><feMergeNode in="c1"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowGold" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b1"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="20" result="b2"/>
+      <feColorMatrix in="b1" type="matrix"
+        values="0 0 0 0 0.83  0 0 0 0 0.69  0 0 0 0 0.19  0 0 0 2.2 0" result="c1"/>
+      <feColorMatrix in="b2" type="matrix"
+        values="0 0 0 0 0.83  0 0 0 0 0.69  0 0 0 0 0.19  0 0 0 0.8 0" result="c2"/>
+      <feMerge><feMergeNode in="c2"/><feMergeNode in="c1"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="6" stdDeviation="18" flood-color="#060E06" flood-opacity="0.95"/>
+    </filter>
+    <filter id="noise" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="saturate" values="0" result="gn"/>
+      <feBlend in="SourceGraphic" in2="gn" mode="overlay" result="bl"/>
+      <feComposite in="bl" in2="SourceGraphic" operator="in"/>
+    </filter>
+    <filter id="blur" x="-15%" y="-15%" width="130%" height="130%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+    <filter id="blurHeavy" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="blurMid" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+    <filter id="shimmer">
+      <feTurbulence type="turbulence" baseFrequency="0.01 0.006" numOctaves="4" seed="7" result="t"/>
+      <feDisplacementMap in="SourceGraphic" in2="t" scale="20" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+
+  <!-- LAYER 1: Deep sky base -->
+  <rect width="3840" height="2160" fill="url(#jSky)"/>
+
+  <!-- LAYER 2: Atmospheric depth radials -->
+  <rect width="3840" height="2160" fill="url(#jAtm1)" filter="url(#blurHeavy)" opacity="0.9"/>
+  <rect width="3840" height="2160" fill="url(#jAtm2)" filter="url(#blurMid)" opacity="0.7"/>
+  <rect width="3840" height="2160" fill="url(#jAtm3)" filter="url(#blurMid)" opacity="0.6"/>
+
+  <!-- LAYER 3: Far background tree canopy silhouettes (heavy blur = far away) -->
+  <g filter="url(#blurHeavy)" opacity="0.5">
+    <ellipse cx="320" cy="950" rx="400" ry="700" fill="#0C1C0A"/>
+    <ellipse cx="820" cy="880" rx="440" ry="720" fill="#0D1E0B"/>
+    <ellipse cx="1380" cy="920" rx="380" ry="680" fill="#0C1C0A"/>
+    <ellipse cx="1980" cy="900" rx="420" ry="710" fill="#0D1E0B"/>
+    <ellipse cx="2560" cy="910" rx="390" ry="695" fill="#0C1C0A"/>
+    <ellipse cx="3120" cy="890" rx="430" ry="705" fill="#0D1E0B"/>
+    <ellipse cx="3680" cy="930" rx="400" ry="690" fill="#0C1C0A"/>
+    <rect x="270" y="950" width="110" height="800" fill="#081508"/>
+    <rect x="770" y="880" width="130" height="870" fill="#081508"/>
+    <rect x="1330" y="920" width="100" height="830" fill="#081508"/>
+    <rect x="1930" y="900" width="120" height="850" fill="#081508"/>
+    <rect x="2510" y="910" width="105" height="840" fill="#081508"/>
+    <rect x="3070" y="890" width="125" height="860" fill="#081508"/>
+    <rect x="3630" y="930" width="115" height="820" fill="#081508"/>
+  </g>
+
+  <!-- LAYER 4: Mid-distance trees -->
+  <g filter="url(#blurMid)" opacity="0.75">
+    <ellipse cx="100" cy="750" rx="340" ry="560" fill="#142E0E"/>
+    <ellipse cx="580" cy="700" rx="370" ry="580" fill="#183810"/>
+    <ellipse cx="1100" cy="720" rx="320" ry="550" fill="#152F0F"/>
+    <ellipse cx="1700" cy="710" rx="355" ry="570" fill="#183810"/>
+    <ellipse cx="2280" cy="715" rx="335" ry="555" fill="#142E0E"/>
+    <ellipse cx="2850" cy="705" rx="360" ry="575" fill="#183810"/>
+    <ellipse cx="3380" cy="720" rx="340" ry="560" fill="#152F0F"/>
+    <ellipse cx="3800" cy="740" rx="300" ry="540" fill="#183810"/>
+    <rect x="50" y="750" width="120" height="1000" fill="#0A1A08"/>
+    <rect x="530" y="700" width="140" height="1050" fill="#0A1A08"/>
+    <rect x="1050" y="720" width="110" height="1020" fill="#0A1A08"/>
+    <rect x="1650" y="710" width="130" height="1040" fill="#0A1A08"/>
+    <rect x="2230" y="715" width="115" height="1030" fill="#0A1A08"/>
+    <rect x="2800" y="705" width="135" height="1045" fill="#0A1A08"/>
+    <rect x="3330" y="720" width="125" height="1010" fill="#0A1A08"/>
+  </g>
+
+  <!-- LAYER 5: God rays from top canopy (emerald beams) -->
+  <g opacity="0.4" filter="url(#blurHeavy)">
+    <polygon points="1840,0 1920,0 2250,2160 1750,2160" fill="url(#jRay1)"/>
+    <polygon points="1710,0 1790,0 2020,2160 1640,2160" fill="url(#jRay1)"/>
+    <polygon points="1960,0 2030,0 2350,2160 2080,2160" fill="url(#jRay1)"/>
+    <polygon points="1580,0 1640,0 1830,2160 1500,2160" fill="url(#jRay1)"/>
+    <polygon points="2070,0 2140,0 2500,2160 2300,2160" fill="url(#jRay1)"/>
+    <polygon points="1450,0 1510,0 1680,2160 1350,2160" fill="url(#jRay1)"/>
+    <polygon points="2200,0 2260,0 2680,2160 2480,2160" fill="url(#jRay1)"/>
+  </g>
+  <!-- Gold god rays (firefly light shafts) -->
+  <g opacity="0.22" filter="url(#blurHeavy)">
+    <polygon points="1870,0 1920,0 2120,2160 1840,2160" fill="url(#jRay2)"/>
+    <polygon points="1740,0 1800,0 1940,2160 1680,2160" fill="url(#jRay2)"/>
+    <polygon points="2000,0 2040,0 2280,2160 2120,2160" fill="url(#jRay2)"/>
+  </g>
+
+  <!-- LAYER 6: Atmospheric fog bands -->
+  <rect x="0" y="550" width="3840" height="350" fill="url(#jFog)" opacity="0.55" filter="url(#blurHeavy)"/>
+  <rect x="0" y="850" width="3840" height="280" fill="url(#jFog)" opacity="0.4" filter="url(#blurHeavy)"/>
+  <rect x="0" y="1100" width="3840" height="240" fill="url(#jFog)" opacity="0.3" filter="url(#blurHeavy)"/>
+  <rect x="0" y="1400" width="3840" height="280" fill="url(#jFog)" opacity="0.35" filter="url(#blurHeavy)"/>
+  <rect x="0" y="1700" width="3840" height="260" fill="url(#jFog)" opacity="0.25" filter="url(#blurHeavy)"/>
+
+  <!-- LAYER 7: Vine structures -->
+  <g opacity="0.65" filter="url(#blur)" stroke-linecap="round">
+    <path d="M250,0 C240,250 270,500 230,750 C190,1000 250,1250 210,1500 C170,1750 230,2000 220,2160" stroke="#2E4820" stroke-width="7" fill="none"/>
+    <path d="M420,0 C440,300 400,600 430,900 C460,1200 390,1500 420,1800 C450,2100 430,2160 430,2160" stroke="#3A5828" stroke-width="5" fill="none"/>
+    <path d="M3580,0 C3600,200 3560,450 3590,700 C3620,950 3570,1200 3600,1450 C3630,1700 3580,1950 3600,2160" stroke="#2E4820" stroke-width="7" fill="none"/>
+    <path d="M3420,0 C3400,280 3440,560 3410,840 C3380,1120 3430,1400 3400,1680 C3370,1960 3410,2160 3410,2160" stroke="#3A5828" stroke-width="5" fill="none"/>
+    <!-- Hanging cross-vines -->
+    <path d="M700,0 C720,180 690,360 710,540 C730,720 700,900 720,1050" stroke="#2E4820" stroke-width="4" fill="none"/>
+    <path d="M1100,0 C1120,200 1080,420 1110,640 C1140,860 1100,1080 1120,1280" stroke="#2E4820" stroke-width="3" fill="none"/>
+    <path d="M1600,0 C1620,170 1580,350 1610,530" stroke="#2E4820" stroke-width="4" fill="none"/>
+    <path d="M2200,0 C2220,190 2180,390 2210,590 C2240,790 2200,990 2220,1180" stroke="#2E4820" stroke-width="3" fill="none"/>
+    <path d="M2700,0 C2720,160 2680,340 2710,520" stroke="#2E4820" stroke-width="4" fill="none"/>
+    <path d="M3100,0 C3120,200 3080,410 3110,620 C3140,830 3100,1040 3120,1250" stroke="#2E4820" stroke-width="3" fill="none"/>
+    <!-- Leaf clusters -->
+    <ellipse cx="240" cy="420" rx="35" ry="22" fill="#2E4820" opacity="0.75"/>
+    <ellipse cx="255" cy="800" rx="40" ry="25" fill="#244018" opacity="0.7"/>
+    <ellipse cx="235" cy="1200" rx="32" ry="20" fill="#2E4820" opacity="0.65"/>
+    <ellipse cx="425" cy="620" rx="30" ry="18" fill="#3A5828" opacity="0.75"/>
+    <ellipse cx="3590" cy="380" rx="38" ry="24" fill="#2E4820" opacity="0.75"/>
+    <ellipse cx="3605" cy="780" rx="42" ry="26" fill="#244018" opacity="0.7"/>
+    <ellipse cx="3595" cy="1180" rx="34" ry="21" fill="#2E4820" opacity="0.65"/>
+  </g>
+
+  <!-- LAYER 8: Foreground large leaf silhouettes -->
+  <g filter="url(#shadow)">
+    <path d="M0,550 Q280,250 520,480 Q310,720 0,820 Z" fill="#0C1A0A" opacity="0.97"/>
+    <path d="M0,320 Q360,100 580,380 Q300,560 0,610 Z" fill="#0E1F0C" opacity="0.93"/>
+    <path d="M0,1050 Q320,820 540,1060 Q280,1300 0,1380 Z" fill="#081508" opacity="0.97"/>
+    <path d="M0,1500 Q250,1300 420,1520 Q200,1740 0,1800 Z" fill="#0A1A08" opacity="0.9"/>
+    <path d="M3840,480 Q3560,220 3320,470 Q3560,720 3840,780 Z" fill="#0C1A0A" opacity="0.97"/>
+    <path d="M3840,280 Q3500,80 3280,330 Q3540,520 3840,570 Z" fill="#0E1F0C" opacity="0.93"/>
+    <path d="M3840,980 Q3520,760 3300,1000 Q3540,1240 3840,1300 Z" fill="#081508" opacity="0.97"/>
+    <path d="M3840,1450 Q3600,1250 3400,1470 Q3620,1680 3840,1740 Z" fill="#0A1A08" opacity="0.9"/>
+    <!-- Bottom ground foliage -->
+    <ellipse cx="450" cy="2120" rx="650" ry="220" fill="#081508" opacity="0.97"/>
+    <ellipse cx="1300" cy="2140" rx="750" ry="200" fill="#0A1A08" opacity="0.93"/>
+    <ellipse cx="2100" cy="2125" rx="700" ry="210" fill="#081508" opacity="0.97"/>
+    <ellipse cx="2900" cy="2130" rx="680" ry="205" fill="#0A1A08" opacity="0.93"/>
+    <ellipse cx="3600" cy="2115" rx="620" ry="215" fill="#081508" opacity="0.97"/>
+  </g>
+
+  <!-- LAYER 9: Isometric block shapes partially hidden in shadows -->
+  <g opacity="0.45" filter="url(#blurMid)">
+    <polygon points="550,1420 680,1358 810,1420 810,1544 680,1606 550,1544" fill="#1A3810" stroke="#2E4820" stroke-width="2"/>
+    <polygon points="680,1358 810,1420 810,1296 680,1234" fill="#2E4820" stroke="#2E4820" stroke-width="2"/>
+    <polygon points="550,1420 680,1358 680,1234 550,1296" fill="#122E0A" stroke="#2E4820" stroke-width="2"/>
+    <polygon points="2750,1280 2890,1212 3030,1280 3030,1412 2890,1480 2750,1412" fill="#1A3810" stroke="#2E4820" stroke-width="2"/>
+    <polygon points="2890,1212 3030,1280 3030,1148 2890,1080" fill="#2E4820" stroke="#2E4820" stroke-width="2"/>
+    <polygon points="2750,1280 2890,1212 2890,1080 2750,1148" fill="#122E0A" stroke="#2E4820" stroke-width="2"/>
+    <polygon points="1380,1580 1510,1514 1640,1580 1640,1712 1510,1778 1380,1712" fill="#1A3810" stroke="#2E4820" stroke-width="2"/>
+    <polygon points="1510,1514 1640,1580 1640,1448 1510,1382" fill="#2E4820" stroke="#2E4820" stroke-width="2"/>
+    <polygon points="1380,1580 1510,1514 1510,1382 1380,1448" fill="#122E0A" stroke="#2E4820" stroke-width="2"/>
+    <polygon points="2050,1480 2200,1406 2350,1480 2350,1628 2200,1702 2050,1628" fill="#1A3810" stroke="#2E4820" stroke-width="2"/>
+    <polygon points="2200,1406 2350,1480 2350,1332 2200,1258" fill="#2E4820" stroke="#2E4820" stroke-width="2"/>
+    <polygon points="2050,1480 2200,1406 2200,1258 2050,1332" fill="#122E0A" stroke="#2E4820" stroke-width="2"/>
+  </g>
+
+  <!-- LAYER 10: Particle field — Gold fireflies (50+) -->
+  <g filter="url(#glowGold)">
+    <circle cx="410" cy="1080" r="5" fill="#D4B030" opacity="0.92"/>
+    <circle cx="680" cy="890" r="4" fill="#FFE080" opacity="0.85"/>
+    <circle cx="950" cy="1180" r="6" fill="#D4B030" opacity="0.95"/>
+    <circle cx="1180" cy="780" r="4" fill="#FFE080" opacity="0.8"/>
+    <circle cx="1420" cy="1090" r="5" fill="#D4B030" opacity="0.88"/>
+    <circle cx="1700" cy="740" r="4" fill="#D4B030" opacity="0.82"/>
+    <circle cx="1950" cy="1250" r="6" fill="#D4B030" opacity="0.92"/>
+    <circle cx="2180" cy="930" r="4" fill="#FFE080" opacity="0.78"/>
+    <circle cx="2420" cy="1130" r="5" fill="#D4B030" opacity="0.88"/>
+    <circle cx="2700" cy="840" r="4" fill="#D4B030" opacity="0.83"/>
+    <circle cx="2980" cy="1190" r="6" fill="#D4B030" opacity="0.92"/>
+    <circle cx="3220" cy="980" r="4" fill="#FFE080" opacity="0.75"/>
+    <circle cx="3480" cy="1100" r="5" fill="#D4B030" opacity="0.88"/>
+    <circle cx="320" cy="1380" r="4" fill="#D4B030" opacity="0.72"/>
+    <circle cx="590" cy="1560" r="3" fill="#FFE080" opacity="0.65"/>
+    <circle cx="870" cy="1440" r="5" fill="#D4B030" opacity="0.78"/>
+    <circle cx="1150" cy="1520" r="3" fill="#FFE080" opacity="0.68"/>
+    <circle cx="1480" cy="1380" r="4" fill="#D4B030" opacity="0.75"/>
+    <circle cx="1750" cy="1620" r="3" fill="#D4B030" opacity="0.7"/>
+    <circle cx="2050" cy="1480" r="5" fill="#D4B030" opacity="0.82"/>
+    <circle cx="2340" cy="1580" r="3" fill="#FFE080" opacity="0.72"/>
+    <circle cx="2620" cy="1420" r="4" fill="#D4B030" opacity="0.78"/>
+    <circle cx="2880" cy="1540" r="3" fill="#FFE080" opacity="0.68"/>
+    <circle cx="3150" cy="1460" r="5" fill="#D4B030" opacity="0.82"/>
+    <circle cx="3420" cy="1580" r="3" fill="#D4B030" opacity="0.7"/>
+    <circle cx="480" cy="670" r="3" fill="#FFE080" opacity="0.62"/>
+    <circle cx="780" cy="610" r="2" fill="#D4B030" opacity="0.58"/>
+    <circle cx="1100" cy="650" r="3" fill="#FFE080" opacity="0.55"/>
+    <circle cx="1500" cy="630" r="2" fill="#D4B030" opacity="0.58"/>
+    <circle cx="1900" cy="640" r="3" fill="#FFE080" opacity="0.55"/>
+    <circle cx="2300" cy="620" r="2" fill="#D4B030" opacity="0.58"/>
+    <circle cx="2700" cy="645" r="3" fill="#FFE080" opacity="0.55"/>
+    <circle cx="3100" cy="635" r="2" fill="#D4B030" opacity="0.58"/>
+    <circle cx="3500" cy="655" r="3" fill="#FFE080" opacity="0.55"/>
+    <circle cx="560" cy="1750" r="3" fill="#D4B030" opacity="0.52"/>
+    <circle cx="1000" cy="1780" r="3" fill="#FFE080" opacity="0.48"/>
+    <circle cx="1600" cy="1760" r="3" fill="#D4B030" opacity="0.52"/>
+    <circle cx="2200" cy="1740" r="3" fill="#FFE080" opacity="0.48"/>
+    <circle cx="2800" cy="1755" r="3" fill="#D4B030" opacity="0.52"/>
+    <circle cx="3300" cy="1765" r="3" fill="#FFE080" opacity="0.48"/>
+  </g>
+  <!-- Green sparkle particles -->
+  <g filter="url(#glow)">
+    <circle cx="460" cy="1030" r="4" fill="#5DC940" opacity="0.82"/>
+    <circle cx="820" cy="1120" r="5" fill="#90FF80" opacity="0.75"/>
+    <circle cx="1260" cy="940" r="4" fill="#5DC940" opacity="0.88"/>
+    <circle cx="1620" cy="1180" r="5" fill="#90FF80" opacity="0.78"/>
+    <circle cx="2020" cy="1040" r="4" fill="#5DC940" opacity="0.82"/>
+    <circle cx="2380" cy="1270" r="5" fill="#90FF80" opacity="0.75"/>
+    <circle cx="2780" cy="1080" r="4" fill="#5DC940" opacity="0.82"/>
+    <circle cx="3180" cy="1220" r="5" fill="#90FF80" opacity="0.78"/>
+    <circle cx="640" cy="1320" r="4" fill="#5DC940" opacity="0.72"/>
+    <circle cx="1040" cy="1420" r="5" fill="#90FF80" opacity="0.68"/>
+    <circle cx="1740" cy="1360" r="4" fill="#5DC940" opacity="0.75"/>
+    <circle cx="2240" cy="1480" r="5" fill="#90FF80" opacity="0.72"/>
+    <circle cx="2640" cy="1440" r="4" fill="#5DC940" opacity="0.78"/>
+    <circle cx="3040" cy="1380" r="5" fill="#90FF80" opacity="0.72"/>
+    <circle cx="380" cy="880" r="3" fill="#5DC940" opacity="0.62"/>
+    <circle cx="960" cy="820" r="3" fill="#90FF80" opacity="0.58"/>
+    <circle cx="1560" cy="850" r="3" fill="#5DC940" opacity="0.62"/>
+    <circle cx="2160" cy="830" r="3" fill="#90FF80" opacity="0.58"/>
+    <circle cx="2760" cy="845" r="3" fill="#5DC940" opacity="0.62"/>
+    <circle cx="3360" cy="835" r="3" fill="#90FF80" opacity="0.58"/>
+    <circle cx="700" cy="1680" r="4" fill="#5DC940" opacity="0.52"/>
+    <circle cx="1400" cy="1700" r="4" fill="#90FF80" opacity="0.48"/>
+    <circle cx="2100" cy="1690" r="4" fill="#5DC940" opacity="0.52"/>
+    <circle cx="2800" cy="1680" r="4" fill="#90FF80" opacity="0.48"/>
+    <circle cx="3400" cy="1695" r="4" fill="#5DC940" opacity="0.52"/>
+  </g>
+
+  <!-- LAYER 11: Specular light top-left (sunlight through canopy) -->
+  <ellipse cx="850" cy="160" rx="900" ry="320" fill="url(#jSpecular)" filter="url(#blurHeavy)" opacity="0.8"/>
+  <ellipse cx="1920" cy="80" rx="500" ry="180" fill="#90FF80" opacity="0.07" filter="url(#blurHeavy)"/>
+
+  <!-- Top canopy dark overlay -->
+  <rect x="0" y="0" width="3840" height="500" fill="#0F2310" opacity="0.7" filter="url(#blurHeavy)"/>
+  <rect x="0" y="0" width="3840" height="280" fill="#060E06" opacity="0.85"/>
+
+  <!-- Ground darkness -->
+  <rect x="0" y="1780" width="3840" height="380" fill="url(#jGround)" opacity="0.9"/>
+  <rect x="0" y="1980" width="3840" height="180" fill="#040C04" opacity="0.95"/>
+
+  <!-- Atmospheric mid haze -->
+  <rect x="0" y="650" width="3840" height="600" fill="url(#jAtm1)" opacity="0.35" filter="url(#blurHeavy)"/>
+
+  <!-- LAYER 12: Foreground vignette -->
+  <rect width="3840" height="2160" fill="url(#jVignette)"/>
+
+  <!-- Organic noise texture -->
+  <rect width="3840" height="2160" fill="#2E4820" opacity="0.035" filter="url(#noise)"/>
+</svg>

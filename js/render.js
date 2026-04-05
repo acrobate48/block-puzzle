@@ -223,10 +223,11 @@ function drawScore(ctx,text,x,y,th,font){
   const g=ctx.createLinearGradient(0,y-fsz*0.5,0,y+fsz*0.5);
   g.addColorStop(0,th.hi||th.tm);g.addColorStop(0.5,th.tm);g.addColorStop(1,lerpC(th.ta,'#000',0.2));
   // Bloom pass 1 — wide soft glow
-  ctx.globalAlpha=0.22;ctx.shadowColor=th.tm;ctx.shadowBlur=fsz*1.1;
+  const _sgCol=th.scoreGlow||th.tm;
+  ctx.globalAlpha=0.22;ctx.shadowColor=_sgCol;ctx.shadowBlur=fsz*1.1;
   ctx.fillStyle=th.hi||th.tm;ctx.fillText(text,x,y);
-  // Bloom pass 2 — tight inner glow
-  ctx.globalAlpha=0.40;ctx.shadowBlur=fsz*0.45;ctx.fillText(text,x,y);
+  // Bloom pass 2 — tight inner glow (scoreGlow shadowColor=12)
+  ctx.globalAlpha=0.40;ctx.shadowColor=_sgCol;ctx.shadowBlur=Math.max(12,fsz*0.45);ctx.fillText(text,x,y);
   // Final crisp pass
   ctx.globalAlpha=1;ctx.shadowBlur=0;
   ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeText(text,x,y);
@@ -302,7 +303,9 @@ function drawCell(ctx,col,x,y,sz,skin,t,alpha=1){
   rp(ctx,x,y,sz,sz,_r);ctx.fillStyle='#000';ctx.fill();
   ctx.restore();
   if(alpha<1)ctx.globalAlpha=alpha;
-  ctx.drawImage(getCached(col,sz,skin,t),x,y);
+  const _thCG=(typeof curTheme!=='undefined'&&THEMES[curTheme])?THEMES[curTheme].cellGlow:null;
+  if(_thCG){ctx.save();ctx.shadowColor=_thCG;ctx.shadowBlur=4;ctx.drawImage(getCached(col,sz,skin,t),x,y);ctx.restore();}
+  else ctx.drawImage(getCached(col,sz,skin,t),x,y);
   if(alpha<1)ctx.globalAlpha=1;
 }
 

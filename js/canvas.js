@@ -27,62 +27,70 @@ let _resizeTimer=null;
 window.addEventListener('resize',()=>{clearTimeout(_resizeTimer);_resizeTimer=setTimeout(()=>{resize();menuBg=buildBg(selTheme);},100);},false);
 resize();
 
-// ─── SVG BACKGROUND PRELOADER ─────────────────────────────────────────────
-// Preloads SVG theme backgrounds from assets/backgrounds/.
-// Used by drawGame/drawMenu as a high-quality replacement for procedural buildBg.
-const _BG_NAMES=['bg_jungle','bg_desert','bg_ocean','bg_volcan','bg_nuit',
-                 'bg_arctique','bg_cosmos','bg_enchante','bg_plage','bg_neopolis'];
+// ─── THEME ASSET PATHS ────────────────────────────────────────────────────────
+// All theme assets are organised in assets/themes/[name]/ : bg.svg, bg.mp4
+// Index order matches THEMES[]: 0=jungle,1=desert,2=ocean,3=volcan,4=nuit,
+//   5=arctique,6=cosmos,7=enchante,8=plage,9=neopolis
+const _THEME_NAMES=['jungle','desert','ocean','volcan','nuit','arctique','cosmos','enchante','plage','neopolis'];
+
+// ─── SVG BACKGROUND PRELOADER ─────────────────────────────────────────────────
 const _bgImgs=new Array(10).fill(null);
 const _bgReady=new Array(10).fill(false);
-_BG_NAMES.forEach((name,i)=>{
+_THEME_NAMES.forEach((name,i)=>{
   const img=new Image();
   img.onload=()=>{_bgImgs[i]=img;_bgReady[i]=true;};
-  img.onerror=()=>{_bgReady[i]=false;};
-  img.src=`assets/backgrounds/${name}.svg`;
+  img.onerror=()=>{
+    // Fallback: try legacy flat path assets/backgrounds/bg_name.svg
+    const img2=new Image();
+    img2.onload=()=>{_bgImgs[i]=img2;_bgReady[i]=true;};
+    img2.src=`assets/backgrounds/bg_${name}.svg`;
+  };
+  img.src=`assets/themes/${name}/bg.svg`;
 });
 
-// Draw background: use SVG if ready, else procedural canvas
 function drawThemeBg(themeIdx,x,y,w,h){
   if(_bgReady[themeIdx]&&_bgImgs[themeIdx]){
     ctx.save();
-    ctx.drawImage(_bgImgs[themeIdx],x,y,w||W,h||H);
+    ctx.drawImage(_bgImgs[themeIdx],x||0,y||0,w||W,h||H);
     ctx.restore();
     return true;
   }
   return false;
 }
 
-// ─── VIDEO BACKGROUND PRELOADER ───────────────────────────────────────────
-// Maps theme index → MP4 filename (themes that have animated videos)
-// Index order matches _BG_NAMES: jungle=0,desert=1,ocean=2,volcan=3,nuit=4,
-//   arctique=5,cosmos=6,enchante=7,plage=8,neopolis=9
-const _BG_VIDEO_MAP={
-  0:'bg_jungle',1:'bg_desert',2:'bg_ocean',3:'bg_volcan',4:'bg_nuit',
-  5:'bg_arctique',6:'bg_cosmos',7:'bg_enchante',8:'bg_plage',9:'bg_neopolis'
-};
+// ─── VIDEO BACKGROUND PRELOADER ───────────────────────────────────────────────
 const _bgVids=new Array(10).fill(null);
 const _bgVidReady=new Array(10).fill(false);
 (function _initBgVids(){
-  Object.entries(_BG_VIDEO_MAP).forEach(([idxStr,name])=>{
-    const i=+idxStr;
+  _THEME_NAMES.forEach((name,i)=>{
     const vid=document.createElement('video');
-    vid.src=`assets/video/${name}.mp4`;
+    // Try new per-theme path first; fallback handled via onerror → src swap
+    vid.src=`assets/themes/${name}/bg.mp4`;
     vid.loop=true;vid.muted=true;vid.playsInline=true;vid.preload='auto';
     vid.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;';
     document.body.appendChild(vid);
     _bgVids[i]=vid;
     vid.addEventListener('canplaythrough',()=>{_bgVidReady[i]=true;vid.play().catch(()=>{});},{once:true});
+    vid.addEventListener('error',()=>{
+      // Fallback to legacy flat path
+      const vid2=document.createElement('video');
+      vid2.src=`assets/video/bg_${name}.mp4`;
+      vid2.loop=true;vid2.muted=true;vid2.playsInline=true;vid2.preload='auto';
+      vid2.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;';
+      document.body.appendChild(vid2);
+      _bgVids[i]=vid2;
+      vid2.addEventListener('canplaythrough',()=>{_bgVidReady[i]=true;vid2.play().catch(()=>{});},{once:true});
+      vid2.load();
+    },{once:true});
     vid.load();
   });
 })();
 
-// Ensure video for current theme is playing (call when theme changes)
 function _ensureVidPlaying(themeIdx){
   const vid=_bgVids[themeIdx];
   if(vid&&vid.paused&&_bgVidReady[themeIdx])vid.play().catch(()=>{});
 }
 
-// Draw video background: returns true if video was drawn
 function drawThemeVideo(themeIdx,x,y,w,h){
   const vid=_bgVids[themeIdx];
   if(!vid||!_bgVidReady[themeIdx]||vid.readyState<2)return false;
@@ -93,8 +101,7 @@ function drawThemeVideo(themeIdx,x,y,w,h){
   return true;
 }
 
-// ─── EVENT VIDEO OVERLAYS ─────────────────────────────────────────────────
-// celebration.mp4, line_clear.mp4, game_logo_loop.mp4
+// ─── EVENT VIDEO OVERLAYS ─────────────────────────────────────────────────────
 const _EVT_VIDS={};
 ['celebration','line_clear','game_logo_loop'].forEach(name=>{
   const vid=document.createElement('video');
@@ -105,7 +112,6 @@ const _EVT_VIDS={};
   _EVT_VIDS[name]=vid;
 });
 
-// Trigger an event video from the start (non-looping by default)
 function playEventVideo(name,loop){
   const vid=_EVT_VIDS[name];
   if(!vid)return;
@@ -113,7 +119,6 @@ function playEventVideo(name,loop){
   vid.play().catch(()=>{});
 }
 
-// Draw an event video as a canvas overlay; returns true while active
 function drawEventVideo(name,alpha,x,y,w,h){
   const vid=_EVT_VIDS[name];
   if(!vid||vid.paused||vid.ended||vid.readyState<2)return false;

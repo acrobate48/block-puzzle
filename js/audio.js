@@ -15,9 +15,11 @@ function _tone(freq,dur,type,vol,delay){
 }
 function _vib(pattern){try{if(navigator.vibrate)navigator.vibrate(pattern);}catch(e){}}
 function sndPlace(){_tone(200,0.06,'square',0.10);_vib(18);}
-function sndClear(n){_tone(440,0.10,'sine',0.20);_tone(660,0.12,'sine',0.16,0.08);if(n>=2)_tone(880,0.14,'sine',0.18,0.17);_vib(n>=3?[40,20,40]:30);}
-function sndCombo(c){const b=400+c*60;_tone(b,0.09,'sine',0.22);_tone(b*1.5,0.09,'sine',0.18,0.09);_tone(b*2,0.16,'sine',0.22,0.18);_vib(c>=4?[30,15,30,15,60]:40);}
+function sndClear(n){_tone(440,0.10,'sine',0.20);_tone(660,0.12,'sine',0.16,0.08);if(n>=2)_tone(880,0.14,'sine',0.18,0.17);if(n>=4)sndClear4();_vib(n>=3?[40,20,40]:30);}
+function sndCombo(c){const notes=[261.6,329.6,392.0,493.9,523.3];const count=Math.min(c,5);for(let i=0;i<count;i++)_tone(notes[i],0.12,'sine',0.18+i*0.02,i*0.09);_vib(c>=4?[30,15,30,15,60]:40);}
 function sndGameOver(){_tone(220,0.35,'sawtooth',0.22);_tone(165,0.45,'sawtooth',0.18,0.32);_tone(110,0.55,'sawtooth',0.15,0.65);_vib([80,40,80,40,120]);}
 function sndBonus(){_tone(660,0.07,'sine',0.18);_tone(880,0.07,'sine',0.18,0.09);_tone(1100,0.11,'sine',0.22,0.18);_vib([20,10,20]);}
+function sndStart(){_tone(220,0.08,'sine',0.12);_tone(330,0.08,'sine',0.14,0.10);_tone(440,0.12,'sine',0.18,0.20);_tone(660,0.16,'sine',0.22,0.30);_vib([20,10,20,10,40]);}
+function sndClear4(){_tone(1100,0.18,'sine',0.20);_tone(1320,0.22,'sine',0.18,0.12);_vib([60,20,60,20,100]);}
 let _soundRect=null,_pauseHudRect=null,_pauseBtns={},_pauseStartTime=0;
 let _volumeSliderRect=null;

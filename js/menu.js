@@ -84,6 +84,22 @@ function drawMenu(t){
     }
     ctx.restore();
   });
+  // Constellation — lignes entre particules proches
+  ctx.save();
+  const _cDist=W*0.17;
+  for(let _ci=0;_ci<menuParts.length;_ci++){
+    const _pa=menuParts[_ci];
+    for(let _cj=_ci+1;_cj<menuParts.length;_cj++){
+      const _pb=menuParts[_cj];
+      const _cdx=_pa.x-_pb.x,_cdy=_pa.y-_pb.y;
+      const _cd=Math.sqrt(_cdx*_cdx+_cdy*_cdy);
+      if(_cd<_cDist){
+        ctx.strokeStyle=`rgba(255,255,255,${((1-_cd/_cDist)*0.10).toFixed(3)})`;
+        ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(_pa.x,_pa.y);ctx.lineTo(_pb.x,_pb.y);ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
   // Overlay
   ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(0,0,W,H);
   layoutMenu();

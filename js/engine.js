@@ -72,6 +72,9 @@ function _engPickIdx(g){
       w*=Math.max(0.12,2.4-cells*0.27);
       // Heavily boost pieces that could clear a line (reward feeling)
       if(fill>0.35&&_engHasPot(shape,g))w*=2.8;
+      // Extra boost when bonus-star cells exist and shape can clear them
+      const starCount=(typeof gridStars!=='undefined')?gridStars.reduce((s,row)=>s+row.filter(Boolean).length,0):0;
+      if(starCount>0&&_engHasPot(shape,g))w*=1.4;
     }
     // build: neutral (just anti-repetition applies)
 

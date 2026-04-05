@@ -328,7 +328,9 @@ function drawMenu(t){
   const bsz=cl(Math.floor(H*0.020),8,14);
   const btmY=H-bsz*2.5;
   ctx.textAlign='center';ctx.textBaseline='alphabetic';
-  if(best>0){ctx.save();ctx.font=`bold ${bsz*1.18}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.shadowColor=th.tm;ctx.shadowBlur=12;ctx.fillStyle=th.tm;ctx.fillText(`★ RECORD : ${best}`,W/2,btmY);ctx.shadowBlur=22;ctx.shadowColor=th.hi||th.tm;ctx.globalAlpha=0.38;ctx.fillText(`★ RECORD : ${best}`,W/2,btmY);ctx.globalAlpha=1;ctx.restore();}
+  if(best>0){ctx.save();ctx.font=`bold ${bsz*1.18}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.shadowColor=th.tm;ctx.shadowBlur=12;ctx.fillStyle=th.tm;ctx.fillText(`★ RECORD : ${best}`,W/2,btmY);ctx.shadowBlur=22;ctx.shadowColor=th.hi||th.tm;ctx.globalAlpha=0.38;ctx.fillText(`★ RECORD : ${best}`,W/2,btmY);ctx.globalAlpha=1;ctx.restore();
+    // Animated sparkles around record score
+    if(Math.random()<0.06)menuParts.push({x:rnd(W/2-60,W/2+60),y:btmY+rnd(-bsz*0.5,bsz*0.1),vx:rnd(-0.6,0.6),vy:rnd(-1.5,-0.3),color:th.tm,size:rnd(1.5,3),life:rnd(30,60),ml:60,star:true});}
   if(bestCombo>1){ctx.save();ctx.font=`${bsz*0.85}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=hexA(th.ta,0.80);ctx.textAlign='center';ctx.shadowColor=th.ta;ctx.shadowBlur=4;ctx.fillText(`Meilleur combo : ×${bestCombo}`,W/2,btmY+bsz*1.35);ctx.restore();}
   ctx.font=`${bsz*0.76}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=hexA(th.tg,0.45);ctx.fillText('Toucher JOUER pour commencer',W/2,H-4);
   ctx.textAlign='left';ctx.textBaseline='alphabetic';

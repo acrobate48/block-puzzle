@@ -68,9 +68,12 @@ class Debris{
   update(){this.x+=this.vx+Math.sin(this.wave)*0.3;this.y+=this.vy;this.vy+=this.grav;this.wave+=0.1;this.life--;return this.life>0;}
   draw(ctx){const rat=this.life/this.ml,a=(0.8*rat).toFixed(3),sz=Math.max(1,this.sz*(0.25+0.75*rat));ctx.fillStyle=`rgba(${this.r},${this.g},${this.b},${a})`;if(this.circ){ctx.beginPath();ctx.arc(this.x,this.y,sz,0,Math.PI*2);ctx.fill();}else ctx.fillRect(this.x-sz,this.y-sz,sz*2,sz*2);}
 }
-function spawnDebris(clC,ti,n){Object.entries(clC).forEach(([k,color])=>{const r=Math.floor(+k/100),c=(+k)%100;const cx=GRID_X+c*CELL+CELL/2,cy=GRID_Y+r*CELL+CELL/2;for(let i=0;i<n;i++)debris.push(new Debris(cx+rnd(-CELL/4,CELL/4),cy+rnd(-CELL/4,CELL/4),color,ti));});}
+function spawnDebris(clC,ti,n){Object.entries(clC).forEach(([k,color])=>{const r=Math.floor(+k/100),c=(+k)%100;const cx=GRID_X+c*CELL+CELL/2,cy=GRID_Y+r*CELL+CELL/2;for(let i=0;i<n;i++)debris.push(new Debris(cx+rnd(-CELL/4,CELL/4),cy+rnd(-CELL/4,CELL/4),color,ti));});
+  // Extra spark ring burst for large clear events
+  if(n>=4){Object.keys(clC).slice(0,3).forEach(k=>{const r2=Math.floor(+k/100),c2=(+k)%100;const cx=GRID_X+c2*CELL+CELL/2,cy=GRID_Y+r2*CELL+CELL/2;for(let i=0;i<6;i++){const a=i/6*Math.PI*2,spd=4+Math.random()*3;particles.push({x:cx,y:cy,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-2,color:'#FFFFFF',life:22+Math.random()*18,ml:40,size:1.5+Math.random()*2,circle:true});}});}
+}
 class FloatText{
   constructor(text,x,y,col,sizeM=1,life=75){this.text=text;this.x=x;this.y=y;this.col=col;this.life=life;this.ml=life;this.vy=-1.1;this.sizeM=sizeM;}
   update(){this.y+=this.vy;this.vy*=0.97;this.life--;return this.life>0;}
-  draw(ctx){const a=this.life/this.ml,fsz=Math.max(10,CELL*0.5*this.sizeM)|0;ctx.save();ctx.globalAlpha=a;ctx.font=`bold ${fsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor=this.col;ctx.shadowBlur=10;ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeText(this.text,this.x,this.y);ctx.fillStyle=this.col;ctx.fillText(this.text,this.x,this.y);ctx.restore();}
+  draw(ctx){const ratio=this.life/this.ml,fsz=Math.max(10,CELL*0.5*this.sizeM)|0;let scalePop=1.0;if(ratio>0.88){const popT=(this.ml-this.life)/(this.ml*0.12);scalePop=1.0+0.35*Math.sin(popT*Math.PI);}ctx.save();ctx.globalAlpha=ratio;ctx.font=`bold ${Math.round(fsz*scalePop)}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor=this.col;ctx.shadowBlur=10;ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeText(this.text,this.x,this.y);ctx.fillStyle=this.col;ctx.fillText(this.text,this.x,this.y);ctx.restore();}
 }

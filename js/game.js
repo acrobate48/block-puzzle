@@ -5,6 +5,16 @@ function drawGame(t){
   if(newTh!==curTheme){const _prevTh=curTheme;curTheme=newTh;gameBg=buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=180;screenFlashCol=THEMES[curTheme].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));}
   // Score animé
   if(displayScore<score){const _gap=score-displayScore;const _rate=_gap>5000?0.22:_gap>1000?0.16:0.12;displayScore=Math.min(score,displayScore+Math.max(1,Math.ceil(_gap*_rate)));}
+  // Milestone celebration
+  if(!over&&_nextMilestoneIdx<_MILESTONES.length&&score>=_MILESTONES[_nextMilestoneIdx]){
+    const _msLbls=['1K','5K','10K','50K','100K'];const _msL=_msLbls[_nextMilestoneIdx]||String(_MILESTONES[_nextMilestoneIdx]);
+    _nextMilestoneIdx++;
+    screenFlash=Math.max(screenFlash,200);screenFlashCol='#FFD700';
+    shake=Math.max(shake,14);shakePow=Math.max(shakePow,5);
+    floats.push(new FloatText(`🏆 ${_msL} !`,W/2,H*0.38,'#FFD700',2.2,200));
+    floats.push(new FloatText('MILESTONE !',W/2,H*0.48,'#FFA020',1.3,160));
+    sndBonus();
+  }
   // Chaos event notification
   if(_engChaosFlash&&!over){
     _engChaosFlash=false;

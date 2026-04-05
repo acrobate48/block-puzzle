@@ -38,7 +38,8 @@ const HISTOIRE_LEVELS=(()=>{
     let mode,goalVal,label;
     if(n<=20){mode='survie';goalVal=n*100;label=`Marque ${n*100} pts`;}
     else if(n<=35){mode='chrono';goalVal=Math.round(n*120);label=`${Math.round(n*120)} pts en temps limité`;}
-    else{mode='contraintes';goalVal=Math.round(n*150);label=`${Math.round(n*150)} pts avec contraintes`;}
+    else if(n%2===0){mode='contraintes';goalVal=Math.round(n*150);label=`${Math.round(n*150)} pts avec contraintes`;lvls.push({mode,goalType:'score',goalVal,label});continue;}
+    else{mode='contraintes';goalVal=Math.min(n-30,15);label=`Efface ${Math.min(n-30,15)} lignes`;lvls.push({mode,goalType:'lines',goalVal,label});continue;}
     lvls.push({mode,goalType:'score',goalVal,label});
   }
   return lvls;
@@ -100,6 +101,8 @@ function _initMode(){
 
 function _applyHistoireSubMode(subMode){
   if(subMode==='chrono'){
+    // Dynamic time for HISTOIRE chrono levels: 8s at level 21 → 5s at level 35
+    if(histoireLevel>=20&&histoireLevel<35){chronoMaxTime=Math.round(8000-(histoireLevel-20)*(3000/15));}
     chronoTimeLeft=chronoMaxTime;chronoLastTick=Date.now();
   }else if(subMode==='choix'){
     _generateChoixOptions();

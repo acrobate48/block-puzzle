@@ -66,3 +66,9 @@ let _undoCount=3;       // undo uses remaining this game
 let _undoHudRect=null,_restartHudRect=null; // HUD button hit-rects (set each frame)
 // Tap vs drag detection — used to trigger piece rotation on short taps
 let _tapStartX=0,_tapStartY=0;
+// ─── ACHIEVEMENTS ─────────────────────────────────────────────────────────────
+let _achieveUnlocked=[];
+try{const _ra=JSON.parse(localStorage.getItem('bp_achievements')||'[]');_achieveUnlocked=Array.isArray(_ra)&&_ra.length===10?_ra:Array(10).fill(false);}catch(e){_achieveUnlocked=Array(10).fill(false);}
+let _achieveToasts=[];   // {idx,born} notifications queue
+let _totalBlocksPlaced=0; // cumulative for achievement #10
+let _themeChangeCount=0;  // cumulative for achievement #6

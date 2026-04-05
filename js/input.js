@@ -15,7 +15,7 @@ function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;_ta
   if(gameState==='pause'){return;}
   if(gameState==='leaderboard'){if(_backLbRect&&x>=_backLbRect.x&&x<_backLbRect.x+_backLbRect.w&&y>=_backLbRect.y&&y<_backLbRect.y+_backLbRect.h){gameState='menu';}return;}
   if(gameState==='gameover'){
-    if(_goReplayRect&&x>=_goReplayRect.x&&x<_goReplayRect.x+_goReplayRect.w&&y>=_goReplayRect.y&&y<_goReplayRect.y+_goReplayRect.h){resetGame();gameState='playing';return;}
+    if(_goReplayRect&&x>=_goReplayRect.x&&x<_goReplayRect.x+_goReplayRect.w&&y>=_goReplayRect.y&&y<_goReplayRect.y+_goReplayRect.h){if(typeof stopGameoverVideo==='function')stopGameoverVideo(curTheme);_goVideoStarted=false;resetGame();gameState='playing';return;}
     if(_goMenuRect&&x>=_goMenuRect.x&&x<_goMenuRect.x+_goMenuRect.w&&y>=_goMenuRect.y&&y<_goMenuRect.y+_goMenuRect.h){gameState='menu';return;}
     if(Date.now()-overT>1200)gameState='menu';return;}
   // Block tray drag only when in choix PICKING phase; all other modes allow normal drag
@@ -230,6 +230,7 @@ function onUp(e){
       if(_getHistoireSubMode()==='chrono'||currentMode==='chrono'){chronoTimeLeft=chronoMaxTime;chronoLastTick=now2;}
       let speedMul=1.0,speedLabel=null,speedCol='#FFFFFF';
       if(thinkMs<SPEED_TURBO){
+        if(typeof _unlockAchieve==='function')_unlockAchieve(3); // Achievement #4 — turbo
         _turboStreak++;speedMul=1.8;speedCol='#FF4020';
         if(_turboStreak>=5){speedLabel=`⚡⚡ TURBO STREAK ×${_turboStreak}`;speedMul=2.5;}
         else if(_turboStreak>=3){speedLabel=`⚡ STREAK ×${_turboStreak}`;speedMul=2.0;}
@@ -257,6 +258,8 @@ function onUp(e){
       // Petites particules de placement
       {const pcells2=[];piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)pcells2.push({r:gr+rr,c:gc+cc});}));spawnParticles(pcells2,2,0.45,[piece.color]);}
       tray[drag.idx]=null;placed++;
+      // Achievement #1 (first block) + #10 (200 blocks)
+      if(typeof _unlockAchieve==='function'){_totalBlocksPlaced++;if(_totalBlocksPlaced===1)_unlockAchieve(0);if(_totalBlocksPlaced>=200)_unlockAchieve(9);}
       showAddCellsBonus=false;addCellsBonusTimer--;
       if(addCellsBonusTimer<=0){showAddCellsBonus=true;addCellsBonusTimer=Math.floor(rnd(8,15));}
       const ti=getCurTheme(),{n,cells,colors}=clearLines(grid);
@@ -264,6 +267,8 @@ function onUp(e){
         sndClear(n);
         if(typeof playEventVideo==='function')playEventVideo('line_clear',false);
         totalLinesCleared+=n;
+        // Achievement #3 — 10 lines cleared
+        if(typeof _unlockAchieve==='function'&&totalLinesCleared>=10)_unlockAchieve(2);
         // Animation sweep
         clearAnims.push({cells:[...cells],born:Date.now(),color:THEMES[ti].tm});
         let starPts=0;const bombList=[];let hasX2=false;
@@ -287,6 +292,8 @@ function onUp(e){
         }
         if(hasX2)doublePointsUntil=Date.now()+60000;
         combo++;
+        // Achievement #2 (combo×3) + #9 (combo×5)
+        if(typeof _unlockAchieve==='function'){if(combo>=3)_unlockAchieve(1);if(combo>=5)_unlockAchieve(8);}
         if(combo>bestCombo){bestCombo=combo;try{localStorage.setItem('bp_bestcombo',String(bestCombo));}catch(e2){}}
         maxComboGame=Math.max(maxComboGame,combo);
         if(combo>=2){sndCombo(combo);
@@ -327,6 +334,7 @@ function onUp(e){
         const newTh=getCurTheme();if(newTh!==curTheme){curTheme=newTh;gameBg=buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=200;screenFlashCol=THEMES[newTh].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));}
         // ── Perfect Clear bonus — entire board emptied ────────────────────────
         if(grid.every(row=>row.every(v=>!v||v==='__BLOCKED__'))){
+          if(typeof _unlockAchieve==='function')_unlockAchieve(4); // Achievement #5 — perfect clear
           const pcPts=500;score+=pcPts;
           screenFlash=255;screenFlashCol='#FFD700';shake=Math.max(shake,22);shakePow=Math.max(shakePow,10);
           floats.push(new FloatText('💥 PERFECT CLEAR !',W/2,H*0.30,'#FFD700',2.4,260));

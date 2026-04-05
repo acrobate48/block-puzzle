@@ -263,7 +263,9 @@ function onUp(e){
       ripples.push({x:_icx,y:_icy,life:20,ml:20,maxR:CELL*(0.8+piece.shape[0].length*0.3),color:'#FFFFFF'});
       ripples.push({x:_icx,y:_icy,life:14,ml:14,maxR:CELL*(0.5+piece.shape[0].length*0.2),color:piece.color});
       // Landing column flash
-      if(typeof _addLandingFlash==='function'){const _lcols=new Set();piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)_lcols.add(gc+cc);}));_addLandingFlash([..._lcols],piece.color);}}
+      if(typeof _addLandingFlash==='function'){const _lcols=new Set();piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)_lcols.add(gc+cc);}));_addLandingFlash([..._lcols],piece.color);}
+      // Grid pulse wave from placement centroid
+      if(typeof _triggerGridWave==='function'){const _gwx=GRID_X+(gc+piece.shape[0].length/2)*CELL,_gwy=GRID_Y+(gr+piece.shape.length/2)*CELL;_triggerGridWave(_gwx,_gwy);}}
       tray[drag.idx]=null;placed++;
       // Fresh cell halos
       if(typeof _addFreshCell==='function')piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)_addFreshCell(gr+rr,gc+cc,piece.color);}));

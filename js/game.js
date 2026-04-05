@@ -212,6 +212,56 @@ function _drawScanlines(){
   ctx.restore();
 }
 
+// ─── 18. GRID PULSE WAVE PROPAGATION ─────────────────────────────────────────
+let _gridWaves=[]; // {cx,cy,born} — rings propagate across filled cells
+function _triggerGridWave(worldX,worldY){_gridWaves.push({cx:worldX,cy:worldY,born:Date.now()});}
+function _drawGridWave(t){
+  if(!_gridWaves.length||!grid)return;
+  const now=Date.now();
+  ctx.save();
+  _gridWaves=_gridWaves.filter(gw=>{
+    const age=now-gw.born;const dur=800;
+    const p=age/dur;if(p>=1)return false;
+    const radius=p*Math.max(GW,GH)*0.85;
+    const a=(1-p)*(1-p)*0.28;
+    // Draw a glow ring at radius from source on filled cells
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+      if(!grid[r][c])continue;
+      const cx2=GRID_X+(c+0.5)*CELL,cy2=GRID_Y+(r+0.5)*CELL;
+      const d=Math.sqrt((cx2-gw.cx)**2+(cy2-gw.cy)**2);
+      const inRing=Math.abs(d-radius)<CELL*0.7;
+      if(inRing){
+        const da=a*(1-Math.abs(d-radius)/(CELL*0.7));
+        if(da<0.01)continue;
+        ctx.fillStyle=`rgba(255,255,255,${da.toFixed(3)})`;
+        ctx.fillRect(GRID_X+c*CELL,GRID_Y+r*CELL,CELL,CELL);
+      }
+    }
+    return true;
+  });
+  ctx.restore();
+}
+
+// ─── 19. AMBIENT GRID MIST ───────────────────────────────────────────────────
+let _mistPhase=0;
+function _drawGridMist(t){
+  if(over)return;
+  const th=THEMES[curTheme];
+  _mistPhase+=0.0006;
+  ctx.save();
+  // Two slow-drifting mist blobs on the grid
+  for(let mi=0;mi<2;mi++){
+    const mx=GRID_X+GW*(0.3+mi*0.4+Math.sin(_mistPhase+mi*2.4)*0.22);
+    const my=GRID_Y+GH*(0.4+Math.cos(_mistPhase*0.7+mi*1.8)*0.28);
+    const mr=CELL*(2.5+Math.sin(_mistPhase*0.9+mi)*0.8);
+    const mg=ctx.createRadialGradient(mx,my,0,mx,my,mr);
+    mg.addColorStop(0,hexA(mi===0?th.tm:th.ta,0.055));
+    mg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=mg;ctx.fillRect(GRID_X,GRID_Y,GW,GH);
+  }
+  ctx.restore();
+}
+
 // ─── 16. GHOST SNAP BOUNCE ────────────────────────────────────────────────────
 let _lastSnapGr=-1,_lastSnapGc=-1,_snapBounce=0;
 function _updateSnapBounce(gr,gc){
@@ -608,6 +658,10 @@ function drawGame(t){
       ctx.fillStyle=hexA(th.sl,0.15);ctx.beginPath();ctx.arc(x+CELL/2,y+CELL/2,Math.max(1,CELL*0.055),0,Math.PI*2);ctx.fill();
     }
   }}
+  // Ambient grid mist
+  _drawGridMist(t);
+  // Grid pulse wave from recent placements
+  _drawGridWave(t);
   // Almost-clear row/col golden highlight
   _drawAlmostClear(t);
   // Persistent halos on freshly placed cells
@@ -768,6 +822,13 @@ function drawGame(t){
   const _traySlideY=((1-_trayEased)*TRAY_H*0.45)|0;
   // Tray speed glow (color border based on think time)
   _drawTraySpeedGlow(t);
+  // Danger tray pulse — extra red glow when grid is near-full
+  if(_fillNow>0.85&&!over){
+    const _dp=((_fillNow-0.85)/0.15);const _dpPulse=0.5+0.5*Math.abs(Math.sin(t*0.016*_dp+0.7));
+    ctx.save();ctx.shadowColor=`rgba(255,30,0,${(_dp*0.9).toFixed(3)})`;ctx.shadowBlur=CELL*_dp*_dpPulse*2;
+    ctx.strokeStyle=`rgba(255,30,0,${(_dp*0.6*_dpPulse).toFixed(3)})`;ctx.lineWidth=2;
+    rp(ctx,GRID_X-1,TRAY_Y-1,GW+2,TRAY_H+2,CR+1);ctx.stroke();ctx.restore();
+  }
   // Tray (glass)
   rrect(ctx,GRID_X,TRAY_Y,GW,TRAY_H,CR,th.trayBg||hexA(th.gbg,0.55),hexA(th.dc,0.5),1);
   const topShine=ctx.createLinearGradient(GRID_X,TRAY_Y,GRID_X,TRAY_Y+TRAY_H*0.4);

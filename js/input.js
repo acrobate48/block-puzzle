@@ -354,6 +354,8 @@ function onUp(e){
           floats.push(new FloatText('🏆 NOUVEAU RECORD !',W/2,H*0.38,'#FFD700',2.0,180));
           spawnParticles(Array.from({length:12},(_,i)=>({r:rndI(0,ROWS-1),c:i})),5,2,['#FFD700','#FFF0A0','#FFA500']);}
         spawnParticles(cells,6,1.2,THEMES[ti].pc);spawnDebris(colors,ti,8);
+      // Combo energy beam
+      if(combo>=3&&typeof _triggerComboBeam==='function'){const _bcx=GRID_X+(gc+piece.shape[0].length/2)*CELL,_bcy=GRID_Y+(gr+piece.shape.length/2)*CELL;_triggerComboBeam(_bcx,_bcy);}
         if(n>=2){shake=Math.max(shake,10);shakePow=Math.max(shakePow,3+(n>=3?4:0));}
         screenFlash=Math.max(screenFlash,80+(n>=3?120:0));screenFlashCol=THEMES[ti].tm;
         const miny=Math.min(...cells.map(c=>c.r));
@@ -385,7 +387,12 @@ function onUp(e){
       // Speed float (show regardless of line clear)
       if(speedLabel)floats.push(new FloatText(speedLabel,GRID_X+GW/2,GRID_Y+GH*0.25,speedCol,0.85,70));
       const subM=_getHistoireSubMode();const eM=currentMode==='histoire'?subM:currentMode;
-      if(tray.every(p=>p===null)&&eM!=='choix'){tray=nextTrayPreview||newTray();nextTrayPreview=newTray();trayRefreshT=Date.now();}
+      if(tray.every(p=>p===null)&&eM!=='choix'){tray=nextTrayPreview||newTray();nextTrayPreview=newTray();trayRefreshT=Date.now();
+        // Tray refresh burst — sparkles from each new piece slot
+        tray.forEach((p,pi)=>{if(!p)return;const pw4=GW/3;const _tx=GRID_X+pi*pw4+pw4/2,_ty=TRAY_Y+TRAY_H/2;
+          for(let _si=0;_si<6;_si++){const _sa=_si/6*Math.PI*2;particles.push({x:_tx,y:_ty,vx:Math.cos(_sa)*rnd(1.5,3.5),vy:Math.sin(_sa)*rnd(1.5,3.5)-0.8,color:p.color,size:rnd(2,4),life:rnd(20,40),ml:40,circle:true});}
+          ripples.push({x:_tx,y:_ty,life:18,ml:18,maxR:pw4*0.55,color:p.color});});}
+
       if(tray.every(p=>p===null)&&eM==='choix'){_generateChoixOptions();}
       // Sauvegarde automatique
       try{localStorage.setItem('bp_save',JSON.stringify({v:1,grid,score,placed,combo,curTheme,gridStars,gridBonus,tray:tray.map(p=>p?{shape:p.shape,color:p.color,isParasite:!!p.isParasite}:null),ntp:nextTrayPreview?nextTrayPreview.map(p=>p?{shape:p.shape,color:p.color}:null):null,gameStartTime,totalLinesCleared,maxComboGame}));}catch(e2){}
@@ -413,7 +420,7 @@ function onUp(e){
         }
       }
     }}
-    drag=null;
+    drag=null;if(typeof _ghostTrail!=='undefined')_ghostTrail.length=0;
   }
 }
 function handleMenuTap(x,y){

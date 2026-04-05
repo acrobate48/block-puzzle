@@ -212,6 +212,106 @@ function _drawScanlines(){
   ctx.restore();
 }
 
+// ─── 15. COMBO ENERGY BEAM ───────────────────────────────────────────────────
+let _lastPlaceCx=0,_lastPlaceCy=0; // set from input.js on placement
+let _comboBeamBorn=0;
+function _triggerComboBeam(cx,cy){_lastPlaceCx=cx;_lastPlaceCy=cy;_comboBeamBorn=Date.now();}
+function _drawComboBeam(t){
+  if(combo<3||over)return;
+  const age=Date.now()-_comboBeamBorn;
+  if(age>600)return;
+  const p=age/600;
+  const a=(1-p)*(1-p)*0.55;
+  if(a<0.01)return;
+  // Target: HUD score position
+  const _portrait=H>W;
+  const _bh=GRID_Y-3;
+  const tx=W/2,ty=_portrait?_bh/2:_bh/2;
+  const th2=THEMES[curTheme];
+  const col=combo>=6?'#FF40FF':combo>=4?'#FFA020':th2.tm;
+  ctx.save();
+  ctx.globalAlpha=a;
+  ctx.strokeStyle=col;
+  ctx.shadowColor=col;ctx.shadowBlur=10*(1-p);
+  ctx.lineWidth=2-p;ctx.lineCap='round';
+  // Beam: zigzag from piece to score
+  const segs=6;
+  ctx.beginPath();ctx.moveTo(_lastPlaceCx,_lastPlaceCy);
+  for(let si=1;si<=segs;si++){
+    const frac=si/(segs);
+    const mx=lerp(_lastPlaceCx,tx,frac)+(Math.sin(si*7.3+t*0.05)*CELL*0.35*(1-p));
+    const my=lerp(_lastPlaceCy,ty,frac)+(Math.cos(si*5.1+t*0.04)*CELL*0.25*(1-p));
+    ctx.lineTo(mx,my);
+  }
+  ctx.stroke();
+  // Dot at piece end
+  ctx.fillStyle=col;ctx.beginPath();ctx.arc(_lastPlaceCx,_lastPlaceCy,4*(1-p),0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+
+// ─── 13. ALMOST-CLEAR ROW/COL HIGHLIGHT ──────────────────────────────────────
+function _drawAlmostClear(t){
+  if(over||!grid)return;
+  ctx.save();
+  const pulse=0.55+0.45*Math.abs(Math.sin(t*0.007));
+  // Rows
+  for(let r=0;r<ROWS;r++){
+    const filled=grid[r].filter(Boolean).length;
+    if(filled===COLS-1){
+      const emptyC=grid[r].indexOf(null);
+      if(emptyC>=0){
+        const x=GRID_X+emptyC*CELL,y=GRID_Y+r*CELL;
+        ctx.shadowColor='#FFD700';ctx.shadowBlur=CELL*0.6*pulse;
+        ctx.strokeStyle=`rgba(255,215,0,${(0.8*pulse).toFixed(3)})`;ctx.lineWidth=2;
+        const er=Math.max(2,CELL/6|0);rp(ctx,x+1,y+1,CELL-2,CELL-2,er);ctx.stroke();
+        // Gold dot in center of empty cell
+        ctx.fillStyle=`rgba(255,215,0,${(0.25*pulse).toFixed(3)})`;
+        rp(ctx,x+1,y+1,CELL-2,CELL-2,er);ctx.fill();
+      }
+    }
+  }
+  // Cols
+  for(let c=0;c<COLS;c++){
+    let filled=0,emptyR=-1;
+    for(let r=0;r<ROWS;r++){if(grid[r][c])filled++;else emptyR=r;}
+    if(filled===ROWS-1&&emptyR>=0){
+      const x=GRID_X+c*CELL,y=GRID_Y+emptyR*CELL;
+      ctx.shadowColor='#60DDFF';ctx.shadowBlur=CELL*0.5*pulse;
+      ctx.strokeStyle=`rgba(96,221,255,${(0.65*pulse).toFixed(3)})`;ctx.lineWidth=1.5;
+      const er=Math.max(2,CELL/6|0);rp(ctx,x+1,y+1,CELL-2,CELL-2,er);ctx.stroke();
+      ctx.fillStyle=`rgba(96,221,255,${(0.18*pulse).toFixed(3)})`;
+      rp(ctx,x+1,y+1,CELL-2,CELL-2,er);ctx.fill();
+    }
+  }
+  ctx.shadowBlur=0;ctx.restore();
+}
+
+// ─── 14. GHOST AFTERIMAGE TRAIL ──────────────────────────────────────────────
+let _ghostTrail=[]; // [{shape,gr,gc,color,born}]
+function _addGhostTrail(shape,gr,gc,color){
+  _ghostTrail.push({shape,gr,gc,color,born:Date.now()});
+  if(_ghostTrail.length>5)_ghostTrail.shift();
+}
+function _drawGhostTrail(t){
+  if(!_ghostTrail.length)return;
+  const now=Date.now();
+  ctx.save();
+  _ghostTrail.forEach((gt,gi)=>{
+    const age=(now-gt.born)/320;
+    if(age>1)return;
+    const a=(1-age)*(gi+1)/_ghostTrail.length*0.18;
+    if(a<0.01)return;
+    ctx.globalAlpha=a;
+    gt.shape.forEach((line,rr)=>line.forEach((v,cc)=>{
+      if(v){const pr2=gt.gr+rr,pc2=gt.gc+cc;
+        if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS)
+          drawCell(ctx,gt.color,GRID_X+pc2*CELL,GRID_Y+pr2*CELL,CELL,selSkin,t);
+      }
+    }));
+  });
+  ctx.restore();
+}
+
 // ─── 9. LANDING COLUMN FLASH ─────────────────────────────────────────────────
 let _landingFlashes=[]; // {cols:[c,..], born, color}
 function _addLandingFlash(cols,color){_landingFlashes.push({cols:[...cols],born:Date.now(),color:color||'#FFFFFF'});}
@@ -476,6 +576,8 @@ function drawGame(t){
       ctx.fillStyle=hexA(th.sl,0.15);ctx.beginPath();ctx.arc(x+CELL/2,y+CELL/2,Math.max(1,CELL*0.055),0,Math.PI*2);ctx.fill();
     }
   }}
+  // Almost-clear row/col golden highlight
+  _drawAlmostClear(t);
   // Persistent halos on freshly placed cells
   _drawFreshHalos();
   // Landing column flash (brief streak down columns of placed piece)
@@ -552,11 +654,26 @@ function drawGame(t){
       const{gr,gc}=snapPos(mouseX,mouseY,piece.shape);
       const valid=_modeCanPlace(grid,piece.shape,gr,gc);
       const ghostColor=valid?piece.color:'#FF4040';
+      // Ghost afterimage trail (fading previous positions)
+      if(valid)_addGhostTrail(piece.shape,gr,gc,piece.color);
+      _drawGhostTrail(t);
       // Column highlight — subtle pulse under ghost columns
       const hlA=(0.06+0.03*Math.sin(Date.now()*0.004)).toFixed(3);
       ctx.save();ctx.fillStyle=`rgba(255,255,255,${hlA})`;
       piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pc2=gc+cc;if(pc2>=0&&pc2<COLS)ctx.fillRect(GRID_X+pc2*CELL,GRID_Y,CELL,GH);}}));
       ctx.restore();
+      // Altitude-based shadow on grid: grows as piece is held higher above snap position
+      const _altDist=Math.max(0,mouseY-(GRID_Y+(gr+piece.shape.length/2)*CELL));
+      const _altA=cl(_altDist/(CELL*4),0,0.45);
+      if(_altA>0.01){ctx.save();ctx.globalAlpha=_altA;
+        piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;
+          if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS){
+            const _sx=GRID_X+pc2*CELL+CELL*0.08,_sy=GRID_Y+pr2*CELL+CELL*0.08;
+            const _sg=ctx.createRadialGradient(_sx+CELL*0.4,_sy+CELL*0.4,0,_sx+CELL*0.4,_sy+CELL*0.4,CELL*0.7);
+            _sg.addColorStop(0,'rgba(0,0,0,0.5)');_sg.addColorStop(1,'rgba(0,0,0,0)');
+            ctx.fillStyle=_sg;ctx.fillRect(_sx,_sy,CELL,CELL);
+          }
+        }}));ctx.restore();}
       // Ambient glow under ghost cells
       ctx.save();ctx.shadowColor=ghostColor;ctx.shadowBlur=CELL*0.65;ctx.globalAlpha=0.20;
       piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;
@@ -757,6 +874,8 @@ function drawGame(t){
   _drawRainbowGlory(t);
   // Electricity arcs on grid border at combo ≥ 4
   _drawElectricityBorder(t);
+  // Combo energy beam from last placed piece to HUD score
+  _drawComboBeam(t);
   // Chromatic aberration on heavy shake
   _drawChromaticAb();
   // Néopolis CRT scanlines

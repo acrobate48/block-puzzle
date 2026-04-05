@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <!-- 5-point star gold fill: bright cream top → deep orange bottom -->
+    <linearGradient id="starGold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#FFFCE0"/>
+      <stop offset="18%"  stop-color="#FFE840"/>
+      <stop offset="45%"  stop-color="#FFD700"/>
+      <stop offset="75%"  stop-color="#FFA800"/>
+      <stop offset="100%" stop-color="#FF7200"/>
+    </linearGradient>
+    <!-- Radial inner highlight (3D top-left catch light) -->
+    <radialGradient id="starInner" cx="38%" cy="28%" r="60%" fx="35%" fy="25%">
+      <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="0.75"/>
+      <stop offset="45%" stop-color="#FFEE80" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#FFD700" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Outer ambient halo -->
+    <radialGradient id="starHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="50%"  stop-color="#FFD700" stop-opacity="0"/>
+      <stop offset="75%"  stop-color="#FFAA00" stop-opacity="0.40"/>
+      <stop offset="100%" stop-color="#FF6600" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Dark edge on bottom face for 3D depth -->
+    <linearGradient id="starDepth" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="60%"  stop-color="#AA5500" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#662200" stop-opacity="0.45"/>
+    </linearGradient>
+    <!-- Drop shadow -->
+    <filter id="starShadow" x="-25%" y="-25%" width="170%" height="170%">
+      <feDropShadow dx="2" dy="6" stdDeviation="7" flood-color="#883300" flood-opacity="0.65"/>
+    </filter>
+    <!-- Warm bloom -->
+    <filter id="bloom" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <!-- Inner glow -->
+    <filter id="starGlow" x="-35%" y="-35%" width="170%" height="170%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Specular soft blur -->
+    <filter id="specSoft">
+      <feGaussianBlur stdDeviation="2.5"/>
+    </filter>
+  </defs>
+
+  <!-- Star path: 5 points, outer r=57, inner r=23, center 64,64 -->
+  <!-- Points: outer at -90°,-18°,54°,126°,198°; inner offset 36° -->
+  <!-- Computed vertices: -->
+  <!-- Outer: (64,7),(118.2,57.5),(97.3,121),(30.7,121),(9.8,57.5) -->
+  <!-- Inner: (88.8,40.3),(91.4,94.1),(64,76.7),(36.6,94.1),(39.2,40.3) -->
+
+  <!-- ── OUTER HALO ── -->
+  <circle cx="64" cy="64" r="64" fill="url(#starHalo)"/>
+
+  <!-- ── DROP SHADOW (star shape offset) ── -->
+  <polygon points="64,7 88.8,40.3 118.2,57.5 91.4,94.1 97.3,121 64,76.7 30.7,121 36.6,94.1 9.8,57.5 39.2,40.3"
+           fill="#442200" opacity="0.4" filter="url(#specSoft)"
+           transform="translate(4,10)"/>
+
+  <!-- ── STAR GLOW PASS ── -->
+  <polygon points="64,7 88.8,40.3 118.2,57.5 91.4,94.1 97.3,121 64,76.7 30.7,121 36.6,94.1 9.8,57.5 39.2,40.3"
+           fill="#FFD700" opacity="0.45" filter="url(#starGlow)"/>
+
+  <!-- ── STAR BODY ── -->
+  <polygon points="64,7 88.8,40.3 118.2,57.5 91.4,94.1 97.3,121 64,76.7 30.7,121 36.6,94.1 9.8,57.5 39.2,40.3"
+           fill="url(#starGold)" stroke="#CC6600" stroke-width="1.8" stroke-linejoin="round"
+           filter="url(#starShadow)"/>
+
+  <!-- ── DEPTH SHADOW OVERLAY (bottom darkening) ── -->
+  <polygon points="64,7 88.8,40.3 118.2,57.5 91.4,94.1 97.3,121 64,76.7 30.7,121 36.6,94.1 9.8,57.5 39.2,40.3"
+           fill="url(#starDepth)"/>
+
+  <!-- ── 3D RADIAL HIGHLIGHT (top-left) ── -->
+  <polygon points="64,7 88.8,40.3 118.2,57.5 91.4,94.1 97.3,121 64,76.7 30.7,121 36.6,94.1 9.8,57.5 39.2,40.3"
+           fill="url(#starInner)" filter="url(#bloom)"/>
+
+  <!-- ── SPECULAR DIAGONAL SHINE ── -->
+  <!-- Wide diffuse diagonal streak -->
+  <ellipse cx="48" cy="38" rx="26" ry="9" fill="#FFFFFF" opacity="0.38"
+           transform="rotate(-32 48 38)" filter="url(#specSoft)"/>
+  <!-- Narrow hard line glint -->
+  <line x1="30" y1="58" x2="72" y2="18" stroke="#FFFFFF" stroke-width="2.5"
+        stroke-linecap="round" opacity="0.30" filter="url(#specSoft)"/>
+
+  <!-- ── INNER GLOW CENTER ── -->
+  <polygon points="64,30 76.5,53.5 103,53.5 81.5,68 89.5,92 64,77 38.5,92 46.5,68 25,53.5 51.5,53.5"
+           fill="#FFEE60" opacity="0.10" filter="url(#bloom)"/>
+</svg>

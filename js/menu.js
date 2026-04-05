@@ -10,48 +10,68 @@ let menuParts=Array.from({length:70},(_,i)=>{
 let skinRects=[],themeRects=[],playRect=null;
 
 function layoutMenu(){
-  const SKW=Math.floor((W-18)/5)-4,SKH=Math.round(SKW*0.92);
-  // Calcule où finit le sous-titre pour éviter le chevauchement
-  const _fsz=cl(Math.floor(H*0.082),20,62);
-  const _titleY=Math.round(H*0.086)+_fsz;
-  const _subSz=cl(Math.floor(H*0.026),9,19);
-  const _lblSz=cl(Math.floor(H*0.022),8,15);
+  // Compact mode for small/medium screens (height < 750px) to prevent layout overflow
+  const _compact=H<750;
+  const SKW=Math.floor((W-18)/5)-4;
+  // On compact screens: tighter font sizing to save vertical space
+  const _fsz=_compact?cl(Math.floor(H*0.070),18,38):cl(Math.floor(H*0.082),20,62);
+  const _titleY=Math.round(H*(_compact?0.072:0.086))+_fsz;
+  const _subSz=cl(Math.floor(H*0.022),8,15);
+  const _lblSz=cl(Math.floor(H*0.020),7,13);
   const _subBottom=Math.ceil(_titleY+_fsz*2.28+_subSz);
-  const skGY=Math.max(_subBottom+_lblSz+8, Math.round(H*0.30));
-  skinRects=Array.from({length:10},(_,i)=>({x:8+(i%5)*(SKW+4),y:skGY+(i<5?0:SKH+5),w:SKW,h:SKH}));
-  const THW=Math.floor((W-18)/5)-4,THH=cl(Math.round(H*0.05),20,36);
-  // +5 = gap inter-lignes skins, +_lblSz+8 = place pour le label "THÈME"
-  const THY=skGY+SKH*2+5+_lblSz+16;
-  themeRects=Array.from({length:10},(_,i)=>({x:8+(i%5)*(THW+4),y:THY+(i<5?0:THH+4),w:THW,h:THH}));
-  const PW=cl(W-52,148,275),PH=cl(Math.round(H*0.075),36,58);
-  const lastThY=THY+THH*2+7;
-  const py0=lastThY+Math.round(H*0.018);
+  // On compact screens: smaller skin cards and tighter gaps
+  const SKH=_compact?Math.round(SKW*0.62):Math.round(SKW*0.92);
+  const _skMinY=_compact?Math.round(H*0.22):Math.round(H*0.30);
+  const skGY=Math.max(_subBottom+_lblSz+(_compact?3:8),_skMinY);
+  skinRects=Array.from({length:10},(_,i)=>({x:8+(i%5)*(SKW+4),y:skGY+(i<5?0:SKH+(_compact?3:5)),w:SKW,h:SKH}));
+  const THW=Math.floor((W-18)/5)-4;
+  // Compact: smaller theme buttons
+  const THH=_compact?cl(Math.round(H*0.038),16,24):cl(Math.round(H*0.05),20,36);
+  // Compact: tighter inter-section gaps
+  const _skThGap=_compact?(_lblSz+5):(_lblSz+16);
+  const _skRowGap=_compact?2:5;
+  const THY=skGY+SKH*2+_skRowGap+_skThGap;
+  themeRects=Array.from({length:10},(_,i)=>({x:8+(i%5)*(THW+4),y:THY+(i<5?0:THH+(_compact?2:4)),w:THW,h:THH}));
+  const PW=cl(W-52,148,275);
+  const PH=_compact?cl(Math.round(H*0.068),32,46):cl(Math.round(H*0.075),36,58);
+  const lastThY=THY+THH*2+(_compact?3:7);
   // Son : petit bouton icône fixé en haut à droite (hors du flux vertical)
   _soundRect={x:W-44,y:6,w:38,h:38};
   // Réserve de l'espace pour RECORD + combo + "Toucher JOUER" en bas
   const _bsz=cl(Math.floor(H*0.020),8,14);
   const _btmReserve=_bsz*4.5+10;
   const numBtns=hasSave?3:2;
-  const avail=H-_btmReserve-py0-PH*numBtns;
-  const gap=cl(Math.floor(avail/(numBtns+1)),4,16);
-  const _maxBtnY=H-_btmReserve-PH;
-  const y0=Math.min(py0+gap,_maxBtnY);
-  playRect={x:(W-PW)/2,y:y0,w:PW,h:PH};
+  // Minimum gap between buttons (compact: 3px, normal: 4px)
+  const _minBtnGap=_compact?3:4;
+  // Total vertical space required by button stack
+  const _btnStack=PH*numBtns+_minBtnGap*(numBtns-1);
+  // Available zone: from just below theme section to just above bottom reserve
+  const _btnZoneTop=lastThY+(_compact?3:Math.round(H*0.018));
+  const _btnZoneBot=H-_btmReserve;
+  // Center buttons in the available zone; if zone too small, anchor to bottom so
+  // buttons never overflow into the bottom-text reserve (may slightly overlap themes)
+  const _btnZoneH=_btnZoneBot-_btnZoneTop;
+  const _extraPad=Math.max(0,Math.floor((_btnZoneH-_btnStack)/2));
+  // Ideal start: centered in zone. Hard floor: must end before _btnZoneBot
+  const py0=Math.min(_btnZoneTop+_extraPad,_btnZoneBot-_btnStack);
+  const gap=_minBtnGap;
+  // Place buttons top-to-bottom: JOUER, REPRENDRE (if save), CLASSEMENT
+  playRect={x:(W-PW)/2,y:py0,w:PW,h:PH};
   if(hasSave){
-    const y1=Math.min(y0+PH+gap,_maxBtnY-PH);
+    const y1=py0+PH+gap;
     resumeRect={x:(W-PW)/2,y:y1,w:PW,h:PH};
-    const y2=Math.min(y1+PH+gap,_maxBtnY);
+    const y2=y1+PH+gap;
     _lbRect={x:(W-PW)/2,y:y2,w:PW,h:PH};
   }else{
     resumeRect=null;
-    const y1=Math.min(y0+PH+gap,_maxBtnY);
+    const y1=py0+PH+gap;
     _lbRect={x:(W-PW)/2,y:y1,w:PW,h:PH};
   }
 }
 
 function drawMenu(t){
   const th=THEMES[selTheme];
-  ctx.drawImage(menuBg,0,0);
+  if(!drawThemeVideo(selTheme,0,0)&&!drawThemeBg(selTheme,0,0)){ctx.drawImage(menuBg,0,0);}
   drawFx(ctx,menuFx,t);
   // Animated dot grid overlay (subtle premium texture)
   {const _gs=Math.round(Math.min(W,H)*0.088);const _gt=t*0.00045;ctx.save();ctx.fillStyle=hexA(th.tm,0.055);for(let _gy=_gs*0.5;_gy<H+_gs;_gy+=_gs){for(let _gx=_gs*0.5;_gx<W+_gs;_gx+=_gs){const _ox=Math.sin(_gt+_gy*0.014)*9,_oy=Math.cos(_gt+_gx*0.012)*9;ctx.beginPath();ctx.arc(_gx+_ox,_gy+_oy,1.3,0,Math.PI*2);ctx.fill();}}ctx.restore();}
@@ -89,7 +109,7 @@ function drawMenu(t){
   // Constellation — lignes entre particules proches
   ctx.save();
   const _cDist=W*0.17;
-  for(let _ci=0;_ci<menuParts.length;_ci++){
+  for(let _ci=0;_ci<menuParts.length;_ci+=2){
     const _pa=menuParts[_ci];
     for(let _cj=_ci+1;_cj<menuParts.length;_cj++){
       const _pb=menuParts[_cj];
@@ -105,17 +125,19 @@ function drawMenu(t){
   // Overlay
   ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(0,0,W,H);
   layoutMenu();
-  // Title
-  const fsz=cl(Math.floor(H*0.082),20,62),font=`${fsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;
-  const titleY=Math.round(H*0.086)+fsz;
+  // Title — compact mode uses smaller font to save vertical space on small/medium screens
+  const _menuCompact=H<750;
+  const fsz=_menuCompact?cl(Math.floor(H*0.070),18,38):cl(Math.floor(H*0.082),20,62);
+  const font=`${fsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;
+  const titleY=Math.round(H*(_menuCompact?0.072:0.086))+fsz;
   bounceTitle(ctx,'BLOCK',W/2,titleY,t,font,th.hi||th.tm,lerpC(th.tm,'#804000',0.4),th.ta,7);
   bounceTitle(ctx,'PUZZLE',W/2,titleY+fsz*1.1,t,font,th.ta,lerpC(th.ta,'#003060',0.5),th.tm,5);
   // Subtitle
-  const subSz=cl(Math.floor(H*0.026),9,19);
+  const subSz=cl(Math.floor(H*0.022),8,15);
   ctx.save();ctx.font=`${subSz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tg;ctx.textAlign='center';ctx.shadowColor=th.tg;ctx.shadowBlur=6;
   ctx.fillText('— Choisis ton style —',W/2,titleY+fsz*2.28);ctx.restore();
   // SKIN label
-  const lblSz=cl(Math.floor(H*0.022),8,15);
+  const lblSz=cl(Math.floor(H*0.020),7,13);
   if(skinRects.length){labelText(ctx,'SKIN',W/2,skinRects[0].y-lblSz-1,th.tg,`bold ${lblSz}px system-ui,-apple-system,"SF Pro Display",Arial`,'center',true);}
   // Skin cards — glassmorphism
   skinRects.forEach((sr,i)=>{
@@ -268,16 +290,27 @@ function layoutPause(){
   const gap=10;
   const titleH=cl(H*0.10,48,68);
   const badgeH=26;
-  const scoreH=24;
-  const padV=20;
-  const panelH=padV+titleH+10+badgeH+gap+bh*5+gap*4+scoreH+padV+52;
+  const scoreH=20;
+  const sliderH=20;
+  const padV=18;
+  // Gap between last button and score line (always at least 8px)
+  const postBtnGap=Math.max(8,Math.round(H*0.012));
+  // Gap between score line and volume slider label+slider
+  const sliderLabelH=16;
+  const panelH=padV+titleH+10+badgeH+gap+bh*5+gap*4+postBtnGap+scoreH+sliderLabelH+sliderH+padV;
   const px=(W-pw)/2|0;
-  const py=((H-panelH)/2)|0;
-  _pauseBtns={_panel:{x:px,y:py,w:pw,h:panelH},_titleY:py+padV+titleH*0.78,_badgeY:py+padV+titleH+10,_scoreY:py+panelH-padV-scoreH-52};
+  // Clamp panel so it stays on screen (at least 4px from each edge)
+  const panelHClamped=Math.min(panelH,H-8);
+  const py=Math.max(4,((H-panelHClamped)/2)|0);
+  _pauseBtns={_panel:{x:px,y:py,w:pw,h:panelHClamped},_titleY:py+padV+titleH*0.78,_badgeY:py+padV+titleH+10};
   let cy=py+padV+titleH+10+badgeH+gap;
   ['resume','restart','sound','music','quit'].forEach(k=>{_pauseBtns[k]={x:px+10,y:cy,w:pw-20,h:bh};cy+=bh+gap;});
-  const sliderY=_pauseBtns._scoreY+20;
-  _volumeSliderRect={x:_pauseBtns._panel.x+20,y:sliderY,w:_pauseBtns._panel.w-40,h:20};
+  // Score line starts after last button with guaranteed gap
+  const _scoreY=cy-gap+postBtnGap;
+  _pauseBtns._scoreY=_scoreY;
+  // Volume slider below score line
+  const sliderY=_scoreY+scoreH+sliderLabelH;
+  _volumeSliderRect={x:px+20,y:sliderY,w:pw-40,h:sliderH};
 }
 
 function drawPause(t){

@@ -4,7 +4,7 @@
 let _goDisplayScore=0,_goRecBurst=false,_goReplayRect=null,_goMenuRect=null,_hudScorePulse=0;
 function drawGame(t){
   const newTh=getCurTheme();
-  if(newTh!==curTheme){const _prevTh=curTheme;curTheme=newTh;gameBg=buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=180;screenFlashCol=THEMES[curTheme].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));}
+  if(newTh!==curTheme){const _prevTh=curTheme;curTheme=newTh;gameBg=buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=180;screenFlashCol=THEMES[curTheme].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));if(typeof _ensureVidPlaying==='function')_ensureVidPlaying(curTheme);}
   // Score animé
   if(displayScore<score){const _gap=score-displayScore;const _rate=_gap>5000?0.22:_gap>1000?0.16:0.12;displayScore=Math.min(score,displayScore+Math.max(1,Math.ceil(_gap*_rate)));_hudScorePulse=Math.min(1,_hudScorePulse+0.15);}else if(!over){_hudScorePulse=Math.max(0,_hudScorePulse-0.05);}
   // Milestone celebration
@@ -37,7 +37,7 @@ function drawGame(t){
   }
   const th=THEMES[curTheme];
   if(shake>0){shake--;shakeX=rnd(-shakePow,shakePow)|0;shakeY=rnd(-shakePow,shakePow)|0;}else{shakeX=0;shakeY=0;}
-  ctx.drawImage(gameBg,shakeX,shakeY);
+  if(!drawThemeVideo(curTheme,shakeX,shakeY)&&!drawThemeBg(curTheme,shakeX,shakeY)){ctx.drawImage(gameBg,shakeX,shakeY);}
   drawFx(ctx,gameFx,t);
   // ── DUST MOTES — lazy-initialized ambient floating particles ──────────────
   if(!dustMotes.length){for(let _di=0;_di<30;_di++)dustMotes.push({x:rnd(0,W),y:rnd(0,H),vx:rnd(-0.14,0.14),vy:rnd(-0.28,-0.04),a:rnd(0.03,0.13),sz:rnd(0.6,1.8),ph:rnd(0,Math.PI*2)});}
@@ -264,9 +264,12 @@ function drawGame(t){
     }
   }
   // ── Aperçu 2 prochains blocs ─────────────────────────────────────────────
-  if(nextTrayPreview){
-    const pvH=Math.max((CELL*1.3)|0,44);
+  // Hide preview when bonus banner is active (avoids overlap at bottom of screen)
+  if(nextTrayPreview&&!showAddCellsBonus){
     const pvY=TRAY_Y+TRAY_H+4;
+    // Cap height so it never overflows the screen on small devices
+    const pvH=Math.min(Math.max((CELL*1.3)|0,44),Math.max(12,H-pvY-2));
+    if(pvH>12){
     // Panel
     const pvBg=ctx.createLinearGradient(GRID_X,pvY,GRID_X,pvY+pvH);
     pvBg.addColorStop(0,hexA(th.gbg,0.38));pvBg.addColorStop(1,hexA(th.ge,0.25));
@@ -289,6 +292,7 @@ function drawGame(t){
       // Séparateur entre les 2 slots
       if(i===0){ctx.strokeStyle=hexA(th.dc,0.22);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(GRID_X+pvSlotW,pvY+4);ctx.lineTo(GRID_X+pvSlotW,pvY+pvH-4);ctx.stroke();}
     }
+    } // end if(pvH>12)
   }
   ctx.restore();
   // Drag trail — spawn energy particles + render behind piece each frame
@@ -340,7 +344,10 @@ function drawGame(t){
   // Particles + Debris
   particles=particles.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.13;p.life--;if(p.life<=0)return false;const ratio=p.life/p.ml,sz=Math.max(1,p.size*ratio);ctx.fillStyle=hexA(p.color,0.82*ratio);if(p.circle){ctx.beginPath();ctx.arc(p.x,p.y,sz,0,Math.PI*2);ctx.fill();}else ctx.fillRect(p.x-sz,p.y-sz,sz*2,sz*2);return true;});
   debris=debris.filter(d=>{d.draw(ctx);return d.update();});
+  if(floats.length>40)floats.splice(0,floats.length-40);
   if(gameState!=='pause'){floats=floats.filter(f=>{f.draw(ctx);return f.update();});}else{floats=floats.filter(f=>f.update());}
+  // Line clear video overlay — brief flash over grid area
+  if(typeof drawEventVideo==='function')drawEventVideo('line_clear',0.60,GRID_X,GRID_Y,GW,GH);
   // Screen flash
   if(screenFlash>0){ctx.fillStyle=hexA(screenFlashCol,screenFlash/255*0.48);ctx.fillRect(0,0,W,H);screenFlash=Math.max(0,screenFlash-5);}
   // Danger zone — red vignette when grid > 75% full
@@ -399,15 +406,16 @@ function drawGame(t){
     // Panel
     const ppg=ctx.createLinearGradient(px3,py3,px3,py3+ph3);
     ppg.addColorStop(0,'rgba(20,0,60,0.98)');ppg.addColorStop(1,'rgba(5,0,20,0.97)');
-    rrect(ctx,px3,py3,pw3,ph3,16,ppg,null);
+    const _bpR=Math.min(CR*3,20);
+    rrect(ctx,px3,py3,pw3,ph3,_bpR,ppg,null);
     // Gold border
     const pbord=ctx.createLinearGradient(px3,py3,px3+pw3,py3+ph3);
     pbord.addColorStop(0,'#FFE040');pbord.addColorStop(0.5,'#FFA000');pbord.addColorStop(1,'#FFE040');
-    rp(ctx,px3,py3,pw3,ph3,16);ctx.strokeStyle=pbord;ctx.lineWidth=2;ctx.stroke();
+    rp(ctx,px3,py3,pw3,ph3,_bpR);ctx.strokeStyle=pbord;ctx.lineWidth=2;ctx.stroke();
     // Shine top
     const psh=ctx.createLinearGradient(px3,py3,px3,py3+ph3*0.35);
     psh.addColorStop(0,'rgba(255,255,255,0.1)');psh.addColorStop(1,'rgba(255,255,255,0)');
-    rp(ctx,px3,py3,pw3,ph3*0.35,16);ctx.fillStyle=psh;ctx.fill();
+    rp(ctx,px3,py3,pw3,ph3*0.35,_bpR);ctx.fillStyle=psh;ctx.fill();
     // Title
     const tsz=cl(pw3*0.062|0,10,19);
     ctx.save();ctx.font=`bold ${tsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -426,7 +434,7 @@ function drawGame(t){
       const slBg=ctx.createLinearGradient(sx,sy,sx,sy+slotH);
       slBg.addColorStop(0,ishov?'rgba(255,200,0,0.22)':'rgba(255,255,255,0.06)');
       slBg.addColorStop(1,ishov?'rgba(255,140,0,0.12)':'rgba(255,255,255,0.02)');
-      rrect(ctx,sx+3,sy+3,slotW-6,slotH-6,10,slBg,ishov?hexA('#FFD700',0.6):hexA('#FFFFFF',0.15),ishov?1.5:0.8);
+      rrect(ctx,sx+3,sy+3,slotW-6,slotH-6,Math.min(CR*2,12),slBg,ishov?hexA('#FFD700',0.6):hexA('#FFFFFF',0.15),ishov?1.5:0.8);
       // Draw piece centered in slot
       const sh=piece.shape;
       const pcol=sh[0].length,prow=sh.length;
@@ -448,11 +456,12 @@ function drawGame(t){
     ctx.fillStyle='rgba(0,0,0,0.76)';ctx.fillRect(0,0,W,H);
     const spg=ctx.createLinearGradient(scpX,scpY,scpX,scpY+scpH);
     spg.addColorStop(0,hexA(th.gbg,0.97));spg.addColorStop(1,hexA(th.bg,0.95));
-    rrect(ctx,scpX,scpY,scpW,scpH,16,spg,null);
+    const _scR=Math.min(CR*3,20);
+    rrect(ctx,scpX,scpY,scpW,scpH,_scR,spg,null);
     const spsh=ctx.createLinearGradient(scpX,scpY,scpX,scpY+scpH*0.35);
     spsh.addColorStop(0,'rgba(255,255,255,0.11)');spsh.addColorStop(1,'rgba(255,255,255,0)');
-    rp(ctx,scpX,scpY,scpW,scpH*0.35,16);ctx.fillStyle=spsh;ctx.fill();
-    rp(ctx,scpX,scpY,scpW,scpH,16);ctx.strokeStyle=hexA(th.dc,0.7);ctx.lineWidth=2;ctx.stroke();
+    rp(ctx,scpX,scpY,scpW,scpH*0.35,_scR);ctx.fillStyle=spsh;ctx.fill();
+    rp(ctx,scpX,scpY,scpW,scpH,_scR);ctx.strokeStyle=hexA(th.dc,0.7);ctx.lineWidth=2;ctx.stroke();
     const qSz=cl(scpW*0.068|0,10,20);
     ctx.save();ctx.font=`bold ${qSz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle=th.hi||th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=12;
@@ -488,22 +497,24 @@ function drawGame(t){
     // Count up score display on game over screen
     if(_goDisplayScore<score){const _gg=score-_goDisplayScore;_goDisplayScore=Math.min(score,_goDisplayScore+Math.max(1,Math.ceil(_gg*(el<1400?0.055:0.20))));}
     // New record particle burst (one-time when count reaches final score)
-    if(_goDisplayScore>=score&&!_goRecBurst&&isRec){_goRecBurst=true;for(let _i=0;_i<70;_i++){particles.push({x:W/2,y:H*0.42,vx:rnd(-7,7),vy:rnd(-9,-1),color:rndc(['#FFD700','#FF8C00','#FFEE60','#FFA020','#FFFFFF','#FF4080']),size:rnd(3,7),life:rnd(50,90),ml:90,circle:Math.random()>0.35});}}
+    if(_goDisplayScore>=score&&!_goRecBurst&&isRec){_goRecBurst=true;for(let _i=0;_i<70;_i++){particles.push({x:W/2,y:H*0.42,vx:rnd(-7,7),vy:rnd(-9,-1),color:rndc(['#FFD700','#FF8C00','#FFEE60','#FFA020','#FFFFFF','#FF4080']),size:rnd(3,7),life:rnd(50,90),ml:90,circle:Math.random()>0.35});}if(typeof playEventVideo==='function')playEventVideo('celebration',false);}
     ctx.fillStyle=`rgba(0,0,0,${Math.min(0.84,el/600*0.84).toFixed(3)})`;ctx.fillRect(0,0,W,H);
+    if(isRec&&typeof drawEventVideo==='function')drawEventVideo('celebration',0.50);
     if(el>350){
       const pw2=Math.min(W-24,390),ph2=Math.round(H*0.62);
       const px=(W-pw2)/2,py=(H-ph2)/2-10;
       // Panel glass
       const pg2=ctx.createLinearGradient(px,py,px,py+ph2);
       pg2.addColorStop(0,hexA(th.gbg,0.97));pg2.addColorStop(1,hexA(th.bg,0.94));
-      rrect(ctx,px,py,pw2,ph2,20,pg2,null);
+      const _goR=Math.min(CR*3,20);
+      rrect(ctx,px,py,pw2,ph2,_goR,pg2,null);
       // Panel shine
       const psg=ctx.createLinearGradient(px,py,px,py+ph2*0.35);
       psg.addColorStop(0,'rgba(255,255,255,0.13)');psg.addColorStop(1,'rgba(255,255,255,0)');
-      rp(ctx,px,py,pw2,ph2*0.35,20);ctx.fillStyle=psg;ctx.fill();
+      rp(ctx,px,py,pw2,ph2*0.35,_goR);ctx.fillStyle=psg;ctx.fill();
       // Border: gold pulse on record, subtle otherwise
-      if(isRec){ctx.save();ctx.shadowColor='#FFD700';ctx.shadowBlur=18+7*Math.abs(Math.sin(Date.now()*0.003));rp(ctx,px,py,pw2,ph2,20);ctx.strokeStyle=hexA('#FFD700',0.60);ctx.lineWidth=2;ctx.stroke();ctx.restore();}
-      else{rp(ctx,px,py,pw2,ph2,20);ctx.strokeStyle=hexA(th.dc,0.7);ctx.lineWidth=2;ctx.stroke();}
+      if(isRec){ctx.save();ctx.shadowColor='#FFD700';ctx.shadowBlur=18+7*Math.abs(Math.sin(Date.now()*0.003));rp(ctx,px,py,pw2,ph2,_goR);ctx.strokeStyle=hexA('#FFD700',0.60);ctx.lineWidth=2;ctx.stroke();ctx.restore();}
+      else{rp(ctx,px,py,pw2,ph2,_goR);ctx.strokeStyle=hexA(th.dc,0.7);ctx.lineWidth=2;ctx.stroke();}
       // Title
       const goSz=cl(pw2*0.12|0,16,40);
       drawPremText(ctx,'GAME OVER',W/2,py+ph2*0.14,`bold ${goSz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`,'#FF6040','#CC2010','rgba(0,0,0,0.6)','#FF4020',18,3);
@@ -594,7 +605,9 @@ function drawGame(t){
     const _cbPulse=0.88+0.12*Math.abs(Math.sin(t*0.016));
     const _cbfsz=cl(Math.floor(CELL*0.72*_cbPulse),16,36)|0;
     const _cbtxt=`🔥 COMBO ×${combo}`;
-    const _cbX=GRID_X+GW/2,_cbY=GRID_Y-_cbfsz*0.7;
+    // Portrait: show combo badge inside grid top (HUD fills above-grid space)
+    // Landscape: show above grid in the available margin
+    const _cbX=GRID_X+GW/2,_cbY=(H>W)?GRID_Y+_cbfsz*0.9:GRID_Y-_cbfsz*0.7;
     const _cbCol=combo>=6?'#FF40A0':combo>=4?'#FFA020':th.hi||th.tm;
     const _cbShad=combo>=6?'#FF2080':combo>=4?'#FF8000':th.tm;
     ctx.save();
@@ -651,16 +664,22 @@ function drawGame(t){
 function _drawModeOverlays(t,th){
   const subMode=_getHistoireSubMode();
   const effectiveMode=currentMode==='histoire'?subMode:currentMode;
+  // Portrait-aware: in portrait the HUD fills the entire space above the grid,
+  // so mode overlays must render AT or INSIDE the grid top edge, not above it.
+  const _portrait=H>W;
   // ── CHRONO ──
   if(effectiveMode==='chrono'&&!over){
     const now=Date.now();
     const dt=now-chronoLastTick;chronoLastTick=now;
     chronoTimeLeft=Math.max(0,chronoTimeLeft-dt);
     const frac=chronoTimeLeft/chronoMaxTime;
-    const barW=GW,barH=Math.max(6,CELL*0.18)|0;
-    const barX=GRID_X,barY=GRID_Y-barH-3;
+    // In portrait: bar overlays grid top (HUD fills above-grid space)
+    // In landscape: bar floats above grid in the available margin
+    const _cszLabel=cl(Math.floor(CELL*0.55),10,20);
+    const barW=GW,barH=_portrait?Math.max(Math.max(6,CELL*0.18)|0,_cszLabel+6):Math.max(6,CELL*0.18)|0;
+    const barX=GRID_X,barY=_portrait?GRID_Y:GRID_Y-barH-3;
     // Track bg
-    rrect(ctx,barX,barY,barW,barH,barH/2,'rgba(0,0,0,0.5)',null);
+    rrect(ctx,barX,barY,barW,barH,barH/2,_portrait?'rgba(0,0,0,0.72)':'rgba(0,0,0,0.5)',null);
     // Fill — green→yellow→orange→red
     const col=frac>0.5?lerpC('#40FF60','#FFD700',(1-frac)*2):lerpC('#FFD700','#FF2020',(0.5-frac)*2);
     if(frac>0)rrect(ctx,barX,barY,Math.ceil(barW*frac),barH,barH/2,col,null);
@@ -674,13 +693,13 @@ function _drawModeOverlays(t,th){
       _vr.addColorStop(0,'rgba(0,0,0,0)');_vr.addColorStop(1,`rgba(220,20,0,${(0.28*_pulse).toFixed(3)})`);
       ctx.fillStyle=_vr;ctx.fillRect(0,0,W,H);
     }
-    // Seconds label
+    // Seconds label — portrait: inside the bar; landscape: above the bar
     const sec=Math.ceil(chronoTimeLeft/1000);
-    const csz=cl(Math.floor(CELL*0.55),10,20);
+    const csz=_cszLabel;
     const _shakeX=_urgent?(Math.sin(t*0.11)*3.5)|0:0;
     ctx.save();ctx.font=`bold ${csz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     if(frac<0.3){ctx.fillStyle='#FF4020';ctx.shadowColor='#FF2010';ctx.shadowBlur=8+4*Math.abs(Math.sin(t*0.012));}else ctx.fillStyle='rgba(255,255,255,0.85)';
-    ctx.fillText(`⏱ ${sec}`,GRID_X+GW/2+_shakeX,barY-csz*0.6);ctx.restore();
+    ctx.fillText(`⏱ ${sec}`,GRID_X+GW/2+_shakeX,_portrait?barY+barH/2:barY-csz*0.6);ctx.restore();
     // Timeout → game over
     if(chronoTimeLeft<=0&&!over){
       over=true;overT=Date.now();
@@ -700,8 +719,9 @@ function _drawModeOverlays(t,th){
     const cx2=(W-cw)/2,cy2=(H-ch)/2;
     const cbg=ctx.createLinearGradient(cx2,cy2,cx2,cy2+ch);
     cbg.addColorStop(0,'rgba(30,10,50,0.97)');cbg.addColorStop(1,'rgba(15,5,25,0.95)');
-    rrect(ctx,cx2,cy2,cw,ch,16,cbg,null);
-    rp(ctx,cx2,cy2,cw,ch,16);ctx.strokeStyle='rgba(200,80,255,0.55)';ctx.lineWidth=2;ctx.stroke();
+    const _chR=Math.min(CR*2,16);
+    rrect(ctx,cx2,cy2,cw,ch,_chR,cbg,null);
+    rp(ctx,cx2,cy2,cw,ch,_chR);ctx.strokeStyle='rgba(200,80,255,0.55)';ctx.lineWidth=2;ctx.stroke();
     const ctsz=cl(Math.floor(ch*0.12),10,20);
     ctx.save();ctx.font=`bold ${ctsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle='#D040FF';ctx.shadowColor='#D040FF';ctx.shadowBlur=8;
@@ -714,9 +734,10 @@ function _drawModeOverlays(t,th){
       const hover=mouseX>=sx&&mouseX<sx+sw&&mouseY>=sy&&mouseY<sy+sh;
       const sbg2=ctx.createLinearGradient(sx,sy,sx,sy+sh);
       sbg2.addColorStop(0,hexA(piece.color,hover?0.38:0.20));sbg2.addColorStop(1,hexA(piece.color,hover?0.22:0.10));
-      rrect(ctx,sx,sy,sw,sh,10,sbg2,null);
-      rp(ctx,sx,sy,sw,sh,10);ctx.strokeStyle=hexA(piece.color,hover?0.9:0.45);ctx.lineWidth=hover?2:1;ctx.stroke();
-      if(hover){ctx.save();ctx.shadowColor=piece.color;ctx.shadowBlur=12;rp(ctx,sx,sy,sw,sh,10);ctx.strokeStyle=hexA(piece.color,0.8);ctx.lineWidth=2;ctx.stroke();ctx.restore();}
+      const _slR=Math.min(CR*2,12);
+      rrect(ctx,sx,sy,sw,sh,_slR,sbg2,null);
+      rp(ctx,sx,sy,sw,sh,_slR);ctx.strokeStyle=hexA(piece.color,hover?0.9:0.45);ctx.lineWidth=hover?2:1;ctx.stroke();
+      if(hover){ctx.save();ctx.shadowColor=piece.color;ctx.shadowBlur=12;rp(ctx,sx,sy,sw,sh,_slR);ctx.strokeStyle=hexA(piece.color,0.8);ctx.lineWidth=2;ctx.stroke();ctx.restore();}
       // Piece preview centred in card
       const pcw=piece.shape[0].length,pch=piece.shape.length;
       const pc=cl(Math.floor(sw/(pcw+1.5)),8,28);
@@ -740,10 +761,10 @@ function _drawModeOverlays(t,th){
       ctx.strokeStyle='rgba(255,60,40,0.35)';ctx.strokeRect(x+1,y+1,CELL-2,CELL-2);
       ctx.globalAlpha=1;ctx.restore();
     });
-    // Blocked count badge
+    // Blocked count badge — portrait: inside grid top; landscape: above grid
     const bcount=contraBlocked.length;
     const bw2=cl(Math.round(GW*0.52),80,180),bh2=cl(Math.round(H*0.048),20,34);
-    const bx2=GRID_X+(GW-bw2)/2,by2=GRID_Y-bh2-4;
+    const bx2=GRID_X+(GW-bw2)/2,by2=_portrait?(GRID_Y+4):(GRID_Y-bh2-4);
     rrect(ctx,bx2,by2,bw2,bh2,bh2/2,'rgba(100,10,10,0.85)',null);
     rp(ctx,bx2,by2,bw2,bh2,bh2/2);ctx.strokeStyle='rgba(255,60,40,0.55)';ctx.lineWidth=1.2;ctx.stroke();
     const bfsz=cl(Math.floor(bh2*0.52),8,14);
@@ -754,7 +775,8 @@ function _drawModeOverlays(t,th){
   if(currentMode==='histoire'&&!over){
     const lvlDef=HISTOIRE_LEVELS[histoireLevel%HISTOIRE_LEVELS.length];
     const bw2=Math.min(GW,280),bh2=cl(Math.round(H*0.055),22,38);
-    const bx2=GRID_X+(GW-bw2)/2,by2=GRID_Y-bh2-4;
+    // Portrait: badge overlays grid top to avoid HUD; landscape: above grid
+    const bx2=GRID_X+(GW-bw2)/2,by2=_portrait?(GRID_Y+4):(GRID_Y-bh2-4);
     const hmet=histoireGoalMet;
     const hcol=hmet?'#40FF80':'#FF6080';
     rrect(ctx,bx2,by2,bw2,bh2,bh2/2,hmet?'rgba(10,40,15,0.9)':'rgba(40,8,20,0.9)',null);
@@ -845,7 +867,7 @@ function drawHUD(th){
     if(combo>=2&&!over){const _cbFrac=Math.min(1,combo/8);const _cbCol=combo>=6?'#FF40A0':combo>=4?'#FFA020':th.tm;const _cbW=Math.round(W*_cbFrac);const _cbX=(W-_cbW)/2|0;const _cbg=ctx.createLinearGradient(_cbX,bh-2,_cbX+_cbW,bh-2);_cbg.addColorStop(0,hexA(th.ta,0));_cbg.addColorStop(0.3,_cbCol);_cbg.addColorStop(0.7,_cbCol);_cbg.addColorStop(1,hexA(th.ta,0));ctx.fillStyle=_cbg;ctx.fillRect(_cbX,bh-2,_cbW,2);}
     // Score centré avec animation de pulsation
     const fz=cl(bh*0.55|0,11,24);
-    if(_hudScorePulse>0.01){const _sc=1+_hudScorePulse*0.18;ctx.save();ctx.translate(W/2,bh/2);ctx.scale(_sc,_sc);ctx.translate(-W/2,-bh/2);drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);ctx.restore();}
+    if(_hudScorePulse>0.01){const _sc=1+_hudScorePulse*0.22;ctx.save();ctx.translate(W/2,bh/2);ctx.scale(_sc,_sc);ctx.translate(-W/2,-bh/2);drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);ctx.restore();}
     else{drawScore(ctx,`${displayScore}`,W/2,bh/2,th,`bold ${fz*1.2}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`);}
     // Left: mode badge pill + record
     const modeInfo=MODES[currentMode]||MODES.survie;
@@ -884,6 +906,10 @@ function drawHUD(th){
     ctx.shadowBlur=0;ctx.font=`${iconSz*0.56|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle=th.hi||th.tm;ctx.fillText('⏸',pauseX+iconSz/2,btnY+iconSz/2);
     ctx.restore();
+    // Subtle pulse ring on pause button
+    const _pbPulse=0.3+0.3*Math.abs(Math.sin(Date.now()*0.0025));
+    ctx.save();ctx.strokeStyle=hexA(th.ta,_pbPulse*0.5);ctx.lineWidth=1;
+    rp(ctx,pauseX-2,btnY-2,iconSz+4,iconSz+4,iconSz/4+1);ctx.stroke();ctx.restore();
     // ── Son button ──
     ctx.save();
     const sOn=_soundEnabled;
@@ -923,8 +949,9 @@ function drawHUD(th){
     if(combo>1){ctx.save();ctx.font=`bold ${fz*0.88}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=7;ctx.fillText(`×${combo}`,rightEdge,bh*0.72);ctx.restore();}
     let _bonusRow=bh*0.72;
     if(combo>1)_bonusRow=bh*0.52;
-    if(doublePointsUntil>Date.now()){const rem=Math.ceil((doublePointsUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${fz*0.65}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='#30FFAA';ctx.shadowColor='#00FFB0';ctx.shadowBlur=5;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(`×2 ${rem}s`,rightEdge,_bonusRow);ctx.shadowBlur=0;ctx.restore();_bonusRow=bh*(combo>1?0.92:0.72);}
-    if(_enduranceBonusUntil>Date.now()){const erem=Math.ceil((_enduranceBonusUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${fz*0.65}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='#60FFD0';ctx.shadowColor='#40EAB0';ctx.shadowBlur=5;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(`🏅×1.5 ${erem}s`,rightEdge,_bonusRow);ctx.shadowBlur=0;ctx.restore();}
+    const _bszBonus=fz*0.65;
+    if(doublePointsUntil>Date.now()){const rem=Math.ceil((doublePointsUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${_bszBonus}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='#30FFAA';ctx.shadowColor='#00FFB0';ctx.shadowBlur=5;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(`×2 ${rem}s`,rightEdge,_bonusRow);ctx.shadowBlur=0;ctx.restore();_bonusRow=Math.min(bh*(combo>1?0.88:0.68),bh-_bszBonus*1.2);}
+    if(_enduranceBonusUntil>Date.now()){const erem=Math.ceil((_enduranceBonusUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${_bszBonus}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='#60FFD0';ctx.shadowColor='#40EAB0';ctx.shadowBlur=5;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(`🏅×1.5 ${erem}s`,rightEdge,_bonusRow);ctx.shadowBlur=0;ctx.restore();}
     ctx.textAlign='left';ctx.textBaseline='alphabetic';
   }else{
     const hx=GRID_X+GW+8,hw=W-hx-5;

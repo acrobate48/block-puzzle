@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <!-- Speaker body (muted / dimmed steel-gray) -->
+    <linearGradient id="spkMuted" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#909EA8"/>
+      <stop offset="50%"  stop-color="#5A6870"/>
+      <stop offset="100%" stop-color="#2C3840"/>
+    </linearGradient>
+    <!-- Cone muted -->
+    <linearGradient id="coneMuted" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#8A9AA4"/>
+      <stop offset="55%"  stop-color="#4A5A62"/>
+      <stop offset="100%" stop-color="#20303A"/>
+    </linearGradient>
+    <!-- Red X glow -->
+    <filter id="xGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2.5" flood-color="#FF4040" flood-opacity="0.80"/>
+    </filter>
+    <!-- Bloom -->
+    <filter id="bloom" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <!-- Drop shadow -->
+    <filter id="spkShadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <!-- Specular soft -->
+    <filter id="specSoft">
+      <feGaussianBlur stdDeviation="1.2"/>
+    </filter>
+  </defs>
+
+  <!-- ── SPEAKER BODY (dimmed) ── -->
+  <rect x="4" y="16" width="12" height="16" rx="2.5"
+        fill="url(#spkMuted)" stroke="#303C44" stroke-width="1.2"
+        filter="url(#spkShadow)" opacity="0.70"/>
+  <!-- Body specular (reduced) -->
+  <rect x="5" y="17" width="3.5" height="7" rx="1.5"
+        fill="#FFFFFF" opacity="0.18"/>
+
+  <!-- ── SPEAKER CONE (dimmed) ── -->
+  <path d="M 16,14 L 26,6 L 26,42 L 16,34 Z"
+        fill="url(#coneMuted)" stroke="#283038" stroke-width="1.2"
+        stroke-linejoin="round" filter="url(#spkShadow)" opacity="0.70"/>
+
+  <!-- ── RED X MARK ── -->
+  <!-- Thick glow pass behind X -->
+  <line x1="28" y1="30" x2="42" y2="14" stroke="#FF2222" stroke-width="7"
+        stroke-linecap="round" opacity="0.30" filter="url(#bloom)"/>
+  <line x1="28" y1="14" x2="42" y2="30" stroke="#FF2222" stroke-width="7"
+        stroke-linecap="round" opacity="0.30" filter="url(#bloom)"/>
+
+  <!-- X main strokes (glowing red) -->
+  <line x1="28" y1="30" x2="42" y2="14" stroke="#FF5050" stroke-width="3.5"
+        stroke-linecap="round" filter="url(#xGlow)"/>
+  <line x1="28" y1="14" x2="42" y2="30" stroke="#FF5050" stroke-width="3.5"
+        stroke-linecap="round" filter="url(#xGlow)"/>
+
+  <!-- X bright center highlights -->
+  <line x1="28" y1="30" x2="42" y2="14" stroke="#FFAAAA" stroke-width="1.2"
+        stroke-linecap="round" opacity="0.70"/>
+  <line x1="28" y1="14" x2="42" y2="30" stroke="#FFAAAA" stroke-width="1.2"
+        stroke-linecap="round" opacity="0.70"/>
+</svg>

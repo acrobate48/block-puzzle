@@ -1,6 +1,7 @@
 'use strict';
 // ─── LOOP ─────────────────────────────────────────────────────────────────────
 let _lastTs=0,_prevGameState='';
+let _fpsFrames=0,_fpsSec=Date.now(),_fpsVal=60;
 function loop(ts){
   // Skip frames arriving faster than 120fps — reduces unnecessary GPU work on high-refresh displays
   if(ts-_lastTs<8){requestAnimationFrame(loop);return;}
@@ -22,6 +23,13 @@ function loop(ts){
   else if(gameState==='leaderboard')drawLeaderboard(ts);
   else if(gameState==='pause'){drawGame(ts);drawPause(ts);}
   else drawGame(ts);
+  // FPS counter (debug mode only)
+  _fpsFrames++;
+  if(Date.now()-_fpsSec>=1000){_fpsVal=_fpsFrames;_fpsFrames=0;_fpsSec=Date.now();}
+  if(localStorage.getItem('bp_debug')==='1'){
+    ctx.save();ctx.font='bold 11px monospace';ctx.fillStyle='rgba(255,255,0,0.8)';
+    ctx.textAlign='right';ctx.textBaseline='top';ctx.fillText(`${_fpsVal}fps`,W-4,4);ctx.restore();
+  }
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);

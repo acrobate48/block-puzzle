@@ -1,4 +1,31 @@
 'use strict';
+// ─── UI ASSET PRELOADER ──────────────────────────────────────────────────────
+// Preloads SVG icons from assets/ui/ for hardware-accelerated canvas drawing.
+// Falls back to canvas-drawn versions if image fails to load.
+const _UI={};
+['bomb','star','x2','trophy','combo_fire','lightning','skull','heart'].forEach(n=>{
+  const img=new Image();
+  img.onload=()=>{_UI[n]=img;};
+  img.src=`assets/ui/${n}.svg`;
+});
+// Fast draw: use preloaded image or fallback to canvas
+function _drawUiIcon(ctx,name,cx,cy,sz){
+  if(_UI[name]){ctx.drawImage(_UI[name],cx-sz/2,cy-sz/2,sz,sz);}
+}
+// ─── LEGACY ICON LOADER ───────────────────────────────────────────────────────
+const _uiIcons={};
+const _uiIconsReady={};
+function _loadIcon(name,path){
+  const img=new Image();
+  img.onload=()=>{_uiIcons[name]=img;_uiIconsReady[name]=true;};
+  img.onerror=()=>{_uiIconsReady[name]=false;};
+  img.src=path;
+}
+_loadIcon('bomb','assets/ui/bomb.svg');
+_loadIcon('star','assets/ui/star.svg');
+_loadIcon('x2','assets/ui/x2.svg');
+_loadIcon('fire','assets/ui/fire.svg');
+_loadIcon('trophy','assets/ui/trophy.svg');
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 function hr(h){return parseInt(h.slice(1,3),16)}
 function hg(h){return parseInt(h.slice(3,5),16)}
@@ -110,6 +137,13 @@ function drawBombIcon(ctx,cx,cy,sz){
   const rays=[[0,-1],[0.7,-0.7],[-0.6,-0.8],[0.85,0.1]];
   rays.forEach(([dx,dy])=>{const base=sz*0.1;ctx.beginPath();ctx.moveTo(cx+sz*0.32+dx*base,cy-sz*0.68+dy*base);ctx.lineTo(cx+sz*0.32+dx*(base+sz*0.14),cy-sz*0.68+dy*(base+sz*0.14));ctx.stroke();});
   ctx.shadowBlur=0;ctx.restore();
+}
+function drawBombIconFast(ctx,cx,cy,sz){
+  if(_uiIconsReady['bomb']&&_uiIcons['bomb']){
+    ctx.drawImage(_uiIcons['bomb'],cx-sz/2,cy-sz/2,sz,sz);
+  } else {
+    drawBombIcon(ctx,cx,cy,sz);
+  }
 }
 function drawX2Icon(ctx,cx,cy,sz){
   ctx.save();
@@ -247,12 +281,15 @@ function _drawBevel(ctx,x,y,sz){
   ctx.restore();
 }
 
-function getCached(col,sz,skin){
-  const k=`${skin}_${col}_${sz}`;
+function getCached(col,sz,skin,t){
+  // Animated skins: bucket time into 100ms frames to avoid cache thrashing
+  const k=ANIMATED_SKINS.has(skin)?`${skin}_${col}_${sz}_${Math.floor(t/100)}`:`${skin}_${col}_${sz}`;
   if(CELL_CACHE.has(k))return CELL_CACHE.get(k);
   const oc=document.createElement('canvas');oc.width=sz;oc.height=sz;
   const c2=oc.getContext('2d');
-  SKIN_FNS[skin](c2,col,0,0,sz,0);
+  // For animated skins bake at position (0,0) using the bucketed time
+  const bakeT=ANIMATED_SKINS.has(skin)?Math.floor(t/100)*100:0;
+  SKIN_FNS[skin](c2,col,0,0,sz,bakeT);
   _drawBevel(c2,0,0,sz);
   CELL_CACHE.set(k,oc);return oc;
 }
@@ -265,8 +302,7 @@ function drawCell(ctx,col,x,y,sz,skin,t,alpha=1){
   rp(ctx,x,y,sz,sz,_r);ctx.fillStyle='#000';ctx.fill();
   ctx.restore();
   if(alpha<1)ctx.globalAlpha=alpha;
-  if(ANIMATED_SKINS.has(skin)){SKIN_FNS[skin](ctx,col,x,y,sz,t);_drawBevel(ctx,x,y,sz);}
-  else ctx.drawImage(getCached(col,sz,skin),x,y);
+  ctx.drawImage(getCached(col,sz,skin,t),x,y);
   if(alpha<1)ctx.globalAlpha=1;
 }
 

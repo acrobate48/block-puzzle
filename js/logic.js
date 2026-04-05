@@ -59,7 +59,15 @@ function _zenClearRows(){
   toClear.forEach(r=>{grid[r]=Array(COLS).fill(null);gridStars[r]=Array(COLS).fill(false);gridBonus[r]=Array(COLS).fill(null);});
   if(toClear.length>0){screenFlash=100;screenFlashCol='#60C880';floats.push(new FloatText('🍃 ZEN — place libérée !',GRID_X+GW/2,GRID_Y+GH/2,'#60C880',1.0,80));}
 }
-function snapPos(mx,my,shape){return{gr:Math.round((my-GRID_Y)/CELL-shape.length/2),gc:Math.round((mx-GRID_X)/CELL-shape[0].length/2)};}
+// Fix C: Snap-to-grid corrected for visual lift offset.
+// During drag the piece is rendered shifted upward by CELL*0.22 (see game.js
+// drawDragPiece: oy = mouseY - sh.length*_liftCell/2 - CELL*0.22).
+// We subtract that same offset from my so the grid highlight matches exactly
+// where the piece *looks*, not where the raw finger position falls.
+function snapPos(mx,my,shape){
+  const _liftOffsetY=CELL*0.22;
+  return{gr:Math.round((my-_liftOffsetY-GRID_Y)/CELL-shape.length/2),gc:Math.round((mx-GRID_X)/CELL-shape[0].length/2)};
+}
 
 // ─── PARTICLES / DEBRIS / FLOATTEXT ──────────────────────────────────────────
 function spawnParticles(cells,n,pow,colors){cells.forEach(({r,c})=>{if(particles.length>=200)return;const cx=GRID_X+c*CELL+CELL/2,cy=GRID_Y+r*CELL+CELL/2;for(let i=0;i<n;i++){if(particles.length>=200)break;const a=rnd(0,Math.PI*2),s=rnd(1.5,4)*pow;particles.push({x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s-rnd(0,1.5),color:rndc(colors),life:28+rnd(0,28),ml:56,size:rnd(2,3.5*pow),circle:Math.random()<0.5});}});}
@@ -75,5 +83,5 @@ function spawnDebris(clC,ti,n){Object.entries(clC).forEach(([k,color])=>{if(debr
 class FloatText{
   constructor(text,x,y,col,sizeM=1,life=75){this.text=text;this.x=x;this.y=y;this.col=col;this.life=life;this.ml=life;this.vy=-1.1;this.sizeM=sizeM;}
   update(){this.y+=this.vy;this.vy*=0.97;this.life--;return this.life>0;}
-  draw(ctx){const ratio=this.life/this.ml,fsz=Math.max(10,CELL*0.5*this.sizeM)|0;let scalePop=1.0;if(ratio>0.88){const popT=(this.ml-this.life)/(this.ml*0.12);scalePop=1.0+0.35*Math.sin(popT*Math.PI);}ctx.save();ctx.globalAlpha=ratio;ctx.font=`bold ${Math.round(fsz*scalePop)}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor=this.col;ctx.shadowBlur=10;ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeText(this.text,this.x,this.y);ctx.fillStyle=this.col;ctx.fillText(this.text,this.x,this.y);ctx.restore();}
+  draw(ctx){if(this.y<0||this.y>H)return;const ratio=this.life/this.ml,fsz=Math.max(10,CELL*0.5*this.sizeM)|0;let scalePop=1.0;if(ratio>0.88){const popT=(this.ml-this.life)/(this.ml*0.12);scalePop=1.0+0.35*Math.sin(popT*Math.PI);}ctx.save();ctx.globalAlpha=ratio;ctx.font=`bold ${Math.round(fsz*scalePop)}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor=this.col;ctx.shadowBlur=10;ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeText(this.text,this.x,this.y);ctx.fillStyle=this.col;ctx.fillText(this.text,this.x,this.y);ctx.restore();}
 }

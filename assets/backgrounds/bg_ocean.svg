@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 3840 2160" width="100%" height="100%"
+     preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="oAtm1" cx="50%" cy="15%" r="60%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#50C8F0" stop-opacity="0.45"/>
+      <stop offset="50%" stop-color="#2868A8" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#040C28" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="oAtm2" cx="25%" cy="50%" r="50%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#28AAA0" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#040C28" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="oAtm3" cx="75%" cy="65%" r="45%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0C4888" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#030820" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="oCaustic1" cx="40%" cy="20%" r="35%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#A0F0FF" stop-opacity="0.5"/>
+      <stop offset="60%" stop-color="#50C8F0" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#040C28" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="oCaustic2" cx="70%" cy="30%" r="30%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#A0F0FF" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#040C28" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="oBioGlow1" cx="30%" cy="70%" r="20%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#50C8F0" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#040C28" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="oBioGlow2" cx="70%" cy="75%" r="18%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#28AAA0" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#040C28" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="oVignette" cx="50%" cy="50%" r="72%" gradientUnits="userSpaceOnUse">
+      <stop offset="35%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.9"/>
+    </radialGradient>
+    <radialGradient id="oSpecular" cx="22%" cy="5%" r="30%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#A0F0FF" stop-opacity="0.55"/>
+      <stop offset="50%" stop-color="#50C8F0" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#040C28" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="oDepth" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#030820"/>
+      <stop offset="15%" stop-color="#040C28"/>
+      <stop offset="50%" stop-color="#070F38"/>
+      <stop offset="80%" stop-color="#0C4888"/>
+      <stop offset="100%" stop-color="#030820"/>
+    </linearGradient>
+    <linearGradient id="oSurface" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#50C8F0" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#A0F0FF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="oCausticRay" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#A0F0FF" stop-opacity="0.3"/>
+      <stop offset="70%" stop-color="#50C8F0" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#50C8F0" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="b1"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="25" result="b2"/>
+      <feColorMatrix in="b1" type="matrix"
+        values="0 0 0 0 0.31  0 0 0 0 0.78  0 0 0 0 0.94  0 0 0 2 0" result="c1"/>
+      <feColorMatrix in="b2" type="matrix"
+        values="0 0 0 0 0.31  0 0 0 0 0.78  0 0 0 0 0.94  0 0 0 0.9 0" result="c2"/>
+      <feMerge><feMergeNode in="c2"/><feMergeNode in="c1"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowTeal" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b1"/>
+      <feColorMatrix in="b1" type="matrix"
+        values="0 0 0 0 0.16  0 0 0 0 0.67  0 0 0 0 0.63  0 0 0 2.5 0" result="c1"/>
+      <feMerge><feMergeNode in="c1"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="6" stdDeviation="16" flood-color="#030820" flood-opacity="0.95"/>
+    </filter>
+    <filter id="noise" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="4" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="saturate" values="0" result="gn"/>
+      <feBlend in="SourceGraphic" in2="gn" mode="overlay" result="bl"/>
+      <feComposite in="bl" in2="SourceGraphic" operator="in"/>
+    </filter>
+    <filter id="blur" x="-15%" y="-15%" width="130%" height="130%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+    <filter id="blurHeavy" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="blurMid" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+    <filter id="causticFilter">
+      <feTurbulence type="turbulence" baseFrequency="0.025 0.02" numOctaves="5" seed="8" result="t"/>
+      <feDisplacementMap in="SourceGraphic" in2="t" scale="30" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="waterWave">
+      <feTurbulence type="turbulence" baseFrequency="0.015 0.008" numOctaves="3" seed="15" result="t"/>
+      <feDisplacementMap in="SourceGraphic" in2="t" scale="20" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+
+  <!-- LAYER 1: Deep ocean base -->
+  <rect width="3840" height="2160" fill="url(#oDepth)"/>
+
+  <!-- LAYER 2: Atmospheric depth radials -->
+  <rect width="3840" height="2160" fill="url(#oAtm1)" filter="url(#blurHeavy)" opacity="0.85"/>
+  <rect width="3840" height="2160" fill="url(#oAtm2)" filter="url(#blurMid)" opacity="0.7"/>
+  <rect width="3840" height="2160" fill="url(#oAtm3)" filter="url(#blurMid)" opacity="0.6"/>
+
+  <!-- LAYER 3: Caustic light patterns from surface -->
+  <g opacity="0.45" filter="url(#causticFilter)">
+    <ellipse cx="800" cy="400" rx="600" ry="200" fill="#A0F0FF" opacity="0.25"/>
+    <ellipse cx="1800" cy="350" rx="550" ry="180" fill="#50C8F0" opacity="0.22"/>
+    <ellipse cx="2900" cy="420" rx="580" ry="195" fill="#A0F0FF" opacity="0.25"/>
+    <ellipse cx="1300" cy="600" rx="500" ry="160" fill="#50C8F0" opacity="0.2"/>
+    <ellipse cx="2400" cy="580" rx="520" ry="170" fill="#A0F0FF" opacity="0.22"/>
+  </g>
+  <rect x="0" y="0" width="3840" height="800" fill="url(#oCausticRay)" opacity="0.55" filter="url(#blurMid)"/>
+
+  <!-- LAYER 4: Light rays from ocean surface above (cyan beams) -->
+  <g opacity="0.35" filter="url(#blurHeavy)">
+    <polygon points="1840,0 1920,0 2200,2160 1700,2160" fill="#50C8F0"/>
+    <polygon points="1700,0 1780,0 1950,2160 1580,2160" fill="#A0F0FF"/>
+    <polygon points="1960,0 2040,0 2350,2160 2100,2160" fill="#50C8F0"/>
+    <polygon points="1560,0 1640,0 1760,2160 1420,2160" fill="#A0F0FF"/>
+    <polygon points="2080,0 2160,0 2550,2160 2300,2160" fill="#50C8F0"/>
+    <polygon points="1420,0 1510,0 1580,2160 1250,2160" fill="#A0F0FF"/>
+    <polygon points="2200,0 2290,0 2750,2160 2500,2160" fill="#50C8F0"/>
+    <polygon points="2320,0 2400,0 2950,2160 2700,2160" fill="#A0F0FF"/>
+  </g>
+
+  <!-- LAYER 5: Depth layer gradients (surface glow at top) -->
+  <rect x="0" y="0" width="3840" height="600" fill="url(#oSurface)" opacity="0.6" filter="url(#blurHeavy)"/>
+  <rect x="0" y="0" width="3840" height="280" fill="#A0F0FF" opacity="0.08" filter="url(#blurHeavy)"/>
+
+  <!-- LAYER 6: Bubble columns -->
+  <g filter="url(#blurMid)" opacity="0.55">
+    <!-- Column 1 -->
+    <circle cx="380" cy="2100" r="8" fill="#A0F0FF" opacity="0.6"/>
+    <circle cx="370" cy="1950" r="6" fill="#50C8F0" opacity="0.55"/>
+    <circle cx="390" cy="1780" r="9" fill="#A0F0FF" opacity="0.5"/>
+    <circle cx="375" cy="1600" r="7" fill="#50C8F0" opacity="0.45"/>
+    <circle cx="385" cy="1400" r="5" fill="#A0F0FF" opacity="0.4"/>
+    <circle cx="372" cy="1200" r="8" fill="#50C8F0" opacity="0.38"/>
+    <circle cx="382" cy="980" r="6" fill="#A0F0FF" opacity="0.32"/>
+    <circle cx="368" cy="760" r="4" fill="#50C8F0" opacity="0.28"/>
+    <!-- Column 2 -->
+    <circle cx="1120" cy="2100" r="7" fill="#A0F0FF" opacity="0.6"/>
+    <circle cx="1115" cy="1920" r="9" fill="#50C8F0" opacity="0.55"/>
+    <circle cx="1125" cy="1740" r="6" fill="#A0F0FF" opacity="0.5"/>
+    <circle cx="1112" cy="1550" r="8" fill="#50C8F0" opacity="0.45"/>
+    <circle cx="1118" cy="1360" r="5" fill="#A0F0FF" opacity="0.4"/>
+    <circle cx="1108" cy="1160" r="7" fill="#50C8F0" opacity="0.35"/>
+    <circle cx="1122" cy="940" r="4" fill="#A0F0FF" opacity="0.3"/>
+    <!-- Column 3 -->
+    <circle cx="1960" cy="2100" r="9" fill="#A0F0FF" opacity="0.6"/>
+    <circle cx="1952" cy="1900" r="6" fill="#50C8F0" opacity="0.55"/>
+    <circle cx="1965" cy="1700" r="8" fill="#A0F0FF" opacity="0.5"/>
+    <circle cx="1958" cy="1500" r="7" fill="#50C8F0" opacity="0.45"/>
+    <circle cx="1950" cy="1280" r="5" fill="#A0F0FF" opacity="0.4"/>
+    <circle cx="1962" cy="1060" r="8" fill="#50C8F0" opacity="0.35"/>
+    <circle cx="1955" cy="840" r="4" fill="#A0F0FF" opacity="0.28"/>
+    <!-- Column 4 -->
+    <circle cx="2800" cy="2100" r="8" fill="#A0F0FF" opacity="0.6"/>
+    <circle cx="2790" cy="1930" r="6" fill="#50C8F0" opacity="0.55"/>
+    <circle cx="2808" cy="1760" r="9" fill="#A0F0FF" opacity="0.5"/>
+    <circle cx="2795" cy="1580" r="7" fill="#50C8F0" opacity="0.45"/>
+    <circle cx="2802" cy="1380" r="5" fill="#A0F0FF" opacity="0.4"/>
+    <circle cx="2788" cy="1180" r="8" fill="#50C8F0" opacity="0.35"/>
+    <circle cx="2798" cy="960" r="4" fill="#A0F0FF" opacity="0.3"/>
+    <!-- Column 5 -->
+    <circle cx="3500" cy="2100" r="7" fill="#A0F0FF" opacity="0.6"/>
+    <circle cx="3494" cy="1920" r="9" fill="#50C8F0" opacity="0.55"/>
+    <circle cx="3506" cy="1740" r="6" fill="#A0F0FF" opacity="0.5"/>
+    <circle cx="3498" cy="1550" r="8" fill="#50C8F0" opacity="0.45"/>
+    <circle cx="3503" cy="1360" r="5" fill="#A0F0FF" opacity="0.4"/>
+    <circle cx="3492" cy="1150" r="7" fill="#50C8F0" opacity="0.35"/>
+    <circle cx="3501" cy="940" r="4" fill="#A0F0FF" opacity="0.28"/>
+  </g>
+
+  <!-- LAYER 7: Bioluminescent glow spots -->
+  <ellipse cx="640" cy="1500" rx="120" ry="80" fill="url(#oBioGlow1)" filter="url(#blurHeavy)" opacity="0.7"/>
+  <ellipse cx="1400" cy="1650" rx="100" ry="65" fill="url(#oBioGlow2)" filter="url(#blurHeavy)" opacity="0.65"/>
+  <ellipse cx="2200" cy="1400" rx="130" ry="85" fill="url(#oBioGlow1)" filter="url(#blurHeavy)" opacity="0.7"/>
+  <ellipse cx="3000" cy="1580" rx="110" ry="72" fill="url(#oBioGlow2)" filter="url(#blurHeavy)" opacity="0.65"/>
+  <ellipse cx="3700" cy="1450" rx="95" ry="62" fill="url(#oBioGlow1)" filter="url(#blurHeavy)" opacity="0.6"/>
+
+  <!-- Caustic light radials -->
+  <rect width="3840" height="2160" fill="url(#oCaustic1)" filter="url(#blurHeavy)" opacity="0.6"/>
+  <rect width="3840" height="2160" fill="url(#oCaustic2)" filter="url(#blurHeavy)" opacity="0.5"/>
+
+  <!-- LAYER 8: Plankton particles (50+) -->
+  <g filter="url(#glow)">
+    <circle cx="420" cy="1050" r="4" fill="#50C8F0" opacity="0.88"/>
+    <circle cx="680" cy="900" r="3" fill="#A0F0FF" opacity="0.82"/>
+    <circle cx="940" cy="1180" r="5" fill="#50C8F0" opacity="0.92"/>
+    <circle cx="1200" cy="820" r="3" fill="#A0F0FF" opacity="0.78"/>
+    <circle cx="1440" cy="1080" r="4" fill="#50C8F0" opacity="0.85"/>
+    <circle cx="1720" cy="760" r="3" fill="#50C8F0" opacity="0.8"/>
+    <circle cx="1960" cy="1260" r="5" fill="#50C8F0" opacity="0.9"/>
+    <circle cx="2200" cy="940" r="3" fill="#A0F0FF" opacity="0.75"/>
+    <circle cx="2440" cy="1140" r="4" fill="#50C8F0" opacity="0.85"/>
+    <circle cx="2700" cy="860" r="3" fill="#50C8F0" opacity="0.8"/>
+    <circle cx="2960" cy="1200" r="5" fill="#50C8F0" opacity="0.9"/>
+    <circle cx="3220" cy="990" r="3" fill="#A0F0FF" opacity="0.75"/>
+    <circle cx="3460" cy="1110" r="4" fill="#50C8F0" opacity="0.85"/>
+    <circle cx="310" cy="1380" r="3" fill="#28AAA0" opacity="0.72"/>
+    <circle cx="580" cy="1540" r="4" fill="#50C8F0" opacity="0.78"/>
+    <circle cx="860" cy="1460" r="3" fill="#A0F0FF" opacity="0.68"/>
+    <circle cx="1140" cy="1550" r="4" fill="#50C8F0" opacity="0.75"/>
+    <circle cx="1480" cy="1400" r="3" fill="#28AAA0" opacity="0.7"/>
+    <circle cx="1760" cy="1620" r="4" fill="#50C8F0" opacity="0.75"/>
+    <circle cx="2040" cy="1480" r="3" fill="#A0F0FF" opacity="0.68"/>
+    <circle cx="2320" cy="1580" r="4" fill="#50C8F0" opacity="0.78"/>
+    <circle cx="2600" cy="1440" r="3" fill="#28AAA0" opacity="0.7"/>
+    <circle cx="2880" cy="1560" r="4" fill="#50C8F0" opacity="0.75"/>
+    <circle cx="3160" cy="1480" r="3" fill="#A0F0FF" opacity="0.68"/>
+    <circle cx="3440" cy="1560" r="4" fill="#50C8F0" opacity="0.78"/>
+    <circle cx="460" cy="680" r="3" fill="#A0F0FF" opacity="0.6"/>
+    <circle cx="760" cy="620" r="2" fill="#50C8F0" opacity="0.55"/>
+    <circle cx="1100" cy="660" r="3" fill="#A0F0FF" opacity="0.58"/>
+    <circle cx="1500" cy="640" r="2" fill="#50C8F0" opacity="0.55"/>
+    <circle cx="1900" cy="655" r="3" fill="#A0F0FF" opacity="0.58"/>
+    <circle cx="2300" cy="635" r="2" fill="#50C8F0" opacity="0.55"/>
+    <circle cx="2700" cy="648" r="3" fill="#A0F0FF" opacity="0.58"/>
+    <circle cx="3100" cy="638" r="2" fill="#50C8F0" opacity="0.55"/>
+    <circle cx="3500" cy="658" r="3" fill="#A0F0FF" opacity="0.58"/>
+    <circle cx="580" cy="1780" r="4" fill="#28AAA0" opacity="0.52"/>
+    <circle cx="1180" cy="1800" r="4" fill="#50C8F0" opacity="0.48"/>
+    <circle cx="1780" cy="1790" r="4" fill="#28AAA0" opacity="0.52"/>
+    <circle cx="2380" cy="1770" r="4" fill="#50C8F0" opacity="0.48"/>
+    <circle cx="2980" cy="1780" r="4" fill="#28AAA0" opacity="0.52"/>
+    <circle cx="3580" cy="1760" r="4" fill="#50C8F0" opacity="0.48"/>
+  </g>
+  <!-- Teal particles -->
+  <g filter="url(#glowTeal)">
+    <circle cx="520" cy="1100" r="3" fill="#28AAA0" opacity="0.82"/>
+    <circle cx="1020" cy="1200" r="4" fill="#50C8F0" opacity="0.78"/>
+    <circle cx="1620" cy="1050" r="3" fill="#28AAA0" opacity="0.85"/>
+    <circle cx="2120" cy="1180" r="4" fill="#50C8F0" opacity="0.78"/>
+    <circle cx="2720" cy="1080" r="3" fill="#28AAA0" opacity="0.82"/>
+    <circle cx="3220" cy="1220" r="4" fill="#50C8F0" opacity="0.78"/>
+    <circle cx="760" cy="1350" r="3" fill="#28AAA0" opacity="0.72"/>
+    <circle cx="1460" cy="1420" r="4" fill="#50C8F0" opacity="0.68"/>
+    <circle cx="2160" cy="1380" r="3" fill="#28AAA0" opacity="0.75"/>
+    <circle cx="2860" cy="1450" r="4" fill="#50C8F0" opacity="0.72"/>
+    <circle cx="3460" cy="1400" r="3" fill="#28AAA0" opacity="0.68"/>
+  </g>
+
+  <!-- LAYER 9: Specular light top-left (sunlight through water) -->
+  <ellipse cx="850" cy="160" rx="900" ry="300" fill="url(#oSpecular)" filter="url(#blurHeavy)" opacity="0.8"/>
+  <ellipse cx="1920" cy="80" rx="500" ry="180" fill="#A0F0FF" opacity="0.07" filter="url(#blurHeavy)"/>
+
+  <!-- Deep abyss bottom -->
+  <rect x="0" y="1750" width="3840" height="410" fill="#030820" opacity="0.7" filter="url(#blur)"/>
+  <rect x="0" y="1950" width="3840" height="210" fill="#020614" opacity="0.95"/>
+
+  <!-- Top water surface glow -->
+  <rect x="0" y="0" width="3840" height="320" fill="#040C28" opacity="0.5" filter="url(#blurMid)"/>
+  <rect x="0" y="0" width="3840" height="160" fill="#030820" opacity="0.75"/>
+
+  <!-- LAYER 10: Foreground vignette -->
+  <rect width="3840" height="2160" fill="url(#oVignette)"/>
+
+  <!-- Water noise texture -->
+  <rect width="3840" height="2160" fill="#2868A8" opacity="0.03" filter="url(#noise)"/>
+</svg>

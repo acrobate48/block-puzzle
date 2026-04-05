@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <!-- Skull cranium: dark purple-green gradient -->
+    <radialGradient id="skullBody" cx="40%" cy="30%" r="65%" fx="38%" fy="28%">
+      <stop offset="0%"   stop-color="#1E3A24"/>
+      <stop offset="40%"  stop-color="#0D1E12"/>
+      <stop offset="80%"  stop-color="#050E08"/>
+      <stop offset="100%" stop-color="#020704"/>
+    </radialGradient>
+    <!-- Eye socket: deep black with green inner glow -->
+    <radialGradient id="eyeSocket" cx="40%" cy="40%" r="60%">
+      <stop offset="0%"   stop-color="#00FF60" stop-opacity="0.95"/>
+      <stop offset="45%"  stop-color="#00CC48" stop-opacity="0.75"/>
+      <stop offset="80%"  stop-color="#004820" stop-opacity="0.50"/>
+      <stop offset="100%" stop-color="#001008" stop-opacity="0.20"/>
+    </radialGradient>
+    <!-- Teeth gradient: pale green-white top → dark green bottom -->
+    <linearGradient id="teethGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#B8FFC8"/>
+      <stop offset="55%"  stop-color="#60CC80"/>
+      <stop offset="100%" stop-color="#226634"/>
+    </linearGradient>
+    <!-- Crossbones gradient -->
+    <linearGradient id="boneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#3A6040"/>
+      <stop offset="50%"  stop-color="#1E3A24"/>
+      <stop offset="100%" stop-color="#0D1810"/>
+    </linearGradient>
+    <!-- Toxic green aura glow -->
+    <filter id="toxicGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Eye inner glow -->
+    <filter id="eyeGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Drop shadow -->
+    <filter id="skullShadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="2" dy="5" stdDeviation="6" flood-color="#002208" flood-opacity="0.70"/>
+    </filter>
+    <!-- Bloom -->
+    <filter id="bloom" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <!-- Specular soft -->
+    <filter id="specSoft">
+      <feGaussianBlur stdDeviation="2.5"/>
+    </filter>
+    <!-- Ground shadow -->
+    <radialGradient id="groundShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#002208" stop-opacity="0.50"/>
+      <stop offset="100%" stop-color="#002208" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ── GROUND SHADOW ── -->
+  <ellipse cx="64" cy="124" rx="34" ry="7" fill="url(#groundShadow)"/>
+
+  <!-- ── TOXIC AURA ── -->
+  <ellipse cx="64" cy="56" rx="46" ry="44" fill="#00FF60" opacity="0.14"
+           filter="url(#toxicGlow)"/>
+
+  <!-- ── CROSSBONES (behind skull) ── -->
+  <!-- Bone 1: top-left to bottom-right -->
+  <g filter="url(#skullShadow)" opacity="0.80">
+    <!-- Left bone -->
+    <line x1="26" y1="90" x2="102" y2="118" stroke="url(#boneGrad)" stroke-width="9"
+          stroke-linecap="round"/>
+    <!-- Left bone end knobs -->
+    <circle cx="26"  cy="90"  r="7" fill="url(#boneGrad)" stroke="#00FF60" stroke-width="1" stroke-opacity="0.4"/>
+    <circle cx="102" cy="118" r="7" fill="url(#boneGrad)" stroke="#00FF60" stroke-width="1" stroke-opacity="0.4"/>
+    <!-- Right bone -->
+    <line x1="102" y1="90" x2="26" y2="118" stroke="url(#boneGrad)" stroke-width="9"
+          stroke-linecap="round"/>
+    <circle cx="102" cy="90"  r="7" fill="url(#boneGrad)" stroke="#00FF60" stroke-width="1" stroke-opacity="0.4"/>
+    <circle cx="26"  cy="118" r="7" fill="url(#boneGrad)" stroke="#00FF60" stroke-width="1" stroke-opacity="0.4"/>
+  </g>
+  <!-- Bone green edge highlights -->
+  <g opacity="0.35">
+    <line x1="26" y1="90" x2="102" y2="118" stroke="#00FF60" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="102" y1="90" x2="26" y2="118" stroke="#00FF60" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- ── SKULL CRANIUM ── -->
+  <ellipse cx="64" cy="54" rx="40" ry="38" fill="url(#skullBody)"
+           stroke="#00FF60" stroke-width="2" stroke-opacity="0.55"
+           filter="url(#skullShadow)"/>
+
+  <!-- ── JAW / LOWER FACE ── -->
+  <path d="M 30,74 Q 28,100 64,102 Q 100,100 98,74 Z"
+        fill="url(#skullBody)" stroke="#00FF60" stroke-width="1.8" stroke-opacity="0.50"/>
+
+  <!-- ── JAW DIVIDER LINE ── -->
+  <line x1="28" y1="78" x2="100" y2="78"
+        stroke="#00FF60" stroke-width="1.5" stroke-opacity="0.40"/>
+
+  <!-- ── TEETH ROW ── -->
+  <g filter="url(#bloom)">
+    <rect x="36" y="82" width="10" height="14" rx="3" fill="url(#teethGrad)"
+          stroke="#00FF60" stroke-width="1.2" stroke-opacity="0.55"/>
+    <rect x="48" y="82" width="10" height="16" rx="3" fill="url(#teethGrad)"
+          stroke="#00FF60" stroke-width="1.2" stroke-opacity="0.55"/>
+    <rect x="60" y="82" width="10" height="17" rx="3" fill="url(#teethGrad)"
+          stroke="#00FF60" stroke-width="1.2" stroke-opacity="0.55"/>
+    <rect x="72" y="82" width="10" height="16" rx="3" fill="url(#teethGrad)"
+          stroke="#00FF60" stroke-width="1.2" stroke-opacity="0.55"/>
+    <rect x="84" y="82" width="8"  height="13" rx="3" fill="url(#teethGrad)"
+          stroke="#00FF60" stroke-width="1.2" stroke-opacity="0.55"/>
+  </g>
+
+  <!-- ── LEFT EYE SOCKET ── -->
+  <!-- Deep black pit -->
+  <ellipse cx="44" cy="52" rx="14" ry="16" fill="#010804"/>
+  <!-- Green glow -->
+  <ellipse cx="44" cy="52" rx="11" ry="13" fill="url(#eyeSocket)"
+           filter="url(#eyeGlow)"/>
+  <!-- Eye pupil black center -->
+  <ellipse cx="44" cy="52" rx="5" ry="6"  fill="#000F04"/>
+
+  <!-- ── RIGHT EYE SOCKET ── -->
+  <ellipse cx="84" cy="52" rx="14" ry="16" fill="#010804"/>
+  <ellipse cx="84" cy="52" rx="11" ry="13" fill="url(#eyeSocket)"
+           filter="url(#eyeGlow)"/>
+  <ellipse cx="84" cy="52" rx="5" ry="6"  fill="#000F04"/>
+
+  <!-- ── NASAL CAVITY ── -->
+  <path d="M 57,68 L 64,58 L 71,68 Q 71,76 64,76 Q 57,76 57,68 Z"
+        fill="#010804" stroke="#00FF60" stroke-width="1" stroke-opacity="0.40"/>
+
+  <!-- ── CRANIUM SPECULAR HIGHLIGHT ── -->
+  <ellipse cx="48" cy="32" rx="14" ry="9" fill="#00FF60" opacity="0.18"
+           transform="rotate(-20 48 32)" filter="url(#specSoft)"/>
+  <!-- Hard glint spot -->
+  <ellipse cx="46" cy="30" rx="6" ry="3.5" fill="#88FFAA" opacity="0.35"
+           transform="rotate(-20 46 30)"/>
+</svg>

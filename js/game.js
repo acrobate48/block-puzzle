@@ -578,6 +578,61 @@ function _drawLightnings(){
   ctx.shadowBlur=0;ctx.restore();
 }
 
+// ─── 26. RHYTHM HEARTBEAT PULSE ──────────────────────────────────────────────
+let _lastBeat=0;
+function _drawRhythmPulse(t){
+  if(over||gameState!=='playing')return;
+  const now=Date.now();
+  const bpm=score>50000?80:60; // faster rhythm at higher score
+  const beatInterval=60000/bpm;
+  if(now-_lastBeat>=beatInterval){_lastBeat=now;}
+  const beatAge=now-_lastBeat;
+  if(beatAge>450)return; // only draw during first 450ms of each beat
+  const p=beatAge/450;
+  const a=(1-p)*(1-p)*0.18;
+  if(a<0.01)return;
+  const rad=(p*Math.max(GW,GH)*0.55);
+  ctx.save();
+  const th=THEMES[curTheme];
+  ctx.strokeStyle=hexA(th.gridGlow||th.tm,a);
+  ctx.lineWidth=3*(1-p)+0.5;
+  ctx.shadowColor=th.gridGlow||th.tm;ctx.shadowBlur=8*(1-p);
+  ctx.beginPath();ctx.arc(GRID_X+GW/2,GRID_Y+GH/2,rad,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+}
+
+// ─── 27. VOLCANO ERUPTION GUST ───────────────────────────────────────────────
+function _spawnVolcanoGust(){
+  if(curTheme!==3||over||Math.random()>0.006)return;
+  // Burst of ember particles from random grid-bottom position
+  const x=GRID_X+rnd(CELL,GW-CELL);const y=GRID_Y+GH;
+  for(let i=0;i<15;i++){
+    const a=rnd(-Math.PI*0.8,-Math.PI*0.2);const s=rnd(3,8);
+    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,color:rndc(['#FF6020','#FF9020','#FFCC40','#FF3010','#FFF080']),size:rnd(2,5),life:rnd(30,55),ml:55,circle:true});
+  }
+  screenFlash=Math.max(screenFlash,20);screenFlashCol='#FF4010';
+  ripples.push({x,y,life:22,ml:22,maxR:CELL*2,color:'#FF6020'});
+}
+
+// ─── 28. COSMOS NEBULA DRIFT ─────────────────────────────────────────────────
+let _nebulaPhase=0;
+function _drawCosmosnNebula(t){
+  if(curTheme!==6||over)return;
+  _nebulaPhase+=0.00035;
+  ctx.save();
+  // Three overlapping color clouds drifting across the grid
+  const cols=['rgba(160,40,255,','rgba(40,80,255,','rgba(255,40,160,'];
+  for(let ni=0;ni<3;ni++){
+    const nx=GRID_X+GW*(0.2+ni*0.3+Math.sin(_nebulaPhase+ni*2.1)*0.2);
+    const ny=GRID_Y+GH*(0.3+Math.cos(_nebulaPhase*0.7+ni*1.7)*0.3);
+    const nr=CELL*(2+Math.sin(_nebulaPhase*1.1+ni)*0.8);
+    const ng=ctx.createRadialGradient(nx,ny,0,nx,ny,nr);
+    ng.addColorStop(0,cols[ni]+'0.07)');ng.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=ng;ctx.fillRect(GRID_X,GRID_Y,GW,GH);
+  }
+  ctx.restore();
+}
+
 // ─── 25. ZAP ARCS BETWEEN POWER CELLS ────────────────────────────────────────
 function _drawPowerZaps(t){
   if(!grid||over)return;
@@ -847,6 +902,12 @@ function drawGame(t){
       ctx.fillStyle=hexA(th.sl,0.15);ctx.beginPath();ctx.arc(x+CELL/2,y+CELL/2,Math.max(1,CELL*0.055),0,Math.PI*2);ctx.fill();
     }
   }}
+  // Cosmos nebula drift
+  _drawCosmosnNebula(t);
+  // Rhythm heartbeat pulse
+  _drawRhythmPulse(t);
+  // Volcano eruption gust
+  _spawnVolcanoGust();
   // Snow accumulation on Arctic grid bottom
   _updateSnowAccum(t);
   // Ambient grid mist
@@ -1171,6 +1232,16 @@ function drawGame(t){
       _dv.addColorStop(0,'rgba(0,0,0,0)');_dv.addColorStop(1,`rgba(200,20,0,${(_danger*0.45*_pulse).toFixed(3)})`);
       ctx.fillStyle=_dv;ctx.fillRect(0,0,W,H);
     }
+  }
+  // Fill danger meter — vertical bar on right edge of grid
+  if(!over&&_fillNow>0.5){
+    const _dmH=GH*_fillNow;const _dmY=GRID_Y+GH-_dmH;const _dmX=GRID_X+GW+b2+2;const _dmW=3;
+    const _dmCol=_fillNow>0.90?'#FF2020':_fillNow>0.75?'#FF8020':'#FFD700';
+    const _dmPulse=_fillNow>0.75?0.6+0.4*Math.abs(Math.sin(t*0.012)):1;
+    ctx.save();ctx.globalAlpha=0.60*_dmPulse;
+    ctx.fillStyle=_dmCol;ctx.shadowColor=_dmCol;ctx.shadowBlur=4;
+    ctx.fillRect(_dmX,_dmY,_dmW,_dmH);
+    ctx.restore();
   }
   // Combo color grading
   _drawComboGrade();

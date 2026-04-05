@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 56" width="100%" height="100%">
+  <defs>
+    <linearGradient id="plbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3A1008"/>
+      <stop offset="100%" stop-color="#1C0804"/>
+    </linearGradient>
+    <radialGradient id="plsun" cx="50%" cy="100%" r="60%">
+      <stop offset="0%" stop-color="#FFD840"/>
+      <stop offset="35%" stop-color="#FF8020"/>
+      <stop offset="100%" stop-color="#CC3800" stop-opacity="0.6"/>
+    </radialGradient>
+    <linearGradient id="plsea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3890C8"/>
+      <stop offset="100%" stop-color="#1850A0"/>
+    </linearGradient>
+    <linearGradient id="plsand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8B860"/>
+      <stop offset="100%" stop-color="#C89040"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="80" height="56" rx="6" fill="url(#plbg)"/>
+
+  <!-- Sky gradient overlay -->
+  <rect width="80" height="36" rx="0" fill="#220A04" opacity="0.3"/>
+
+  <!-- Sun glow halo -->
+  <circle cx="40" cy="32" r="20" fill="#FF6010" opacity="0.2"/>
+  <circle cx="40" cy="32" r="14" fill="#FF8020" opacity="0.15"/>
+
+  <!-- Sun (half-circle on horizon) -->
+  <clipPath id="plsunclip">
+    <rect x="22" y="0" width="36" height="32"/>
+  </clipPath>
+  <circle cx="40" cy="32" r="10" fill="url(#plsun)" clip-path="url(#plsunclip)"/>
+
+  <!-- Sun reflection on water -->
+  <path d="M36,33 Q40,36 44,33 Q40,38 36,33 Z" fill="#FF8020" opacity="0.5"/>
+
+  <!-- Sea -->
+  <rect x="0" y="32" width="80" height="12" fill="url(#plsea)"/>
+  <!-- Sea wave -->
+  <path d="M0,34 Q10,31 20,34 Q30,37 40,34 Q50,31 60,34 Q70,37 80,34 L80,44 L0,44 Z"
+        fill="#2870B0" opacity="0.6"/>
+
+  <!-- Sand -->
+  <path d="M0,42 Q20,39 40,42 Q60,45 80,41 L80,56 L0,56 Z" fill="url(#plsand)"/>
+
+  <!-- Horizon line glow -->
+  <line x1="0" y1="32" x2="80" y2="32" stroke="#FF9040" stroke-width="0.8" opacity="0.6"/>
+
+  <!-- Palm tree (right side) -->
+  <!-- Trunk -->
+  <path d="M64,44 Q63,38 65,32 Q66,28 64,24" stroke="#5A3010" stroke-width="2.5"
+        fill="none" stroke-linecap="round"/>
+  <!-- Fronds -->
+  <path d="M64,24 Q56,18 52,20" stroke="#1A6820" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M64,24 Q60,16 58,14" stroke="#228828" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M64,24 Q68,16 72,16" stroke="#1A6820" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M64,24 Q70,20 74,22" stroke="#228828" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M64,24 Q62,20 58,21" stroke="#1E7022" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- Coconuts -->
+  <circle cx="62" cy="26" r="1.8" fill="#5A3010"/>
+  <circle cx="65" cy="25" r="1.5" fill="#4A2808"/>
+
+  <!-- Seagull silhouette -->
+  <path d="M18,16 Q20,14 22,16" stroke="#1A0804" stroke-width="1" fill="none" opacity="0.6"/>
+  <path d="M24,14 Q26,12 28,14" stroke="#1A0804" stroke-width="1" fill="none" opacity="0.5"/>
+
+  <!-- Theme name -->
+  <text x="40" y="52" font-family="Arial, sans-serif" font-size="8" font-weight="bold"
+        fill="#F09838" text-anchor="middle" dominant-baseline="middle">PLAGE</text>
+
+  <!-- Gloss overlay -->
+  <rect width="80" height="20" rx="6" fill="white" opacity="0.07"/>
+  <rect x="0" y="0" width="80" height="8" rx="6" fill="white" opacity="0.08"/>
+</svg>

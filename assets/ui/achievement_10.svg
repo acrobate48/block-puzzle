@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <defs>
+    <radialGradient id="bg10" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1a0505"/>
+      <stop offset="100%" stop-color="#060101"/>
+    </radialGradient>
+    <radialGradient id="shield10" cx="40%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#4a1010"/>
+      <stop offset="100%" stop-color="#1a0404"/>
+    </radialGradient>
+    <radialGradient id="glowbg10" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#CC2020" stop-opacity="0.2"/>
+      <stop offset="70%" stop-color="#CC2020" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#CC2020" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow10" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#CC2020" flood-opacity="0.8"/>
+    </filter>
+    <filter id="shieldglow10">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#CC2020" flood-opacity="0.7"/>
+    </filter>
+    <filter id="starglow10">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#FF4040" flood-opacity="0.9"/>
+    </filter>
+    <filter id="crackglow10">
+      <feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="#FF6040" flood-opacity="0.8"/>
+    </filter>
+  </defs>
+  <!-- Hexagonal background -->
+  <polygon points="40,4 73,22 73,58 40,76 7,58 7,22" fill="url(#bg10)" filter="url(#shadow10)"/>
+  <!-- Background glow -->
+  <circle cx="40" cy="38" r="32" fill="url(#glowbg10)"/>
+  <!-- Shield body -->
+  <path d="M40 12 L60 20 L60 42 Q60 58 40 68 Q20 58 20 42 L20 20 Z" fill="url(#shield10)" filter="url(#shieldglow10)"/>
+  <!-- Shield border -->
+  <path d="M40 12 L60 20 L60 42 Q60 58 40 68 Q20 58 20 42 L20 20 Z" fill="none" stroke="#CC2020" stroke-width="2"/>
+  <!-- Shield inner border -->
+  <path d="M40 16 L57 23 L57 42 Q57 55 40 64 Q23 55 23 42 L23 23 Z" fill="none" stroke="#FF4040" stroke-width="0.8" opacity="0.5"/>
+  <!-- Battle scratches / cracks on shield -->
+  <!-- Main diagonal crack -->
+  <path d="M34 20 L38 28 L35 30 L40 42 L36 44" fill="none" stroke="#FF6040" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" filter="url(#crackglow10)"/>
+  <!-- Secondary crack -->
+  <path d="M46 25 L50 33 L47 36 L52 48" fill="none" stroke="#FF4020" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" filter="url(#crackglow10)" opacity="0.8"/>
+  <!-- Small crack -->
+  <path d="M28 36 L31 40 L29 43" fill="none" stroke="#CC2020" stroke-width="1" stroke-linecap="round" filter="url(#crackglow10)" opacity="0.7"/>
+  <!-- Star in center -->
+  <polygon points="40,30 42,36 48,36 43.2,40 45.2,46 40,42 34.8,46 36.8,40 32,36 38,36" fill="#CC2020" filter="url(#starglow10)"/>
+  <!-- Star inner highlight -->
+  <polygon points="40,32 41.4,36 45.5,36 42.2,38.5 43.4,42.5 40,40 36.6,42.5 37.8,38.5 34.5,36 38.6,36" fill="#FF4040" opacity="0.6"/>
+  <polygon points="40,34 41,36.5 43.5,36.5 41.5,38 42.2,40.5 40,39 37.8,40.5 38.5,38 36.5,36.5 39,36.5" fill="#FF8080" opacity="0.4"/>
+  <!-- Damage chips on shield edge -->
+  <rect x="19.5" y="30" width="3" height="2" rx="0.5" fill="#060101"/>
+  <rect x="57.5" y="38" width="3" height="1.5" rx="0.5" fill="#060101"/>
+  <rect x="35" y="11.5" width="2" height="3" rx="0.5" fill="#060101"/>
+  <!-- Blood-like drip -->
+  <path d="M40 68 Q40 70 40 72" stroke="#CC2020" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <!-- Label -->
+  <text x="40" y="72.5" font-family="Arial, sans-serif" font-size="6.5" font-weight="bold" fill="#FF4040" text-anchor="middle" letter-spacing="0.5">SURVIVANT</text>
+  <!-- Hex border -->
+  <polygon points="40,4 73,22 73,58 40,76 7,58 7,22" fill="none" stroke="#CC2020" stroke-width="1.5" opacity="0.9"/>
+  <polygon points="40,5.5 71.5,23 71.5,57 40,74.5 8.5,57 8.5,23" fill="none" stroke="#FF6060" stroke-width="0.5" opacity="0.35"/>
+</svg>

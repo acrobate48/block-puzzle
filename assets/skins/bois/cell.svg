@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100" width="120" height="100">
+  <defs>
+    <!-- Gradient brun top face -->
+    <linearGradient id="bois-top-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9B6832"/>
+      <stop offset="50%" stop-color="#7A4A1E"/>
+      <stop offset="100%" stop-color="#5C3010"/>
+    </linearGradient>
+    <!-- Texture bois (grain) -->
+    <filter id="bois-grain" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.5" numOctaves="3" seed="7" result="grain"/>
+      <feColorMatrix type="matrix"
+        values="0.2 0 0 0 0
+                0.1 0 0 0 0
+                0   0 0 0 0
+                0   0 0 2 -0.5"
+        in="grain" result="woodGrain"/>
+      <feBlend in="SourceGraphic" in2="woodGrain" mode="multiply" result="blended"/>
+      <feComposite in="blended" in2="SourceGraphic" operator="in"/>
+    </filter>
+    <!-- Left face -->
+    <linearGradient id="bois-left-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3A1E08"/>
+      <stop offset="100%" stop-color="#4A2A10"/>
+    </linearGradient>
+    <!-- Right face -->
+    <linearGradient id="bois-right-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6B3E18"/>
+      <stop offset="100%" stop-color="#5A3010"/>
+    </linearGradient>
+    <!-- Ombre -->
+    <filter id="bois-shadow" x="-15%" y="-15%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#1A0800" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#bois-shadow)">
+    <!-- Top face avec texture bois -->
+    <polygon points="60,24 105.2,50 60,76 14.8,50"
+             fill="url(#bois-top-grad)" filter="url(#bois-grain)"
+             stroke="#2A1206" stroke-width="0.8"/>
+    <!-- Left face -->
+    <polygon points="14.8,50 60,76 60,102 14.8,76"
+             fill="url(#bois-left-grad)"
+             stroke="#2A1206" stroke-width="0.8"/>
+    <!-- Right face -->
+    <polygon points="105.2,50 60,76 60,102 105.2,76"
+             fill="url(#bois-right-grad)"
+             stroke="#2A1206" stroke-width="0.8"/>
+  </g>
+
+  <!-- Veinures du bois sur top face (lignes sinueuses) -->
+  <polyline points="28,52 40,48 52,50 65,46 80,48 95,44"
+            fill="none" stroke="#3A1A08" stroke-width="0.7" opacity="0.6"
+            clip-path="url(#topClip)"/>
+  <polyline points="22,56 38,54 55,56 70,52 88,54 100,50"
+            fill="none" stroke="#3A1A08" stroke-width="0.6" opacity="0.5"
+            clip-path="url(#topClip)"/>
+  <polyline points="30,60 48,58 62,62 78,58 96,62"
+            fill="none" stroke="#2E1606" stroke-width="0.5" opacity="0.45"
+            clip-path="url(#topClip)"/>
+  <!-- ClipPath top face -->
+  <clipPath id="topClip">
+    <polygon points="60,24 105.2,50 60,76 14.8,50"/>
+  </clipPath>
+
+  <!-- Reflet léger sur arête supérieure -->
+  <line x1="14.8" y1="50" x2="60" y2="24" stroke="#C09060" stroke-width="0.8" opacity="0.4"/>
+  <line x1="60" y1="24" x2="105.2" y2="50" stroke="#C09060" stroke-width="0.8" opacity="0.4"/>
+</svg>

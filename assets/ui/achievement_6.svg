@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <defs>
+    <radialGradient id="bg6" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#160a28"/>
+      <stop offset="100%" stop-color="#0a0414"/>
+    </radialGradient>
+    <radialGradient id="palette6" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2a1060"/>
+      <stop offset="100%" stop-color="#180838"/>
+    </radialGradient>
+    <filter id="shadow6" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#A040FF" flood-opacity="0.7"/>
+    </filter>
+    <filter id="dotglow6">
+      <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="currentColor" flood-opacity="0.9"/>
+    </filter>
+    <filter id="brushglow6">
+      <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#A040FF" flood-opacity="0.7"/>
+    </filter>
+  </defs>
+  <!-- Hexagonal background -->
+  <polygon points="40,4 73,22 73,58 40,76 7,58 7,22" fill="url(#bg6)" filter="url(#shadow6)"/>
+  <!-- Palette oval shape -->
+  <ellipse cx="38" cy="37" rx="20" ry="17" fill="url(#palette6)" stroke="#A040FF" stroke-width="1.5" filter="url(#brushglow6)"/>
+  <!-- Thumb hole -->
+  <ellipse cx="32" cy="49" rx="4.5" ry="3.5" fill="#0a0414"/>
+  <ellipse cx="32" cy="49" rx="4.5" ry="3.5" fill="none" stroke="#A040FF" stroke-width="1"/>
+  <!-- 6 color dots on palette -->
+  <!-- Red -->
+  <circle cx="30" cy="28" r="4.5" fill="#FF4040">
+    <title>red</title>
+  </circle>
+  <circle cx="30" cy="28" r="4.5" fill="none" stroke="#FF8080" stroke-width="0.7" opacity="0.7"/>
+  <!-- Orange -->
+  <circle cx="40" cy="24" r="4.5" fill="#FF8020"/>
+  <circle cx="40" cy="24" r="4.5" fill="none" stroke="#FFB060" stroke-width="0.7" opacity="0.7"/>
+  <!-- Yellow -->
+  <circle cx="50" cy="28" r="4.5" fill="#FFD700"/>
+  <circle cx="50" cy="28" r="4.5" fill="none" stroke="#FFFF80" stroke-width="0.7" opacity="0.7"/>
+  <!-- Green -->
+  <circle cx="52" cy="39" r="4.5" fill="#40C060"/>
+  <circle cx="52" cy="39" r="4.5" fill="none" stroke="#80FF90" stroke-width="0.7" opacity="0.7"/>
+  <!-- Blue -->
+  <circle cx="44" cy="48" r="4.5" fill="#4080FF"/>
+  <circle cx="44" cy="48" r="4.5" fill="none" stroke="#80AAFF" stroke-width="0.7" opacity="0.7"/>
+  <!-- Violet -->
+  <circle cx="30" cy="40" r="4.5" fill="#A040FF"/>
+  <circle cx="30" cy="40" r="4.5" fill="none" stroke="#CC80FF" stroke-width="0.7" opacity="0.7"/>
+  <!-- Paintbrush -->
+  <line x1="54" y1="20" x2="67" y2="13" stroke="#C0A060" stroke-width="2.5" stroke-linecap="round" filter="url(#brushglow6)"/>
+  <line x1="52" y1="22" x2="54" y2="20" stroke="#A040FF" stroke-width="3" stroke-linecap="round"/>
+  <path d="M54 20 Q56 18 58 17 Q57 19 55 21 Z" fill="#E0C080"/>
+  <!-- Brush tip -->
+  <path d="M65 13 Q68 11 70 10 Q69 12 67 14 Z" fill="#CC8840"/>
+  <!-- Label -->
+  <text x="40" y="72.5" font-family="Arial, sans-serif" font-size="5.5" font-weight="bold" fill="#CC80FF" text-anchor="middle" letter-spacing="0.3">MAÎTRE THÈMES</text>
+  <!-- Hex border -->
+  <polygon points="40,4 73,22 73,58 40,76 7,58 7,22" fill="none" stroke="#A040FF" stroke-width="1.5" opacity="0.9"/>
+  <polygon points="40,5.5 71.5,23 71.5,57 40,74.5 8.5,57 8.5,23" fill="none" stroke="#CC80FF" stroke-width="0.5" opacity="0.4"/>
+</svg>

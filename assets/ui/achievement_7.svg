@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <defs>
+    <radialGradient id="bg7" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#061a14"/>
+      <stop offset="100%" stop-color="#020a08"/>
+    </radialGradient>
+    <radialGradient id="ensoglow7" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#40C0A0" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#40C0A0" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow7" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#40C0A0" flood-opacity="0.7"/>
+    </filter>
+    <filter id="ensoglow7f">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#40C0A0" flood-opacity="0.8"/>
+    </filter>
+    <filter id="dotglow7">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#40C0A0" flood-opacity="1"/>
+    </filter>
+  </defs>
+  <!-- Hexagonal background -->
+  <polygon points="40,4 73,22 73,58 40,76 7,58 7,22" fill="url(#bg7)" filter="url(#shadow7)"/>
+  <!-- Background halo -->
+  <circle cx="40" cy="38" r="28" fill="url(#ensoglow7)"/>
+  <!-- Enso circle - open brushstroke -->
+  <!-- The enso: thick brush arc that doesn't fully close, with tapered ends -->
+  <!-- Main stroke - using a thick path that simulates brush -->
+  <path d="M40 16
+             A22 22 0 1 1 27 57"
+        fill="none"
+        stroke="#40C0A0"
+        stroke-width="5.5"
+        stroke-linecap="round"
+        filter="url(#ensoglow7f)"
+        opacity="0.95"/>
+  <!-- Brush texture overlay - slightly offset for depth -->
+  <path d="M40 16
+             A22 22 0 1 1 27 57"
+        fill="none"
+        stroke="#80FFE0"
+        stroke-width="2"
+        stroke-linecap="round"
+        opacity="0.3"/>
+  <!-- Tapered end of stroke (start of brush) -->
+  <path d="M38 16 Q40 14 42 16 Q41 17 40 16.5 Z" fill="#40C0A0" opacity="0.8"/>
+  <!-- Gap opening — artistic brush gap at bottom-left -->
+  <!-- End stroke taper -->
+  <path d="M27 57 Q26 59 28 60 Q27.5 58 27 57 Z" fill="#40C0A0" filter="url(#ensoglow7f)" opacity="0.7"/>
+  <!-- Inner subtle ring -->
+  <circle cx="40" cy="38" r="14" fill="none" stroke="#40C0A0" stroke-width="0.5" opacity="0.2"/>
+  <!-- Central dot -->
+  <circle cx="40" cy="38" r="3.5" fill="#40C0A0" filter="url(#dotglow7)"/>
+  <circle cx="40" cy="38" r="1.8" fill="#CCFFF0"/>
+  <!-- Subtle kanji-like dash accent (minimalist) -->
+  <line x1="56" y1="18" x2="62" y2="15" stroke="#40C0A0" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="57" y1="21" x2="64" y2="20" stroke="#40C0A0" stroke-width="1" stroke-linecap="round" opacity="0.35"/>
+  <!-- Label -->
+  <text x="40" y="72.5" font-family="Arial, sans-serif" font-size="6.5" font-weight="bold" fill="#40C0A0" text-anchor="middle" letter-spacing="0.5">ZEN MASTER</text>
+  <!-- Hex border -->
+  <polygon points="40,4 73,22 73,58 40,76 7,58 7,22" fill="none" stroke="#40C0A0" stroke-width="1.5" opacity="0.9"/>
+  <polygon points="40,5.5 71.5,23 71.5,57 40,74.5 8.5,57 8.5,23" fill="none" stroke="#80FFE0" stroke-width="0.5" opacity="0.4"/>
+</svg>

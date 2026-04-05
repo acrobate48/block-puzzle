@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 56" width="100%" height="100%">
+  <defs>
+    <linearGradient id="enbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#071A0C"/>
+      <stop offset="100%" stop-color="#030A06"/>
+    </linearGradient>
+    <radialGradient id="englow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#30D050" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#30D050" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="enfairy1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#80FF80" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#40FF60" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="enfairy2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#C0FFD0" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#80FFB0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="enshroom" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#CC2020"/>
+      <stop offset="100%" stop-color="#881010"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="80" height="56" rx="6" fill="url(#enbg)"/>
+
+  <!-- Magical glow -->
+  <ellipse cx="38" cy="30" rx="24" ry="16" fill="url(#englow)"/>
+
+  <!-- Ground -->
+  <ellipse cx="40" cy="44" rx="32" ry="4" fill="#0A2010" opacity="0.8"/>
+
+  <!-- Mushroom stem -->
+  <rect x="33" y="34" width="10" height="12" rx="3" fill="#E8D8B0"/>
+  <rect x="34" y="36" width="3" height="8" rx="1" fill="#F0E8C0" opacity="0.5"/>
+
+  <!-- Mushroom cap -->
+  <ellipse cx="38" cy="34" rx="16" ry="10" fill="url(#enshroom)"/>
+  <ellipse cx="38" cy="34" rx="16" ry="10" fill="#AA1818" opacity="0"/>
+  <!-- Cap brim -->
+  <ellipse cx="38" cy="40" rx="17" ry="4" fill="#AA1818" opacity="0.5"/>
+  <!-- White spots on cap -->
+  <circle cx="32" cy="30" r="3" fill="white" opacity="0.85"/>
+  <circle cx="42" cy="28" r="2.2" fill="white" opacity="0.85"/>
+  <circle cx="38" cy="33" r="1.5" fill="white" opacity="0.75"/>
+  <circle cx="47" cy="32" r="1.8" fill="white" opacity="0.8"/>
+  <circle cx="29" cy="35" r="1.5" fill="white" opacity="0.7"/>
+
+  <!-- Magic star -->
+  <path d="M62,14 L63.5,18.5 L68,18.5 L64.4,21.2 L65.8,25.7 L62,23 L58.2,25.7 L59.6,21.2 L56,18.5 L60.5,18.5 Z"
+        fill="#40F060" opacity="0.9"/>
+  <path d="M62,14 L63.5,18.5 L68,18.5 L64.4,21.2 L65.8,25.7 L62,23 L58.2,25.7 L59.6,21.2 L56,18.5 L60.5,18.5 Z"
+        fill="white" opacity="0.3"/>
+  <!-- Star sparkle lines -->
+  <line x1="62" y1="11" x2="62" y2="14" stroke="#40F060" stroke-width="1" opacity="0.7"/>
+  <line x1="70" y1="17" x2="68" y2="18.5" stroke="#40F060" stroke-width="1" opacity="0.7"/>
+  <line x1="54" y1="17" x2="56" y2="18.5" stroke="#40F060" stroke-width="1" opacity="0.7"/>
+
+  <!-- Fairy 1 (left) -->
+  <circle cx="14" cy="20" r="5" fill="url(#enfairy1)"/>
+  <circle cx="14" cy="20" r="1.8" fill="#A0FFA0"/>
+  <circle cx="14" cy="20" r="0.8" fill="white"/>
+
+  <!-- Fairy 2 (right) -->
+  <circle cx="66" cy="34" r="4" fill="url(#enfairy2)"/>
+  <circle cx="66" cy="34" r="1.5" fill="#C0FFD0"/>
+  <circle cx="66" cy="34" r="0.6" fill="white"/>
+
+  <!-- Sparkle dots -->
+  <circle cx="22" cy="14" r="0.8" fill="#60FF80" opacity="0.7"/>
+  <circle cx="55" cy="10" r="0.6" fill="#40F060" opacity="0.6"/>
+  <circle cx="18" cy="36" r="0.7" fill="#80FFB0" opacity="0.5"/>
+
+  <!-- Theme name -->
+  <text x="40" y="52" font-family="Arial, sans-serif" font-size="8" font-weight="bold"
+        fill="#40F060" text-anchor="middle" dominant-baseline="middle">ENCHANTE</text>
+
+  <!-- Gloss overlay -->
+  <rect width="80" height="20" rx="6" fill="white" opacity="0.07"/>
+  <rect x="0" y="0" width="80" height="8" rx="6" fill="white" opacity="0.08"/>
+</svg>

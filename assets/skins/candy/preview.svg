@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" width="100%" height="100%">
+  <defs>
+    <linearGradient id="ca-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF60A0"/>
+      <stop offset="100%" stop-color="#C02060"/>
+    </linearGradient>
+    <linearGradient id="ca-shine" x1="0%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.38"/>
+      <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="ca-top" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFB0D0"/>
+      <stop offset="50%" stop-color="#FF70B0"/>
+      <stop offset="100%" stop-color="#E03080"/>
+    </linearGradient>
+    <linearGradient id="ca-reflet" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.80"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="ca-left" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#A01848"/>
+      <stop offset="100%" stop-color="#C02858"/>
+    </linearGradient>
+    <linearGradient id="ca-right" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E04080"/>
+      <stop offset="100%" stop-color="#CC3070"/>
+    </linearGradient>
+    <filter id="ca-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="ca-shadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="2" dy="3" stdDeviation="4" flood-color="#C02060" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="200" height="140" rx="10" fill="url(#ca-bg)"/>
+
+  <!-- Halo candy derrière le bloc -->
+  <ellipse cx="100" cy="60" rx="42" ry="24" fill="#FF90C0" opacity="0.20" filter="url(#ca-glow)"/>
+
+  <g filter="url(#ca-shadow)">
+    <polygon points="100,30 127.7,46 100,62 72.3,46"
+             fill="url(#ca-top)"
+             stroke="#E03070" stroke-width="0.8"/>
+    <polygon points="72.3,46 100,62 100,78 72.3,62"
+             fill="url(#ca-left)"
+             stroke="#901040" stroke-width="0.8"/>
+    <polygon points="127.7,46 100,62 100,78 127.7,62"
+             fill="url(#ca-right)"
+             stroke="#D03068" stroke-width="0.8"/>
+  </g>
+
+  <!-- Gros reflet brilliant candy sur top -->
+  <polygon points="100,30 127.7,46 100,62 72.3,46" fill="url(#ca-reflet)"/>
+  <!-- Brillance ronde centrale -->
+  <ellipse cx="100" cy="44" rx="12" ry="6" fill="#FFFFFF" opacity="0.50"/>
+  <!-- Reflet arête -->
+  <line x1="72.3" y1="46" x2="100" y2="30" stroke="#FFE0EE" stroke-width="1.5" opacity="0.9"/>
+  <line x1="100" y1="30" x2="127.7" y2="46" stroke="#FFD0E8" stroke-width="1.0" opacity="0.7"/>
+
+  <!-- Points de confiserie (pois) -->
+  <circle cx="80" cy="100" r="3" fill="#FFFFFF" opacity="0.25"/>
+  <circle cx="120" cy="100" r="3" fill="#FFFFFF" opacity="0.25"/>
+  <circle cx="60" cy="90" r="2" fill="#FFFFFF" opacity="0.18"/>
+  <circle cx="140" cy="90" r="2" fill="#FFFFFF" opacity="0.18"/>
+
+  <rect x="0" y="0" width="200" height="140" rx="10" fill="url(#ca-shine)"/>
+
+  <text x="100" y="115" font-family="Arial Black, Arial, sans-serif" font-weight="900"
+        font-size="14" text-anchor="middle" letter-spacing="2" fill="#FFFFFF"
+        paint-order="stroke" stroke="#A01040" stroke-width="2">CANDY</text>
+
+  <rect x="1" y="1" width="198" height="138" rx="9.5" fill="none"
+        stroke="#FF90C0" stroke-width="1.5" opacity="0.8"/>
+</svg>

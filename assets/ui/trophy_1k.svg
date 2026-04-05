@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="100" height="120">
+  <defs>
+    <!-- Bronze cup gradient -->
+    <linearGradient id="cupGrad1k" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#CD8040"/>
+      <stop offset="50%"  stop-color="#A05820"/>
+      <stop offset="100%" stop-color="#8B4A10"/>
+    </linearGradient>
+    <!-- Pedestal gradient -->
+    <linearGradient id="pedGrad1k" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#7A3800"/>
+      <stop offset="100%" stop-color="#5A2800"/>
+    </linearGradient>
+    <!-- Stem gradient -->
+    <linearGradient id="stemGrad1k" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#7A3800"/>
+      <stop offset="50%"  stop-color="#A05820"/>
+      <stop offset="100%" stop-color="#7A3800"/>
+    </linearGradient>
+    <!-- Drop shadow filter -->
+    <filter id="shadow1k" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#5A2800" flood-opacity="0.7"/>
+    </filter>
+  </defs>
+
+  <!-- Pedestal -->
+  <rect x="22" y="100" width="56" height="14" rx="4" ry="4"
+        fill="url(#pedGrad1k)" filter="url(#shadow1k)"/>
+  <!-- Pedestal top line detail -->
+  <rect x="22" y="100" width="56" height="2" rx="1" fill="#9A5A20" opacity="0.5"/>
+
+  <!-- Stem -->
+  <rect x="44" y="88" width="12" height="14" fill="url(#stemGrad1k)"/>
+  <!-- Stem base flare -->
+  <rect x="38" y="95" width="24" height="5" rx="2" fill="url(#stemGrad1k)"/>
+
+  <!-- Cup body (Bezier path: wide top, narrow waist, slight flare bottom) -->
+  <path d="
+    M 18 30
+    C 18 25, 24 22, 30 22
+    L 70 22
+    C 76 22, 82 25, 82 30
+    C 82 50, 74 65, 66 72
+    C 62 75, 58 76, 56 77
+    L 56 88
+    L 44 88
+    L 44 77
+    C 42 76, 38 75, 34 72
+    C 26 65, 18 50, 18 30 Z
+  " fill="url(#cupGrad1k)" filter="url(#shadow1k)"/>
+
+  <!-- Left handle -->
+  <path d="M 18 35 C 4 35, 4 58, 18 58" fill="none" stroke="url(#cupGrad1k)"
+        stroke-width="5" stroke-linecap="round"/>
+  <!-- Left handle inner shadow -->
+  <path d="M 18 35 C 7 35, 7 58, 18 58" fill="none" stroke="#8B4A10"
+        stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Right handle -->
+  <path d="M 82 35 C 96 35, 96 58, 82 58" fill="none" stroke="url(#cupGrad1k)"
+        stroke-width="5" stroke-linecap="round"/>
+  <!-- Right handle inner shadow -->
+  <path d="M 82 35 C 93 35, 93 58, 82 58" fill="none" stroke="#8B4A10"
+        stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Reflection arc on cup body -->
+  <ellipse cx="38" cy="38" rx="9" ry="14" fill="white" opacity="0.18"
+           transform="rotate(-20 38 38)"/>
+
+  <!-- Small highlight spot -->
+  <ellipse cx="34" cy="30" rx="4" ry="3" fill="white" opacity="0.22"/>
+
+  <!-- Rim top bar -->
+  <rect x="18" y="20" width="64" height="6" rx="3" fill="#B86020"/>
+  <rect x="20" y="20" width="60" height="3" rx="2" fill="#D89050" opacity="0.6"/>
+
+  <!-- "1K" label inside cup -->
+  <text x="50" y="58"
+        font-family="'Arial Black', Arial, sans-serif"
+        font-weight="900"
+        font-size="18"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        fill="#CD8040"
+        filter="url(#shadow1k)">1K</text>
+  <!-- Label inner highlight -->
+  <text x="50" y="57"
+        font-family="'Arial Black', Arial, sans-serif"
+        font-weight="900"
+        font-size="18"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        fill="#E8A060"
+        opacity="0.5">1K</text>
+
+  <!-- Bottom text score label -->
+  <text x="50" y="113"
+        font-family="Arial, sans-serif"
+        font-size="7"
+        font-weight="bold"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        fill="#CD8040"
+        opacity="0.9">SCORE</text>
+</svg>

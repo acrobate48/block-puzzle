@@ -51,3 +51,15 @@ const SKIN_NAMES=['PIERRE','CRISTAL','BOIS','MÉTAL','MARBRE','CANDY','GLACE','F
 const ANIMATED_SKINS=new Set([7,8]);
 const COLS=10,ROWS=10;
 const CELL_CACHE=new Map();
+const ACHIEVEMENTS=[
+  {label:'Premier bloc',desc:'Pose ton 1er bloc'},
+  {label:'Combo ×3',desc:'3 lignes en combo'},
+  {label:'10 lignes',desc:'Efface 10 lignes en tout'},
+  {label:'Éclair',desc:'Placement TURBO'},
+  {label:'Parfait',desc:'Perfect Clear !'},
+  {label:'Explorateur',desc:'Change de thème 5 fois'},
+  {label:'Zen master',desc:'3 minutes de jeu continu'},
+  {label:'100K',desc:'Atteins 100 000 points'},
+  {label:'Combo ×5',desc:'5 lignes en combo'},
+  {label:'Survivant',desc:'200 blocs posés'},
+];

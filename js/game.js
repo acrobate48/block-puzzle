@@ -4,14 +4,25 @@
 let _goDisplayScore=0,_goRecBurst=false,_goReplayRect=null,_goMenuRect=null,_hudScorePulse=0;
 let _uiRipples=[];
 function _addUiRipple(x,y,col,maxR){_uiRipples.push({x,y,col:col||'#FFFFFF',maxR:maxR||32,born:Date.now()});}
+// ─── ACHIEVEMENT SYSTEM ───────────────────────────────────────────────────────
+function _unlockAchieve(idx){
+  if(_achieveUnlocked[idx])return;
+  _achieveUnlocked[idx]=true;
+  try{localStorage.setItem('bp_achievements',JSON.stringify(_achieveUnlocked));}catch(e){}
+  _achieveToasts.push({idx,born:Date.now()});
+  if(typeof sndBonus==='function')sndBonus();
+}
+let _goVideoStarted=false;
 function drawGame(t){
   const newTh=getCurTheme();
-  if(newTh!==curTheme){const _prevTh=curTheme;curTheme=newTh;gameBg=buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=180;screenFlashCol=THEMES[curTheme].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));if(typeof _ensureVidPlaying==='function')_ensureVidPlaying(curTheme);}
+  if(newTh!==curTheme){const _prevTh=curTheme;curTheme=newTh;gameBg=buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=180;screenFlashCol=THEMES[curTheme].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));if(typeof _ensureVidPlaying==='function')_ensureVidPlaying(curTheme);if(typeof playThemeTransition==='function')playThemeTransition(curTheme);_themeChangeCount++;if(_themeChangeCount>=5)_unlockAchieve(5);_goVideoStarted=false;}
   // Score animé
   if(displayScore<score){const _gap=score-displayScore;const _rate=_gap>5000?0.22:_gap>1000?0.16:0.12;displayScore=Math.min(score,displayScore+Math.max(1,Math.ceil(_gap*_rate)));_hudScorePulse=Math.min(1,_hudScorePulse+0.15);}else if(!over){_hudScorePulse=Math.max(0,_hudScorePulse-0.05);}
   // Milestone celebration
   if(!over&&_nextMilestoneIdx<_MILESTONES.length&&score>=_MILESTONES[_nextMilestoneIdx]){
     const _msLbls=['1K','5K','10K','50K','100K'];const _msL=_msLbls[_nextMilestoneIdx]||String(_MILESTONES[_nextMilestoneIdx]);
+    const _msVids=['milestone_1k','milestone_5k','milestone_10k','milestone_50k','milestone_100k'];
+    if(_msVids[_nextMilestoneIdx]&&typeof playEventVideo==='function')playEventVideo(_msVids[_nextMilestoneIdx],false);
     _nextMilestoneIdx++;
     screenFlash=Math.max(screenFlash,200);screenFlashCol='#FFD700';
     shake=Math.max(shake,14);shakePow=Math.max(shakePow,5);
@@ -19,6 +30,10 @@ function drawGame(t){
     floats.push(new FloatText('MILESTONE !',W/2,H*0.48,'#FFA020',1.3,160));
     sndBonus();
   }
+  // Achievement #8 — score 100K
+  if(score>=100000)_unlockAchieve(7);
+  // Achievement #7 — 3 min continuous play
+  if(!over&&gameStartTime>0&&Date.now()-gameStartTime>=180000)_unlockAchieve(6);
   // Chaos event notification
   if(_engChaosFlash&&!over){
     _engChaosFlash=false;
@@ -40,6 +55,7 @@ function drawGame(t){
   const th=THEMES[curTheme];
   if(shake>0){shake--;shakeX=rnd(-shakePow,shakePow)|0;shakeY=rnd(-shakePow,shakePow)|0;}else{shakeX=0;shakeY=0;}
   if(!drawThemeVideo(curTheme,shakeX,shakeY)&&!drawThemeBg(curTheme,shakeX,shakeY)){ctx.drawImage(gameBg,shakeX,shakeY);}
+  if(typeof drawThemeTransition==='function')drawThemeTransition();
   drawFx(ctx,gameFx,t);
   // ── DUST MOTES — lazy-initialized ambient floating particles ──────────────
   if(!dustMotes.length){for(let _di=0;_di<30;_di++)dustMotes.push({x:rnd(0,W),y:rnd(0,H),vx:rnd(-0.14,0.14),vy:rnd(-0.28,-0.04),a:rnd(0.03,0.13),sz:rnd(0.6,1.8),ph:rnd(0,Math.PI*2)});}
@@ -54,6 +70,8 @@ function drawGame(t){
   ctx.save();ctx.shadowColor=th.gridGlow||th.ta;ctx.shadowBlur=8+4*Math.sin(t*0.001);
   rrect(ctx,GRID_X-b2,GRID_Y-b2,GW+b2*2,GH+b2*2,CR+b2,fg3,th.gridBorder||th.sl,1.5);
   ctx.restore();
+  // Grid corner decorations
+  if(typeof drawGridCorner==='function'){const _csz=Math.min(GW,GH)*0.14|0;if(_csz>=10){ctx.save();ctx.globalAlpha=0.72;drawGridCorner(curTheme,GRID_X,GRID_Y,_csz,0);drawGridCorner(curTheme,GRID_X+GW,GRID_Y,_csz,Math.PI/2);drawGridCorner(curTheme,GRID_X,GRID_Y+GH,_csz,-Math.PI/2);drawGridCorner(curTheme,GRID_X+GW,GRID_Y+GH,_csz,Math.PI);ctx.restore();}}
   // Grid glass inner
   const gig=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X,GRID_Y+GH);
   gig.addColorStop(0,hexA(th.gbg,0.90));gig.addColorStop(1,hexA(th.ge,0.90));
@@ -512,13 +530,14 @@ function drawGame(t){
   if(over){
     const el=Date.now()-overT;
     // Reset animated score counter when panel first appears
-    if(el<80){_goDisplayScore=0;_goRecBurst=false;}
+    if(el<80){_goDisplayScore=0;_goRecBurst=false;if(!_goVideoStarted){_goVideoStarted=true;if(typeof startGameoverVideo==='function')startGameoverVideo(curTheme);}}
     const isRec=score>=best&&score>0;
     // Count up score display on game over screen
     if(_goDisplayScore<score){const _gg=score-_goDisplayScore;_goDisplayScore=Math.min(score,_goDisplayScore+Math.max(1,Math.ceil(_gg*(el<1400?0.055:0.20))));}
     // New record particle burst (one-time when count reaches final score)
     if(_goDisplayScore>=score&&!_goRecBurst&&isRec){_goRecBurst=true;for(let _i=0;_i<70;_i++){particles.push({x:W/2,y:H*0.42,vx:rnd(-7,7),vy:rnd(-9,-1),color:rndc(['#FFD700','#FF8C00','#FFEE60','#FFA020','#FFFFFF','#FF4080']),size:rnd(3,7),life:rnd(50,90),ml:90,circle:Math.random()>0.35});}if(typeof playEventVideo==='function')playEventVideo('celebration',false);}
     ctx.fillStyle=`rgba(0,0,0,${Math.min(0.84,el/600*0.84).toFixed(3)})`;ctx.fillRect(0,0,W,H);
+    if(typeof drawGameoverVideo==='function')drawGameoverVideo(curTheme,0.40);
     if(isRec&&typeof drawEventVideo==='function')drawEventVideo('celebration',0.50);
     if(el>350){
       const pw2=Math.min(W-24,390),ph2=Math.round(H*0.62);
@@ -679,6 +698,36 @@ function drawGame(t){
   }
   // ── MODE OVERLAYS ────────────────────────────────────────────────────────────
   _drawModeOverlays(t,th);
+  // ── ACHIEVEMENT TOASTS ───────────────────────────────────────────────────────
+  _achieveToasts=_achieveToasts.filter(_at=>{
+    const _ap=Math.min(1,(Date.now()-_at.born)/3200);
+    if(_ap>=1)return false;
+    const _aSlide=_ap<0.12?_ap/0.12:1;
+    const _aFade=_ap>0.72?(1-(_ap-0.72)/0.28):1;
+    const _atW=Math.min(W*0.6,250);const _atH=Math.max(44,_atW*0.22)|0;
+    const _atX=W-_atW-8;const _atY=60+_achieveToasts.indexOf(_at)*(_atH+6);
+    ctx.save();
+    ctx.globalAlpha=_aSlide*_aFade;
+    ctx.translate(_atX+(1-_aSlide)*_atW*0.25,_atY);
+    rrect(ctx,0,0,_atW,_atH,8,'rgba(12,6,28,0.94)',hexA(THEMES[curTheme].tm,0.65),1.5);
+    // Shine
+    const _ashg=ctx.createLinearGradient(0,0,0,_atH*0.5);
+    _ashg.addColorStop(0,'rgba(255,255,255,0.10)');_ashg.addColorStop(1,'rgba(255,255,255,0)');
+    rrect(ctx,1,1,_atW-2,_atH*0.5,7,_ashg,null);
+    const _icSz=_atH-10;
+    if(_achieveImgs[_at.idx])ctx.drawImage(_achieveImgs[_at.idx],5,5,_icSz,_icSz);
+    const _atfz=Math.max(7,_atH*0.28|0);
+    ctx.font=`bold ${_atfz}px system-ui,-apple-system,"SF Pro Display",Arial`;
+    ctx.fillStyle='#FFFFFF';ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.shadowColor=THEMES[curTheme].tm;ctx.shadowBlur=5;
+    ctx.fillText('ACHIEVEMENT !',_icSz+12,_atH*0.34);
+    const _atfz2=Math.max(6,_atH*0.22|0);
+    ctx.font=`${_atfz2}px system-ui,-apple-system,"SF Pro Display",Arial`;
+    ctx.fillStyle=hexA(THEMES[curTheme].ta,0.95);ctx.shadowBlur=0;
+    ctx.fillText(ACHIEVEMENTS[_at.idx].label,_icSz+12,_atH*0.70);
+    ctx.restore();
+    return true;
+  });
 }
 
 function _drawModeOverlays(t,th){
@@ -970,6 +1019,8 @@ function drawHUD(th){
     const _bszBonus=fz*0.65;
     if(doublePointsUntil>Date.now()){const rem=Math.ceil((doublePointsUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${_bszBonus}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='#30FFAA';ctx.shadowColor='#00FFB0';ctx.shadowBlur=5;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(`×2 ${rem}s`,rightEdge,_bonusRow);ctx.shadowBlur=0;ctx.restore();_bonusRow=Math.min(bh*(combo>1?0.88:0.68),bh-_bszBonus*1.2);}
     if(_enduranceBonusUntil>Date.now()){const erem=Math.ceil((_enduranceBonusUntil-Date.now())/1000);ctx.save();ctx.font=`bold ${_bszBonus}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle='#60FFD0';ctx.shadowColor='#40EAB0';ctx.shadowBlur=5;ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(`🏅×1.5 ${erem}s`,rightEdge,_bonusRow);ctx.shadowBlur=0;ctx.restore();}
+    // HUD border decoration (bottom edge of portrait HUD strip)
+    if(typeof drawHudBorder==='function')drawHudBorder(curTheme,0,bh-3,W,4);
     ctx.textAlign='left';ctx.textBaseline='alphabetic';
   }else{
     const hx=GRID_X+GW+8,hw=W-hx-5;

@@ -178,9 +178,13 @@ function drawMenu(t){
     rrect(ctx,x,y,w,h*0.45,h/5,lig,null);
     // Border
     rp(ctx,x,y,w,h,h/5);ctx.strokeStyle=sel?th.tm:hexA(th.sl,0.5);ctx.lineWidth=sel?2:1;ctx.stroke();
-    // Preview
-    const psz=Math.floor(h*0.42);
-    drawCell(ctx,COLORS[i%COLORS.length],(x+w/2-psz/2)|0,y+5,psz,i,t);
+    // Preview — SVG skin card or fallback to canvas cell
+    const psz=Math.floor(h*0.52);
+    const _spW=Math.min(psz,w-8),_spH=_spW;
+    const _spX=(x+w/2-_spW/2)|0,_spY=y+3;
+    if(!(typeof drawSkinPreview==='function'&&drawSkinPreview(i,_spX,_spY,_spW,_spH))){
+      drawCell(ctx,COLORS[i%COLORS.length],(x+w/2-psz/2)|0,y+5,psz,i,t);
+    }
     // Name
     const nfz=cl(Math.floor(h*0.19),7,14);
     ctx.save();ctx.font=`bold ${nfz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -203,9 +207,13 @@ function drawMenu(t){
     rp(ctx,x,y,w,h,h/3);ctx.fillStyle=tsh;ctx.fill();
     rp(ctx,x,y,w,h,h/3);ctx.strokeStyle=sel?sth.tm:hexA(sth.dc,0.7);ctx.lineWidth=sel?2:1;ctx.stroke();
     const tfz=cl(Math.floor(h*0.44),6,12);
-    ctx.save();ctx.font=`bold ${tfz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    // Theme icon (small icon left of text)
+    const _ticW=Math.min(w*0.28,h*1.4)|0,_ticH=h;
+    const _iconDrawn=typeof drawThemeIcon==='function'&&drawThemeIcon(i,x,y,_ticW,_ticH);
+    ctx.save();ctx.font=`bold ${tfz}px system-ui,-apple-system,"SF Pro Display",Arial`;
+    ctx.textAlign=_iconDrawn?'right':'center';ctx.textBaseline='middle';
     if(sel){ctx.shadowColor=sth.tm;ctx.shadowBlur=5;}
-    ctx.fillStyle='rgba(255,255,255,0.95)';ctx.fillText(sth.name,x+w/2,y+h/2);ctx.restore();
+    ctx.fillStyle='rgba(255,255,255,0.95)';ctx.fillText(sth.name,_iconDrawn?x+w-3:x+w/2,y+h/2);ctx.restore();
   });
   // ── JOUER ──
   if(playRect){

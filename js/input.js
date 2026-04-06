@@ -9,8 +9,7 @@ let _lastTapT = 0;
 const _TAP_DEBOUNCE = 300;
 
 function getPos(e){if(e.touches&&e.touches.length>0)return{x:e.touches[0].clientX,y:e.touches[0].clientY};if(e.changedTouches&&e.changedTouches.length>0)return{x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};return{x:e.clientX,y:e.clientY};}
-function onDown(e){try{e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;_tapStartX=x;_tapStartY=y;
-  if(typeof _d==='function')_d('TAP state='+gameState+' xy='+Math.round(x)+','+Math.round(y));
+function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;_tapStartX=x;_tapStartY=y;
   if(gameState==='menu'){handleMenuTap(x,y);return;}
   if(gameState==='modeselect'){handleModeSelectTap(x,y);return;}
   if(gameState==='pause'){return;}
@@ -26,8 +25,7 @@ function onDown(e){try{e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y
     const _pcx=GRID_X+(i+0.5)*pw,_pcy=TRAY_Y+TRAY_H/2;
     ripples.push({x:_pcx,y:_pcy,life:16,ml:16,maxR:CELL*1.1,color:tray[i].color});
     for(let _dp=0;_dp<6;_dp++){const _da=_dp/6*Math.PI*2;particles.push({x:_pcx,y:_pcy,vx:Math.cos(_da)*rnd(0.8,2.2),vy:Math.sin(_da)*rnd(0.8,2.2)-0.5,color:tray[i].color,size:rnd(1.5,3),life:rnd(12,22),ml:22,circle:true});}
-    break;}}}}catch(err){if(typeof _d==='function')_d('ERR onDown: '+err.message);}
-}
+    break;}}}}
 function onMove(e){e.preventDefault();const{x,y}=getPos(e);
   // Fix A: Only commit the new pointer position (and let the ghost piece follow)
   // once the finger has moved beyond the dead-zone threshold.  Until then we

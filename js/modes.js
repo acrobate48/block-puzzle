@@ -46,14 +46,10 @@ const HISTOIRE_LEVELS=(()=>{
 })();
 
 function _modeCanPlace(grid,shape,row,col){
-  // Compute effective mode once, outside loop
-  const _eM=currentMode==='histoire'?_getHistoireSubMode():currentMode;
   for(let r=0;r<shape.length;r++)for(let c=0;c<shape[r].length;c++)if(shape[r][c]){
     const gr=row+r,gc=col+c;
     if(gr<0||gr>=ROWS||gc<0||gc>=COLS)return false;
-    if(grid[gr][gc])return false; // null=empty, any string=blocked (includes '__BLOCKED__')
-    // Extra contraintes check: blocked cells are already set in grid, this covers visual-only case
-    if(_eM==='contraintes'&&contraBlocked.some(b=>b.r===gr&&b.c===gc))return false;
+    if(grid[gr][gc])return false; // null=empty; '__BLOCKED__','__CRACKED__' or color = occupied
   }
   return true;
 }
@@ -68,7 +64,7 @@ function _generateContraBlocked(){
     tries++;
     const r=rndI(1,8),c=rndI(1,8);
     const k=r*100+c;
-    if(!used.has(k)){used.add(k);contraBlocked.push({r,c});}
+    if(!used.has(k)){used.add(k);contraBlocked.push({r,c,hp:2});}
   }
 }
 

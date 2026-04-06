@@ -2,6 +2,9 @@
 // ─── LOOP ─────────────────────────────────────────────────────────────────────
 let _lastTs=0,_prevGameState='';
 let _fpsFrames=0,_fpsSec=Date.now(),_fpsVal=60;
+// Auto low-perf mode: disable shadowBlur globally when FPS < 42 for 3s
+let _lowPerfStrikes=0,_lowPerfActive=false;
+var _lowPerf=false; // var so it's accessible from all scripts
 function loop(ts){
   // Skip frames arriving faster than 120fps — reduces unnecessary GPU work on high-refresh displays
   if(ts-_lastTs<8){requestAnimationFrame(loop);return;}
@@ -27,7 +30,11 @@ function loop(ts){
   }catch(e){console.error('[BlockPuzzle] render error:',e);}
   // FPS counter (debug mode only)
   _fpsFrames++;
-  if(Date.now()-_fpsSec>=1000){_fpsVal=_fpsFrames;_fpsFrames=0;_fpsSec=Date.now();}
+  if(Date.now()-_fpsSec>=1000){
+    _fpsVal=_fpsFrames;_fpsFrames=0;_fpsSec=Date.now();
+    // Auto low-perf: 3 consecutive seconds under 42fps → disable shadowBlur globally
+    if(_fpsVal<42){_lowPerfStrikes++;if(_lowPerfStrikes>=3&&!_lowPerfActive){_lowPerfActive=true;_lowPerf=true;try{Object.defineProperty(ctx,'shadowBlur',{get:()=>0,set:()=>{},configurable:true});Object.defineProperty(ctx,'shadowColor',{get:()=>'transparent',set:()=>{},configurable:true});}catch(e){}}}else{_lowPerfStrikes=0;}
+  }
   if(localStorage.getItem('bp_debug')==='1'){
     ctx.save();ctx.font='bold 11px monospace';ctx.fillStyle='rgba(255,255,0,0.8)';
     ctx.textAlign='right';ctx.textBaseline='top';ctx.fillText(`${_fpsVal}fps`,W-4,4);ctx.restore();

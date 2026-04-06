@@ -1017,7 +1017,7 @@ function _drawParallax(t){
 }
 function drawGame(t){
   const newTh=getCurTheme();
-  if(newTh!==curTheme){const _prevTh=curTheme;curTheme=newTh;gameBg=buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=180;screenFlashCol=THEMES[curTheme].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));if(typeof _ensureVidPlaying==='function')_ensureVidPlaying(curTheme);if(typeof playThemeTransition==='function')playThemeTransition(curTheme);_themeChangeCount++;if(_themeChangeCount>=5)_unlockAchieve(5);_goVideoStarted=false;}
+  if(newTh!==curTheme){const _prevTh=curTheme;curTheme=newTh;gameBg=_IS_IOS?null:buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=180;screenFlashCol=THEMES[curTheme].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));if(typeof _ensureVidPlaying==='function')_ensureVidPlaying(curTheme);if(typeof playThemeTransition==='function')playThemeTransition(curTheme);_themeChangeCount++;if(_themeChangeCount>=5)_unlockAchieve(5);_goVideoStarted=false;}
   // Score animé
   if(displayScore<score){const _gap=score-displayScore;const _rate=_gap>5000?0.22:_gap>1000?0.16:0.12;displayScore=Math.min(score,displayScore+Math.max(1,Math.ceil(_gap*_rate)));_hudScorePulse=Math.min(1,_hudScorePulse+0.15);}else if(!over){_hudScorePulse=Math.max(0,_hudScorePulse-0.05);}
   // Milestone celebration
@@ -1057,7 +1057,7 @@ function drawGame(t){
   const th=THEMES[curTheme];
   if(!over&&_goExploded)_goExploded=false;
   if(shake>0){shake--;shakeX=rnd(-shakePow,shakePow)|0;shakeY=rnd(-shakePow,shakePow)|0;}else{shakeX=0;shakeY=0;}
-  if(!drawThemeVideo(curTheme,shakeX,shakeY)&&!drawThemeBg(curTheme,shakeX,shakeY)){if(gameBg)ctx.drawImage(gameBg,shakeX,shakeY);}
+  if(!drawThemeVideo(curTheme,shakeX,shakeY)&&!drawThemeBg(curTheme,shakeX,shakeY)){if(gameBg)ctx.drawImage(gameBg,shakeX,shakeY);else{ctx.fillStyle=THEMES[curTheme].sky||'#060A0A';ctx.fillRect(0,0,W,H);}}
   if(typeof drawThemeTransition==='function')drawThemeTransition();
   _drawParallax(t);
   // Aurora borealis (Night, Cosmos)

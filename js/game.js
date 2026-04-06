@@ -1271,7 +1271,7 @@ function drawGame(t){
   });
   // Ghost piece (snap preview) + column highlight + ambient glow
   // ── HINT FLASH ── show a valid placement after 12s idle (no drag active)
-  if(!_IS_IOS&&!drag&&gameState==='playing'&&!over&&lastPlaceTime>0&&Date.now()-lastPlaceTime>12000){
+  if(!drag&&gameState==='playing'&&!over&&lastPlaceTime>0&&Date.now()-lastPlaceTime>12000){
     const _ht=Date.now();const _hPulse=0.3+0.3*Math.abs(Math.sin(_ht*0.005));
     let _hDone=false;
     for(let _hi=0;_hi<tray.length&&!_hDone;_hi++){const _hp=tray[_hi];if(!_hp)continue;
@@ -1388,7 +1388,7 @@ function drawGame(t){
   // Tray speed glow (color border based on think time)
   if(!_IS_IOS)_drawTraySpeedGlow(t);
   // Danger tray pulse — extra red glow when grid is near-full
-  if(!_IS_IOS&&_fillNow>0.85&&!over){
+  if(_fillNow>0.85&&!over){
     const _dp=((_fillNow-0.85)/0.15);const _dpPulse=0.5+0.5*Math.abs(Math.sin(t*0.016*_dp+0.7));
     ctx.save();ctx.shadowColor=`rgba(255,30,0,${(_dp*0.9).toFixed(3)})`;ctx.shadowBlur=CELL*_dp*_dpPulse*2;
     ctx.strokeStyle=`rgba(255,30,0,${(_dp*0.6*_dpPulse).toFixed(3)})`;ctx.lineWidth=2;
@@ -1559,7 +1559,7 @@ function drawGame(t){
     }
   }
   // Fill danger meter — vertical bar on right edge of grid
-  if(!_IS_IOS&&!over&&_fillNow>0.5){
+  if(!over&&_fillNow>0.5){
     const _dmH=GH*_fillNow;const _dmY=GRID_Y+GH-_dmH;const _dmX=GRID_X+GW+b2+2;const _dmW=3;
     const _dmCol=_fillNow>0.90?'#FF2020':_fillNow>0.75?'#FF8020':'#FFD700';
     const _dmPulse=_fillNow>0.75?0.6+0.4*Math.abs(Math.sin(t*0.012)):1;

@@ -16,16 +16,16 @@ function layoutModeSelect(){
 
 function drawModeSelect(t){
   const th=THEMES[selTheme];
-  ctx.drawImage(menuBg,0,0);
-  drawFx(ctx,menuFx,t);
-  menuDeco.forEach(b=>{b.x=(b.x+b.vx+W)%W;b.y=(b.y+b.vy+H)%H;ctx.globalAlpha=0.08;drawCell(ctx,b.color,b.x-b.sz/2|0,b.y-b.sz/2|0,b.sz|0,b.skin,t);ctx.globalAlpha=1;});
+  if(menuBg)ctx.drawImage(menuBg,0,0);
+  else{ctx.fillStyle=th.sky||'#060A0A';ctx.fillRect(0,0,W,H);}
+  if(!_IS_IOS){drawFx(ctx,menuFx,t);
+  menuDeco.forEach(b=>{b.x=(b.x+b.vx+W)%W;b.y=(b.y+b.vy+H)%H;ctx.globalAlpha=0.08;drawCell(ctx,b.color,b.x-b.sz/2|0,b.y-b.sz/2|0,b.sz|0,b.skin,t);ctx.globalAlpha=1;});}
   ctx.fillStyle='rgba(0,0,0,0.62)';ctx.fillRect(0,0,W,H);
   layoutModeSelect();
-  // Title with animated glow pulse
+  // Title
   const tsz=cl(Math.floor(H*0.06),14,40);
-  const _tpulse=0.5+0.5*Math.abs(Math.sin(t*0.003));
   ctx.save();ctx.font=`bold ${tsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillStyle=th.tm;ctx.shadowColor=th.tm;ctx.shadowBlur=10+8*_tpulse;
+  ctx.fillStyle=th.tm;
   ctx.fillText('CHOISIR UN MODE',W/2,Math.round(H*0.10));ctx.restore();
   // Subtitle
   const ssz=cl(Math.floor(H*0.022),8,14);
@@ -39,7 +39,11 @@ function drawModeSelect(t){
     if(sel){ctx.save();ctx.shadowColor=m.color;ctx.shadowBlur=18+6*Math.sin(now*0.004);
       rp(ctx,x-2,y-2,w+4,h+4,12);ctx.strokeStyle=hexA(m.color,0.7);ctx.lineWidth=2.5;ctx.stroke();ctx.restore();}
     else if(_hov){ctx.save();ctx.shadowColor=m.color;ctx.shadowBlur=10;rp(ctx,x-1,y-1,w+2,h+2,12);ctx.strokeStyle=hexA(m.color,0.4);ctx.lineWidth=1.5;ctx.stroke();ctx.restore();}
-    // Card bg (brighter on hover)
+    // Card bg
+    if(_IS_IOS){
+      rrect(ctx,x,y,w,h,12,hexA(th.gbg,sel?0.9:0.62),sel?hexA(m.color,0.8):hexA(th.sl,0.4),sel?2:1);
+      ctx.fillStyle=hexA(m.color,0.7);ctx.fillRect(x,y,w,4);
+    }else{
     const cbg=ctx.createLinearGradient(x,y,x,y+h);
     cbg.addColorStop(0,hexA(th.gbg,sel?0.9:_hov?0.75:0.62));cbg.addColorStop(1,hexA(th.bg,sel?0.8:_hov?0.58:0.45));
     rrect(ctx,x,y,w,h,12,cbg,null);
@@ -52,7 +56,7 @@ function drawModeSelect(t){
     // Color accent bar top
     const ab=ctx.createLinearGradient(x,y,x+w,y);
     ab.addColorStop(0,hexA(m.color,0.8));ab.addColorStop(1,hexA(m.color,0.2));
-    rp(ctx,x,y,w,4,12);ctx.fillStyle=ab;ctx.fill();
+    rp(ctx,x,y,w,4,12);ctx.fillStyle=ab;ctx.fill();}
     // Icon
     const isz=cl(Math.floor(h*0.38),14,32);
     ctx.save();ctx.font=`${isz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -88,7 +92,11 @@ function drawModeSelect(t){
   const bx=(W-bw2)/2,by=Math.round(H*0.89)-bh2;
   const pulse=0.5+0.5*Math.sin(t*0.004);
   const selM=MODES[currentMode];
-  ctx.save();ctx.shadowColor=selM.color;ctx.shadowBlur=16+pulse*12;
+  ctx.save();
+  if(_IS_IOS){
+    rrect(ctx,bx,by,bw2,bh2,bh2/2,selM.color,null);
+  }else{
+  ctx.shadowColor=selM.color;ctx.shadowBlur=16+pulse*12;
   const pbg2=ctx.createLinearGradient(bx,by,bx,by+bh2);
   pbg2.addColorStop(0,lerpC(selM.color,'#fff',0.2));pbg2.addColorStop(1,lerpC(selM.color,'#000',0.3));
   rrect(ctx,bx,by,bw2,bh2,bh2/2,pbg2,null);
@@ -96,7 +104,7 @@ function drawModeSelect(t){
   psh.addColorStop(0,'rgba(255,255,255,0.25)');psh.addColorStop(1,'rgba(255,255,255,0)');
   rp(ctx,bx+2,by+2,bw2-4,bh2*0.45,bh2/2);ctx.fillStyle=psh;ctx.fill();
   rp(ctx,bx,by,bw2,bh2,bh2/2);ctx.strokeStyle=hexA(selM.color,0.6);ctx.lineWidth=1.5;ctx.stroke();
-  ctx.shadowBlur=0;
+  ctx.shadowBlur=0;}
   const pfz=cl(Math.floor(bh2*0.48),10,20);
   drawPremText(ctx,`▶  JOUER EN MODE ${selM.name}`,bx+bw2/2,by+bh2/2,`bold ${pfz}px system-ui,-apple-system,"SF Pro Display",Arial`,'#FFFFFF',hexA(selM.color,0.6),'rgba(0,0,0,0.5)',selM.color,8,2);
   ctx.restore();
@@ -112,20 +120,22 @@ let _modePlayRect=null,_modeBackRect=null;
 // ─── LEADERBOARD SCREEN ──────────────────────────────────────────────────────
 function drawLeaderboard(t){
   const th=THEMES[selTheme];
-  ctx.drawImage(menuBg,0,0);
-  drawFx(ctx,menuFx,t);
-  menuDeco.forEach(b=>{b.x=(b.x+b.vx+W)%W;b.y=(b.y+b.vy+H)%H;ctx.globalAlpha=0.07;drawCell(ctx,b.color,b.x-b.sz/2|0,b.y-b.sz/2|0,b.sz|0,b.skin,t);ctx.globalAlpha=1;});
+  if(menuBg)ctx.drawImage(menuBg,0,0);
+  else{ctx.fillStyle=th.sky||'#060A0A';ctx.fillRect(0,0,W,H);}
+  if(!_IS_IOS){drawFx(ctx,menuFx,t);
+  menuDeco.forEach(b=>{b.x=(b.x+b.vx+W)%W;b.y=(b.y+b.vy+H)%H;ctx.globalAlpha=0.07;drawCell(ctx,b.color,b.x-b.sz/2|0,b.y-b.sz/2|0,b.sz|0,b.skin,t);ctx.globalAlpha=1;});}
   ctx.fillStyle='rgba(0,0,0,0.74)';ctx.fillRect(0,0,W,H);
   // Panel
   const pw=Math.min(W-18,420),ph=Math.round(H*0.84);
   const px=(W-pw)/2,py=(H-ph)/2;
+  if(_IS_IOS){rrect(ctx,px,py,pw,ph,18,hexA(th.gbg,0.96),hexA('#FFD700',0.55),2);}else{
   const pg=ctx.createLinearGradient(px,py,px,py+ph);
   pg.addColorStop(0,hexA(th.gbg,0.96));pg.addColorStop(1,hexA(th.bg,0.93));
   rrect(ctx,px,py,pw,ph,18,pg,null);
   const psg=ctx.createLinearGradient(px,py,px,py+ph*0.28);
   psg.addColorStop(0,'rgba(255,255,255,0.10)');psg.addColorStop(1,'rgba(255,255,255,0)');
   rp(ctx,px,py,pw,ph*0.28,18);ctx.fillStyle=psg;ctx.fill();
-  rp(ctx,px,py,pw,ph,18);ctx.strokeStyle=hexA('#FFD700',0.55);ctx.lineWidth=2;ctx.stroke();
+  if(!_IS_IOS){rp(ctx,px,py,pw,ph,18);ctx.strokeStyle=hexA('#FFD700',0.55);ctx.lineWidth=2;ctx.stroke();}}
   // Title
   const tsz=cl(pw*0.098|0,15,32);
   ctx.save();ctx.font=`bold ${tsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -187,8 +197,9 @@ function drawLeaderboard(t){
   // Back button
   const bw=cl(pw*0.46|0,100,180),bh2=cl(Math.round(H*0.068),28,48);
   const bx2=(W-bw)/2,by2=py+ph-bh2-14;
-  const bbg=ctx.createLinearGradient(bx2,by2,bx2,by2+bh2);
-  bbg.addColorStop(0,'#383858');bbg.addColorStop(1,'#1c1c2c');
+  let bbg;
+  if(_IS_IOS){bbg='#383858';}else{bbg=ctx.createLinearGradient(bx2,by2,bx2,by2+bh2);
+  bbg.addColorStop(0,'#383858');bbg.addColorStop(1,'#1c1c2c');}
   rrect(ctx,bx2,by2,bw,bh2,bh2/2,bbg,null);
   rp(ctx,bx2,by2,bw,bh2,bh2/2);ctx.strokeStyle=hexA(th.dc,0.5);ctx.lineWidth=1.5;ctx.stroke();
   const bfz=cl(Math.floor(bh2*0.5),10,18);

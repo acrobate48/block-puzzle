@@ -1,6 +1,7 @@
 'use strict';
 // ─── MENU ────────────────────────────────────────────────────────────────────
 let menuBg=buildBg(0),menuFx=initFx(0);
+const _menuHoverBgCache=new Array(10).fill(null); // buildBg result per theme, built once
 let menuDeco=Array.from({length:12},()=>({x:rnd(0,W),y:rnd(0,H),vx:rnd(-0.28,0.28),vy:rnd(-0.18,0.18),color:rndc(COLORS),skin:rndI(0,9),sz:rnd(22,48)}));
 let menuParts=Array.from({length:70},(_,i)=>{
   const big=i<12;
@@ -82,7 +83,7 @@ function drawMenu(t){
   // Live hover theme preview — detect which theme button is hovered
   {let _hovIdx=-1;for(let _ti=0;_ti<themeRects.length;_ti++){const _tr=themeRects[_ti];if(_tr&&mouseX>=_tr.x&&mouseX<_tr.x+_tr.w&&mouseY>=_tr.y&&mouseY<_tr.y+_tr.h){_hovIdx=_ti;break;}}
   if(_hovIdx>=0&&_hovIdx!==selTheme){_menuHoverTheme=_hovIdx;_menuHoverAlpha=Math.min(0.45,_menuHoverAlpha+0.04);}else{_menuHoverAlpha=Math.max(0,_menuHoverAlpha-0.06);}
-  if(_menuHoverAlpha>0.01&&_menuHoverTheme>=0){ctx.save();ctx.globalAlpha=_menuHoverAlpha;if(!drawThemeBg(_menuHoverTheme,0,0)){const _hBg=buildBg(_menuHoverTheme);ctx.drawImage(_hBg,0,0);}ctx.restore();}}
+  if(_menuHoverAlpha>0.01&&_menuHoverTheme>=0){ctx.save();ctx.globalAlpha=_menuHoverAlpha;if(!drawThemeBg(_menuHoverTheme,0,0)){if(!_menuHoverBgCache[_menuHoverTheme])_menuHoverBgCache[_menuHoverTheme]=buildBg(_menuHoverTheme);ctx.drawImage(_menuHoverBgCache[_menuHoverTheme],0,0);}ctx.restore();}}
   drawFx(ctx,menuFx,t);
   // ── Menu click ripples ──────────────────────────────────────────────────────
   _menuRipples=_menuRipples.filter(_mr=>{

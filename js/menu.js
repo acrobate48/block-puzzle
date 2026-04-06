@@ -2,8 +2,8 @@
 // ─── MENU ────────────────────────────────────────────────────────────────────
 let menuBg=_IS_IOS?null:buildBg(0),menuFx=_IS_IOS?null:initFx(0);
 const _menuHoverBgCache=new Array(10).fill(null); // buildBg result per theme, built once
-let menuDeco=Array.from({length:12},()=>({x:rnd(0,W),y:rnd(0,H),vx:rnd(-0.28,0.28),vy:rnd(-0.18,0.18),color:rndc(COLORS),skin:rndI(0,9),sz:rnd(22,48)}));
-let menuParts=Array.from({length:70},(_,i)=>{
+let menuDeco=_IS_IOS?[]:Array.from({length:12},()=>({x:rnd(0,W),y:rnd(0,H),vx:rnd(-0.28,0.28),vy:rnd(-0.18,0.18),color:rndc(COLORS),skin:rndI(0,9),sz:rnd(22,48)}));
+let menuParts=_IS_IOS?[]:Array.from({length:70},(_,i)=>{
   const big=i<12;
   return{x:rnd(0,W),y:rnd(0,H),vx:rnd(-0.5,0.5),vy:rnd(big?-0.5:-1.4,big?-0.15:-0.3),
     color:rndc(COLORS),size:big?rnd(4,9):rnd(1.5,4),life:rnd(0,big?240:180),ml:big?240:180,star:big};
@@ -176,13 +176,10 @@ function drawMenu(t){
     // Glow ring for selected
     if(sel){const t2=Date.now()*0.003;const gr=0.65+0.35*Math.sin(t2);ctx.save();ctx.shadowColor=th.tm;ctx.shadowBlur=14*gr;rp(ctx,x-1,y-1,w+2,h+2,h/5);ctx.strokeStyle=th.tm;ctx.lineWidth=2;ctx.stroke();ctx.restore();}
     // Glass bg
-    const glass=ctx.createLinearGradient(x,y,x,y+h);
-    glass.addColorStop(0,hexA(th.gbg,sel?0.88:0.62));glass.addColorStop(1,hexA(th.gbg,sel?0.7:0.45));
-    rrect(ctx,x,y,w,h,h/5,glass,null);
+    if(!_IS_IOS){const glass=ctx.createLinearGradient(x,y,x,y+h);glass.addColorStop(0,hexA(th.gbg,sel?0.88:0.62));glass.addColorStop(1,hexA(th.gbg,sel?0.7:0.45));rrect(ctx,x,y,w,h,h/5,glass,null);}
+    else{rrect(ctx,x,y,w,h,h/5,hexA(th.gbg,sel?0.78:0.54),null);}
     // Inner light top
-    const lig=ctx.createLinearGradient(x,y,x,y+h*0.4);
-    lig.addColorStop(0,'rgba(255,255,255,0.12)');lig.addColorStop(1,'rgba(255,255,255,0)');
-    rrect(ctx,x,y,w,h*0.45,h/5,lig,null);
+    if(!_IS_IOS){const lig=ctx.createLinearGradient(x,y,x,y+h*0.4);lig.addColorStop(0,'rgba(255,255,255,0.12)');lig.addColorStop(1,'rgba(255,255,255,0)');rrect(ctx,x,y,w,h*0.45,h/5,lig,null);}
     // Border
     rp(ctx,x,y,w,h,h/5);ctx.strokeStyle=sel?th.tm:hexA(th.sl,0.5);ctx.lineWidth=sel?2:1;ctx.stroke();
     // Preview — SVG skin card or fallback to canvas cell
@@ -194,13 +191,13 @@ function drawMenu(t){
     }
     // Shimmer sweep on selected card
     if(sel){
-      const shimT=(Date.now()*0.0015)%(1.6);const shimP=Math.max(0,shimT-0.3);const shimX=x-w*0.25+shimP*(w*1.5);
+      if(!_IS_IOS){const shimT=(Date.now()*0.0015)%(1.6);const shimP=Math.max(0,shimT-0.3);const shimX=x-w*0.25+shimP*(w*1.5);
       ctx.save();rp(ctx,x+1,y+1,w-2,h-2,h/5);ctx.clip();
       const sg=ctx.createLinearGradient(shimX-w*0.18,y,shimX+w*0.18,y+h);
       sg.addColorStop(0,'rgba(255,255,255,0)');sg.addColorStop(0.5,'rgba(255,255,255,0.22)');sg.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=sg;ctx.fillRect(shimX-w*0.25,y,w*0.5,h);ctx.restore();
+      ctx.fillStyle=sg;ctx.fillRect(shimX-w*0.25,y,w*0.5,h);ctx.restore();}
       // Occasional sparkle from selected card
-      if(Math.random()<0.045)menuParts.push({x:rnd(x,x+w),y:rnd(y,y+h),vx:rnd(-0.4,0.4),vy:rnd(-1.8,-0.5),color:th.tm,size:rnd(1.5,3.5),life:rnd(40,80),ml:80,star:true});
+      if(!_IS_IOS&&Math.random()<0.045)menuParts.push({x:rnd(x,x+w),y:rnd(y,y+h),vx:rnd(-0.4,0.4),vy:rnd(-1.8,-0.5),color:th.tm,size:rnd(1.5,3.5),life:rnd(40,80),ml:80,star:true});
     }
     // Name
     const nfz=cl(Math.floor(h*0.19),7,14);
@@ -220,11 +217,9 @@ function drawMenu(t){
     if(_isThHov){const _hA=0.55+0.15*Math.sin(Date.now()*0.006);ctx.save();ctx.shadowColor=sth.tm;ctx.shadowBlur=12*_hA;rp(ctx,x-1,y-1,w+2,h+2,h/3+1);ctx.strokeStyle=hexA(sth.tm,_hA*0.7);ctx.lineWidth=1.5;ctx.stroke();ctx.restore();}
     if(sel){ctx.save();ctx.shadowColor=sth.tm;ctx.shadowBlur=9;rp(ctx,x,y,w,h,h/3);ctx.strokeStyle=sth.tm;ctx.lineWidth=2;ctx.stroke();ctx.restore();}
     // Full color theme bg
-    const tg=ctx.createLinearGradient(x,y,x,y+h);
-    tg.addColorStop(0,hexA(sth.tm,sel?1.0:0.97));tg.addColorStop(1,hexA(sth.ta,sel?0.95:0.90));
-    rrect(ctx,x,y,w,h,h/3,tg,null);
-    const tsh=ctx.createLinearGradient(x,y,x,y+h*0.5);tsh.addColorStop(0,'rgba(255,255,255,0.22)');tsh.addColorStop(1,'rgba(255,255,255,0)');
-    rp(ctx,x,y,w,h,h/3);ctx.fillStyle=tsh;ctx.fill();
+    if(!_IS_IOS){const tg=ctx.createLinearGradient(x,y,x,y+h);tg.addColorStop(0,hexA(sth.tm,sel?1.0:0.97));tg.addColorStop(1,hexA(sth.ta,sel?0.95:0.90));rrect(ctx,x,y,w,h,h/3,tg,null);}
+    else{rrect(ctx,x,y,w,h,h/3,hexA(sth.tm,sel?0.98:0.93),null);}
+    if(!_IS_IOS){const tsh=ctx.createLinearGradient(x,y,x,y+h*0.5);tsh.addColorStop(0,'rgba(255,255,255,0.22)');tsh.addColorStop(1,'rgba(255,255,255,0)');rp(ctx,x,y,w,h,h/3);ctx.fillStyle=tsh;ctx.fill();}
     rp(ctx,x,y,w,h,h/3);ctx.strokeStyle=sel?sth.tm:hexA(sth.dc,0.7);ctx.lineWidth=sel?2:1;ctx.stroke();
     const tfz=cl(Math.floor(h*0.44),6,12);
     // Theme icon (small icon left of text)
@@ -250,22 +245,12 @@ function drawMenu(t){
     rp(ctx,x-6,y-6,w+12,h+12,h/2+6);ctx.strokeStyle=hexA(th.ta,(0.10+pulse*0.08)*_hovBoost);ctx.lineWidth=3;ctx.stroke();
     ctx.restore();
     // Main button gradient
-    const pbg=ctx.createLinearGradient(x,y,x,y+h);
-    pbg.addColorStop(0,rgb(cl(hr(th.ta)+38,0,255),cl(hg(th.ta)+38,0,255),cl(hb(th.ta)+38,0,255)));
-    pbg.addColorStop(0.45,th.ta);pbg.addColorStop(1,lerpC(th.ta,'#000',0.35));
-    rrect(ctx,x,y,w,h,h/2,pbg,null);
+    if(!_IS_IOS){const pbg=ctx.createLinearGradient(x,y,x,y+h);pbg.addColorStop(0,rgb(cl(hr(th.ta)+38,0,255),cl(hg(th.ta)+38,0,255),cl(hb(th.ta)+38,0,255)));pbg.addColorStop(0.45,th.ta);pbg.addColorStop(1,lerpC(th.ta,'#000',0.35));rrect(ctx,x,y,w,h,h/2,pbg,null);}
+    else{rrect(ctx,x,y,w,h,h/2,th.ta,null);}
     // Top shine (pill-shape top half)
-    const shg=ctx.createLinearGradient(x,y,x,y+h*0.48);
-    shg.addColorStop(0,'rgba(255,255,255,0.32)');shg.addColorStop(1,'rgba(255,255,255,0)');
-    rp(ctx,x+2,y+2,w-4,h*0.48,h/2);ctx.fillStyle=shg;ctx.fill();
+    if(!_IS_IOS){const shg=ctx.createLinearGradient(x,y,x,y+h*0.48);shg.addColorStop(0,'rgba(255,255,255,0.32)');shg.addColorStop(1,'rgba(255,255,255,0)');rp(ctx,x+2,y+2,w-4,h*0.48,h/2);ctx.fillStyle=shg;ctx.fill();}
     // Animated shimmer sweep
-    const _shimX=x+((now*0.0008)%(w+h*2))-h;
-    ctx.save();ctx.beginPath();rp(ctx,x,y,w,h,h/2);ctx.clip();
-    const _shg=ctx.createLinearGradient(_shimX,y,_shimX+h*1.2,y+h);
-    _shg.addColorStop(0,'rgba(255,255,255,0)');_shg.addColorStop(0.4,'rgba(255,255,255,0.18)');
-    _shg.addColorStop(0.5,'rgba(255,255,255,0.26)');_shg.addColorStop(0.6,'rgba(255,255,255,0.18)');
-    _shg.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=_shg;ctx.fillRect(x,y,w,h);ctx.restore();
+    if(!_IS_IOS){const _shimX=x+((now*0.0008)%(w+h*2))-h;ctx.save();ctx.beginPath();rp(ctx,x,y,w,h,h/2);ctx.clip();const _shg=ctx.createLinearGradient(_shimX,y,_shimX+h*1.2,y+h);_shg.addColorStop(0,'rgba(255,255,255,0)');_shg.addColorStop(0.4,'rgba(255,255,255,0.18)');_shg.addColorStop(0.5,'rgba(255,255,255,0.26)');_shg.addColorStop(0.6,'rgba(255,255,255,0.18)');_shg.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=_shg;ctx.fillRect(x,y,w,h);ctx.restore();}
     // Double border
     rp(ctx,x,y,w,h,h/2);ctx.strokeStyle=hexA(th.tm,0.65);ctx.lineWidth=1.5;ctx.stroke();
     rp(ctx,x+1.5,y+1.5,w-3,h-3,h/2-1.5);ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();
@@ -278,12 +263,9 @@ function drawMenu(t){
     const{x,y,w,h}=resumeRect;
     const pulse2=0.5+0.5*Math.sin(Date.now()*0.003);
     ctx.save();ctx.shadowColor='#40FF80';ctx.shadowBlur=12+pulse2*8;
-    const rbg=ctx.createLinearGradient(x,y,x,y+h);
-    rbg.addColorStop(0,'#30A050');rbg.addColorStop(1,'#1A5030');
-    rrect(ctx,x,y,w,h,h/2,rbg,null);
-    const rsh=ctx.createLinearGradient(x,y,x,y+h*0.45);
-    rsh.addColorStop(0,'rgba(255,255,255,0.22)');rsh.addColorStop(1,'rgba(255,255,255,0)');
-    rp(ctx,x+2,y+2,w-4,h*0.45,h/2);ctx.fillStyle=rsh;ctx.fill();
+    if(!_IS_IOS){const rbg=ctx.createLinearGradient(x,y,x,y+h);rbg.addColorStop(0,'#30A050');rbg.addColorStop(1,'#1A5030');rrect(ctx,x,y,w,h,h/2,rbg,null);}
+    else{rrect(ctx,x,y,w,h,h/2,'#228840',null);}
+    if(!_IS_IOS){const rsh=ctx.createLinearGradient(x,y,x,y+h*0.45);rsh.addColorStop(0,'rgba(255,255,255,0.22)');rsh.addColorStop(1,'rgba(255,255,255,0)');rp(ctx,x+2,y+2,w-4,h*0.45,h/2);ctx.fillStyle=rsh;ctx.fill();}
     rp(ctx,x,y,w,h,h/2);ctx.strokeStyle=hexA('#40FF80',0.5);ctx.lineWidth=1.5;ctx.stroke();
     ctx.shadowBlur=0;
     const rfz=cl(Math.floor(h*0.48),12,22);
@@ -295,12 +277,9 @@ function drawMenu(t){
     const{x,y,w,h}=_lbRect;
     const pulse3=0.5+0.5*Math.sin(Date.now()*0.0027);
     ctx.save();ctx.shadowColor='#FFD700';ctx.shadowBlur=10+pulse3*10;
-    const lbg=ctx.createLinearGradient(x,y,x,y+h);
-    lbg.addColorStop(0,'#705010');lbg.addColorStop(1,'#3A2800');
-    rrect(ctx,x,y,w,h,h/2,lbg,null);
-    const lsh=ctx.createLinearGradient(x,y,x,y+h*0.45);
-    lsh.addColorStop(0,'rgba(255,255,255,0.18)');lsh.addColorStop(1,'rgba(255,255,255,0)');
-    rp(ctx,x+2,y+2,w-4,h*0.45,h/2);ctx.fillStyle=lsh;ctx.fill();
+    if(!_IS_IOS){const lbg=ctx.createLinearGradient(x,y,x,y+h);lbg.addColorStop(0,'#705010');lbg.addColorStop(1,'#3A2800');rrect(ctx,x,y,w,h,h/2,lbg,null);}
+    else{rrect(ctx,x,y,w,h,h/2,'#54380C',null);}
+    if(!_IS_IOS){const lsh=ctx.createLinearGradient(x,y,x,y+h*0.45);lsh.addColorStop(0,'rgba(255,255,255,0.18)');lsh.addColorStop(1,'rgba(255,255,255,0)');rp(ctx,x+2,y+2,w-4,h*0.45,h/2);ctx.fillStyle=lsh;ctx.fill();}
     rp(ctx,x,y,w,h,h/2);ctx.strokeStyle=hexA('#FFD700',0.55);ctx.lineWidth=1.5;ctx.stroke();
     ctx.shadowBlur=0;
     const lfz=cl(Math.floor(h*0.46),12,21);
@@ -313,12 +292,9 @@ function drawMenu(t){
     ctx.save();
     const pulse=0.5+0.5*Math.sin(Date.now()*0.003);
     ctx.shadowColor=on?'#40D8FF':'#FF6060';ctx.shadowBlur=6+4*pulse;
-    const sbg=ctx.createLinearGradient(x,y,x,y+h);
-    sbg.addColorStop(0,on?'#1A3A50':'#3A1010');sbg.addColorStop(1,on?'#0A1A26':'#1E0808');
-    rrect(ctx,x,y,w,h,10,sbg,null);
-    const ssh=ctx.createLinearGradient(x,y,x,y+h*0.5);
-    ssh.addColorStop(0,'rgba(255,255,255,0.18)');ssh.addColorStop(1,'rgba(255,255,255,0)');
-    rp(ctx,x+2,y+2,w-4,h*0.5,8);ctx.fillStyle=ssh;ctx.fill();
+    if(!_IS_IOS){const sbg=ctx.createLinearGradient(x,y,x,y+h);sbg.addColorStop(0,on?'#1A3A50':'#3A1010');sbg.addColorStop(1,on?'#0A1A26':'#1E0808');rrect(ctx,x,y,w,h,10,sbg,null);}
+    else{rrect(ctx,x,y,w,h,10,on?'#122838':'#2C0E0E',null);}
+    if(!_IS_IOS){const ssh=ctx.createLinearGradient(x,y,x,y+h*0.5);ssh.addColorStop(0,'rgba(255,255,255,0.18)');ssh.addColorStop(1,'rgba(255,255,255,0)');rp(ctx,x+2,y+2,w-4,h*0.5,8);ctx.fillStyle=ssh;ctx.fill();}
     rp(ctx,x,y,w,h,10);ctx.strokeStyle=hexA(on?'#40D8FF':'#FF6060',0.6);ctx.lineWidth=1.5;ctx.stroke();
     ctx.shadowBlur=0;
     ctx.font=`${Math.floor(h*0.58)}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -376,7 +352,7 @@ function drawPause(t){
   ctx.save();
   ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillRect(0,0,W,H);
   // Animated ambient orbs behind panel
-  ctx.save();
+  if(!_IS_IOS){ctx.save();
   for(let oi=0;oi<5;oi++){
     const ox=p.x+p.w*(0.1+oi*0.2+Math.sin(now*0.00055+oi*2.1)*0.12);
     const oy=p.y+p.h*(0.15+oi*0.16+Math.cos(now*0.00042+oi*1.7)*0.12);
@@ -385,15 +361,12 @@ function drawPause(t){
     og.addColorStop(0,hexA(oi%2===0?th.tm:th.ta,0.12));og.addColorStop(1,'rgba(0,0,0,0)');
     ctx.fillStyle=og;ctx.fillRect(ox-or2,oy-or2,or2*2,or2*2);
   }
-  ctx.restore();
+  ctx.restore();}
   // Panel glass
-  const pg=ctx.createLinearGradient(p.x,p.y,p.x,p.y+p.h);
-  pg.addColorStop(0,hexA(th.gbg,0.97));pg.addColorStop(1,hexA(th.bg,0.95));
-  rrect(ctx,p.x,p.y,p.w,p.h,20,pg,null);
+  if(!_IS_IOS){const pg=ctx.createLinearGradient(p.x,p.y,p.x,p.y+p.h);pg.addColorStop(0,hexA(th.gbg,0.97));pg.addColorStop(1,hexA(th.bg,0.95));rrect(ctx,p.x,p.y,p.w,p.h,20,pg,null);}
+  else{rrect(ctx,p.x,p.y,p.w,p.h,20,hexA(th.gbg,0.96),null);}
   // Panel shine top
-  const ps=ctx.createLinearGradient(p.x,p.y,p.x,p.y+p.h*0.45);
-  ps.addColorStop(0,'rgba(255,255,255,0.10)');ps.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.save();rp(ctx,p.x,p.y,p.w,p.h,20);ctx.clip();ctx.fillStyle=ps;ctx.fillRect(p.x,p.y,p.w,p.h*0.45);ctx.restore();
+  if(!_IS_IOS){const ps=ctx.createLinearGradient(p.x,p.y,p.x,p.y+p.h*0.45);ps.addColorStop(0,'rgba(255,255,255,0.10)');ps.addColorStop(1,'rgba(255,255,255,0)');ctx.save();rp(ctx,p.x,p.y,p.w,p.h,20);ctx.clip();ctx.fillStyle=ps;ctx.fillRect(p.x,p.y,p.w,p.h*0.45);ctx.restore();}
   // Animated panel border (rotating gradient)
   const _pbPulse=0.5+0.5*Math.abs(Math.sin(now*0.0025));
   ctx.save();ctx.shadowColor=th.tm;ctx.shadowBlur=8*_pbPulse;
@@ -432,13 +405,10 @@ function drawPause(t){
     ctx.save();ctx.shadowColor=def.border;ctx.shadowBlur=8+pulse*8;
     rp(ctx,bx,by,bw,bh,br);ctx.strokeStyle=def.border;ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
     // Fill gradient
-    const bg=ctx.createLinearGradient(bx,by,bx,by+bh);
-    bg.addColorStop(0,def.g0);bg.addColorStop(1,def.g1);
-    rrect(ctx,bx,by,bw,bh,br,bg,def.border,1.5);
+    if(!_IS_IOS){const bg=ctx.createLinearGradient(bx,by,bx,by+bh);bg.addColorStop(0,def.g0);bg.addColorStop(1,def.g1);rrect(ctx,bx,by,bw,bh,br,bg,def.border,1.5);}
+    else{rrect(ctx,bx,by,bw,bh,br,def.g0,def.border,1.5);}
     // Shine
-    const sh=ctx.createLinearGradient(bx,by,bx,by+bh*0.45);
-    sh.addColorStop(0,'rgba(255,255,255,0.16)');sh.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.save();rp(ctx,bx,by,bw,bh,br);ctx.clip();ctx.fillStyle=sh;ctx.fillRect(bx,by,bw,bh*0.45);ctx.restore();
+    if(!_IS_IOS){const sh=ctx.createLinearGradient(bx,by,bx,by+bh*0.45);sh.addColorStop(0,'rgba(255,255,255,0.16)');sh.addColorStop(1,'rgba(255,255,255,0)');ctx.save();rp(ctx,bx,by,bw,bh,br);ctx.clip();ctx.fillStyle=sh;ctx.fillRect(bx,by,bw,bh*0.45);ctx.restore();}
     // Label
     const fs=cl(bh*0.40,12,20);
     ctx.font=`bold ${fs}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -464,9 +434,7 @@ function drawPause(t){
     const fillW=Math.max(vh,vw*_volume);
     rrect(ctx,vx,vy,fillW,vh,vh/2,hexA(th2.ta,0.85),null);
     // Shine
-    const ssh2=ctx.createLinearGradient(vx,vy,vx,vy+vh*0.5);
-    ssh2.addColorStop(0,'rgba(255,255,255,0.25)');ssh2.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.save();rp(ctx,vx,vy,fillW,vh,vh/2);ctx.clip();ctx.fillStyle=ssh2;ctx.fillRect(vx,vy,fillW,vh);ctx.restore();
+    if(!_IS_IOS){const ssh2=ctx.createLinearGradient(vx,vy,vx,vy+vh*0.5);ssh2.addColorStop(0,'rgba(255,255,255,0.25)');ssh2.addColorStop(1,'rgba(255,255,255,0)');ctx.save();rp(ctx,vx,vy,fillW,vh,vh/2);ctx.clip();ctx.fillStyle=ssh2;ctx.fillRect(vx,vy,fillW,vh);ctx.restore();}
     // Thumb
     const tx2=vx+vw*_volume;
     ctx.save();ctx.shadowColor=th2.tm;ctx.shadowBlur=6;

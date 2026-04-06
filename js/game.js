@@ -47,6 +47,7 @@ const _WX=[
 ];
 function _wxInit(ti){_wxTheme=ti;_wx=[];const cfg=_WX[ti];if(!cfg)return;for(let i=0;i<cfg.n;i++){const p=cfg.spawn(W,H);if(p.t==='leaf'||p.t==='snow')p.y=rnd(-20,H+20);if(p.t==='bubble')p.y=rnd(0,H+10);if(p.t==='cosmos'||p.t==='fly'||p.t==='glow')p.life=rnd(0,p.ml);if(p.t==='star')p.x=rnd(0,W),p.y=rnd(0,H*0.42);_wx.push(p);}}
 function _drawWeather(t){
+  if(_IS_IOS)return;
   if(_wxTheme!==curTheme){_wxInit(curTheme);return;}
   const cfg=_WX[curTheme];if(!cfg)return;
   ctx.save();
@@ -136,6 +137,7 @@ function _drawFreshHalos(){
 
 // ─── 5. STRESS CRACKS (grid >78% full) ───────────────────────────────────────
 function _drawStressCracks(fillRatio){
+  if(_IS_IOS)return;
   if(fillRatio<0.78||over)return;
   const intensity=cl((fillRatio-0.78)/0.22,0,1);
   const _sc=seeded(42);
@@ -160,6 +162,7 @@ function _drawStressCracks(fillRatio){
 
 // ─── 6. FLOOR GLOW EFFECT PER THEME ─────────────────────────────────────────
 function _drawFloorEffect(t){
+  if(_IS_IOS)return;
   const th=THEMES[curTheme];
   const fx=GRID_X,fy=GRID_Y+GH,fw=GW,fh=Math.min(TRAY_Y-fy,40);
   if(fh<4)return;
@@ -336,6 +339,7 @@ function _drawComboBeam(t){
 
 // ─── 13. ALMOST-CLEAR ROW/COL HIGHLIGHT ──────────────────────────────────────
 function _drawAlmostClear(t){
+  if(_IS_IOS)return;
   if(over||!grid)return;
   ctx.save();
   const pulse=0.55+0.45*Math.abs(Math.sin(t*0.007));
@@ -854,6 +858,7 @@ function _drawHeatShimmer(t){
 
 // ─── 34. NÉOPOLIS HOLOGRAPHIC DEPTH LINES ───────────────────────────────────
 function _drawHolographic(t){
+  if(_IS_IOS)return;
   if(curTheme!==9||over)return;
   const _nf=getNeonFlicker();
   ctx.save();
@@ -1131,8 +1136,10 @@ function drawGame(t){
   }
   const _glP=0.022+0.012*Math.sin(t*0.0018);
   ctx.strokeStyle=hexA(th.sl,_glP);ctx.lineWidth=0.5;
-  for(let _gr2=0;_gr2<=ROWS;_gr2++){ctx.beginPath();ctx.moveTo(GRID_X,GRID_Y+_gr2*CELL);ctx.lineTo(GRID_X+GW,GRID_Y+_gr2*CELL);ctx.stroke();}
-  for(let _gc2=0;_gc2<=COLS;_gc2++){ctx.beginPath();ctx.moveTo(GRID_X+_gc2*CELL,GRID_Y);ctx.lineTo(GRID_X+_gc2*CELL,GRID_Y+GH);ctx.stroke();}
+  if(!_IS_IOS){
+    for(let _gr2=0;_gr2<=ROWS;_gr2++){ctx.beginPath();ctx.moveTo(GRID_X,GRID_Y+_gr2*CELL);ctx.lineTo(GRID_X+GW,GRID_Y+_gr2*CELL);ctx.stroke();}
+    for(let _gc2=0;_gc2<=COLS;_gc2++){ctx.beginPath();ctx.moveTo(GRID_X+_gc2*CELL,GRID_Y);ctx.lineTo(GRID_X+_gc2*CELL,GRID_Y+GH);ctx.stroke();}
+  }
   ctx.restore();
   // Néopolis holographic depth lines (behind cells)
   _drawHolographic(t);
@@ -1210,9 +1217,16 @@ function drawGame(t){
     if(p<0.22){
       const _sf=1-(p/0.22);
       const _fRows=[...new Set(a.cells.map(_fc=>_fc.r))],_fCols=[...new Set(a.cells.map(_fc=>_fc.c))];
-      ctx.save();ctx.shadowColor='#FFFFFF';ctx.shadowBlur=CELL*0.9*_sf;
-      _fRows.forEach(_r=>{const _fg=ctx.createLinearGradient(GRID_X,0,GRID_X+GW,0);_fg.addColorStop(0,'rgba(255,255,255,0)');_fg.addColorStop(0.1,`rgba(255,255,255,${(_sf*0.95).toFixed(3)})`);_fg.addColorStop(0.5,`rgba(255,255,255,${_sf.toFixed(3)})`);_fg.addColorStop(0.9,`rgba(255,255,255,${(_sf*0.95).toFixed(3)})`);_fg.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=_fg;ctx.fillRect(GRID_X,GRID_Y+_r*CELL,GW,CELL);});
-      _fCols.forEach(_c=>{const _fg=ctx.createLinearGradient(0,GRID_Y,0,GRID_Y+GH);_fg.addColorStop(0,'rgba(255,255,255,0)');_fg.addColorStop(0.1,`rgba(255,255,255,${(_sf*0.82).toFixed(3)})`);_fg.addColorStop(0.5,`rgba(255,255,255,${(_sf*0.88).toFixed(3)})`);_fg.addColorStop(0.9,`rgba(255,255,255,${(_sf*0.82).toFixed(3)})`);_fg.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=_fg;ctx.fillRect(GRID_X+_c*CELL,GRID_Y,CELL,GH);});
+      ctx.save();ctx.shadowColor='#FFFFFF';ctx.shadowBlur=_IS_IOS?0:CELL*0.9*_sf;
+      if(!_IS_IOS){
+        _fRows.forEach(_r=>{const _fg=ctx.createLinearGradient(GRID_X,0,GRID_X+GW,0);_fg.addColorStop(0,'rgba(255,255,255,0)');_fg.addColorStop(0.1,`rgba(255,255,255,${(_sf*0.95).toFixed(3)})`);_fg.addColorStop(0.5,`rgba(255,255,255,${_sf.toFixed(3)})`);_fg.addColorStop(0.9,`rgba(255,255,255,${(_sf*0.95).toFixed(3)})`);_fg.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=_fg;ctx.fillRect(GRID_X,GRID_Y+_r*CELL,GW,CELL);});
+        _fCols.forEach(_c=>{const _fg=ctx.createLinearGradient(0,GRID_Y,0,GRID_Y+GH);_fg.addColorStop(0,'rgba(255,255,255,0)');_fg.addColorStop(0.1,`rgba(255,255,255,${(_sf*0.82).toFixed(3)})`);_fg.addColorStop(0.5,`rgba(255,255,255,${(_sf*0.88).toFixed(3)})`);_fg.addColorStop(0.9,`rgba(255,255,255,${(_sf*0.82).toFixed(3)})`);_fg.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=_fg;ctx.fillRect(GRID_X+_c*CELL,GRID_Y,CELL,GH);});
+      }else{
+        /* iOS: flat white fill instead of gradient */
+        ctx.fillStyle=`rgba(255,255,255,${(_sf*0.82).toFixed(3)})`;
+        _fRows.forEach(_r=>{ctx.fillRect(GRID_X,GRID_Y+_r*CELL,GW,CELL);});
+        _fCols.forEach(_c=>{ctx.fillRect(GRID_X+_c*CELL,GRID_Y,CELL,GH);});
+      }
       ctx.shadowBlur=0;ctx.restore();
     }
     // Phase 1 (0-0.5): individual cells pulse + glow
@@ -1362,9 +1376,9 @@ function drawGame(t){
   }
   // Tray (glass)
   rrect(ctx,GRID_X,TRAY_Y,GW,TRAY_H,CR,th.trayBg||hexA(th.gbg,0.55),hexA(th.dc,0.5),1);
-  const topShine=ctx.createLinearGradient(GRID_X,TRAY_Y,GRID_X,TRAY_Y+TRAY_H*0.4);
+  if(!_IS_IOS){const topShine=ctx.createLinearGradient(GRID_X,TRAY_Y,GRID_X,TRAY_Y+TRAY_H*0.4);
   topShine.addColorStop(0,'rgba(255,255,255,0.08)');topShine.addColorStop(1,'rgba(255,255,255,0)');
-  rrect(ctx,GRID_X,TRAY_Y,GW,TRAY_H,CR,topShine,null);
+  rrect(ctx,GRID_X,TRAY_Y,GW,TRAY_H,CR,topShine,null);}
   const pw=GW/3;
   for(let i=0;i<3;i++){
     if(i>0){ctx.strokeStyle=hexA(th.dc,0.3);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(GRID_X+i*pw,TRAY_Y+4);ctx.lineTo(GRID_X+i*pw,TRAY_Y+TRAY_H-4);ctx.stroke();}
@@ -1417,8 +1431,8 @@ function drawGame(t){
     const pvH=Math.min(Math.max((CELL*1.3)|0,44),Math.max(12,H-pvY-2));
     if(pvH>12){
     // Panel
-    const pvBg=ctx.createLinearGradient(GRID_X,pvY,GRID_X,pvY+pvH);
-    pvBg.addColorStop(0,hexA(th.gbg,0.38));pvBg.addColorStop(1,hexA(th.ge,0.25));
+    let pvBg;
+    if(!_IS_IOS){pvBg=ctx.createLinearGradient(GRID_X,pvY,GRID_X,pvY+pvH);pvBg.addColorStop(0,hexA(th.gbg,0.38));pvBg.addColorStop(1,hexA(th.ge,0.25));}else{pvBg=hexA(th.gbg,0.38);}
     rrect(ctx,GRID_X,pvY,GW,pvH,CR,pvBg,hexA(th.dc,0.28),1);
     // Label "SUIVANT" à gauche
     const lsz=Math.max(7,pvH*0.22)|0;
@@ -1456,9 +1470,9 @@ function drawGame(t){
       // Drop shadow — layered: color aura glow + dark drop shadow
       ctx.save();
       // Color aura behind lifted piece (drawn first, below piece)
-      ctx.globalAlpha=0.20;
+      if(!_IS_IOS){ctx.globalAlpha=0.20;
       sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const _ax=ox+cc*_liftCell+_liftCell/2,_ay=oy+rr*_liftCell+_liftCell/2+CELL*0.20;const _ag=ctx.createRadialGradient(_ax,_ay,0,_ax,_ay,_liftCell*0.70);_ag.addColorStop(0,piece.isParasite?'#00FF50':piece.color);_ag.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=_ag;ctx.fillRect(_ax-_liftCell,_ay-_liftCell,_liftCell*2,_liftCell*2);}}));
-      ctx.globalAlpha=1;
+      ctx.globalAlpha=1;}
       // Dark drop shadow + draw piece
       ctx.shadowColor='rgba(0,0,0,0.62)';ctx.shadowBlur=CELL*0.58;ctx.shadowOffsetX=CELL*0.04;ctx.shadowOffsetY=CELL*0.28;
       sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){if(piece.isParasite)drawParasiteCell(ctx,ox+cc*_liftCell,oy+rr*_liftCell,_liftCell,t,rr*17+cc*31);else drawCell(ctx,piece.color,ox+cc*_liftCell,oy+rr*_liftCell,_liftCell,selSkin,t);}}));
@@ -1506,9 +1520,9 @@ function drawGame(t){
     if(_fillRatio>0.75){
       const _danger=(_fillRatio-0.75)/0.25; // 0→1 as fill goes 75%→100%
       const _pulse=0.5+0.5*Math.abs(Math.sin(t*(_fillRatio>0.90?0.018:0.010)));
-      const _dv=ctx.createRadialGradient(GRID_X+GW/2,GRID_Y+GH/2,Math.min(GW,GH)*0.25,GRID_X+GW/2,GRID_Y+GH/2,Math.max(GW,GH)*0.82);
+      if(!_IS_IOS){const _dv=ctx.createRadialGradient(GRID_X+GW/2,GRID_Y+GH/2,Math.min(GW,GH)*0.25,GRID_X+GW/2,GRID_Y+GH/2,Math.max(GW,GH)*0.82);
       _dv.addColorStop(0,'rgba(0,0,0,0)');_dv.addColorStop(1,`rgba(200,20,0,${(_danger*0.45*_pulse).toFixed(3)})`);
-      ctx.fillStyle=_dv;ctx.fillRect(0,0,W,H);
+      ctx.fillStyle=_dv;ctx.fillRect(0,0,W,H);}else{ctx.fillStyle=`rgba(200,20,0,${(_danger*0.22*_pulse).toFixed(3)})`;ctx.fillRect(0,0,W,H);}
     }
   }
   // Fill danger meter — vertical bar on right edge of grid
@@ -1540,32 +1554,32 @@ function drawGame(t){
   // HUD
   drawHUD(th);
   // Vignette
-  const vig=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.28,W/2,H/2,Math.max(W,H)*0.68);
+  if(!_IS_IOS){const vig=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.28,W/2,H/2,Math.max(W,H)*0.68);
   vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,0,0.38)');
-  ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);}
   // Bonus banner (piece picker)
   if(showAddCellsBonus&&!over&&!showSecondChance&&!showBonusPicker){
     const bw2=Math.min(W-20,360),bh2=Math.round(H*0.092)+2;
     const bx2=(W-bw2)/2,by2=H-bh2-8;
     const pulse2=0.5+0.5*Math.sin(Date.now()*0.005);
     // Background
-    const bbg=ctx.createLinearGradient(bx2,by2,bx2,by2+bh2);
-    bbg.addColorStop(0,'rgba(20,0,60,0.97)');bbg.addColorStop(1,'rgba(60,20,120,0.95)');
+    let bbg;
+    if(!_IS_IOS){bbg=ctx.createLinearGradient(bx2,by2,bx2,by2+bh2);bbg.addColorStop(0,'rgba(20,0,60,0.97)');bbg.addColorStop(1,'rgba(60,20,120,0.95)');}else{bbg='rgba(20,0,60,0.97)';}
     rrect(ctx,bx2,by2,bw2,bh2,bh2/2,bbg,null);
     // Gold border pulse
     rp(ctx,bx2,by2,bw2,bh2,bh2/2);
-    const bord=ctx.createLinearGradient(bx2,by2,bx2+bw2,by2+bh2);
+    if(!_IS_IOS){const bord=ctx.createLinearGradient(bx2,by2,bx2+bw2,by2+bh2);
     bord.addColorStop(0,'#FFE040');bord.addColorStop(0.5,'#FFA000');bord.addColorStop(1,'#FFE040');
-    ctx.strokeStyle=bord;ctx.lineWidth=1.5+pulse2;ctx.stroke();
+    ctx.strokeStyle=bord;}else{ctx.strokeStyle='#FFE040';}ctx.lineWidth=1.5+pulse2;ctx.stroke();
     // Star icon left
     const ico=bh2*0.45;
     ctx.save();ctx.font=`${ico|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#FFD700';ctx.shadowBlur=10;ctx.fillStyle='#FFD700';ctx.fillText('🎁',bx2+bh2*0.62,by2+bh2/2);ctx.shadowBlur=0;ctx.restore();
     // Text
     const bfsz2=cl(Math.floor(bh2*0.29),8,14);
     ctx.save();ctx.font=`bold ${bfsz2}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-    const tg2=ctx.createLinearGradient(0,by2+bh2*0.15,0,by2+bh2*0.85);
+    if(!_IS_IOS){const tg2=ctx.createLinearGradient(0,by2+bh2*0.15,0,by2+bh2*0.85);
     tg2.addColorStop(0,'#FFF0A0');tg2.addColorStop(0.5,'#FFD700');tg2.addColorStop(1,'#FFA020');
-    ctx.fillStyle=tg2;ctx.shadowColor='rgba(255,200,0,0.6)';ctx.shadowBlur=8;
+    ctx.fillStyle=tg2;}else{ctx.fillStyle='#FFF0A0';}ctx.shadowColor='rgba(255,200,0,0.6)';ctx.shadowBlur=8;
     ctx.fillText('BONUS  —  Touchez pour choisir une pièce !',bx2+bw2/2+bh2*0.2,by2+bh2/2);
     ctx.shadowBlur=0;ctx.restore();
     addCellsBonusRect={x:bx2,y:by2,w:bw2,h:bh2};
@@ -1577,24 +1591,21 @@ function drawGame(t){
     const pw3=Math.min(W-20,400),ph3=Math.round(H*0.38);
     const px3=(W-pw3)/2,py3=(H-ph3)/2;
     // Panel
-    const ppg=ctx.createLinearGradient(px3,py3,px3,py3+ph3);
-    ppg.addColorStop(0,'rgba(20,0,60,0.98)');ppg.addColorStop(1,'rgba(5,0,20,0.97)');
+    let ppg;
+    if(!_IS_IOS){ppg=ctx.createLinearGradient(px3,py3,px3,py3+ph3);ppg.addColorStop(0,'rgba(20,0,60,0.98)');ppg.addColorStop(1,'rgba(5,0,20,0.97)');}else{ppg='rgba(20,0,60,0.98)';}
     const _bpR=Math.min(CR*3,20);
     rrect(ctx,px3,py3,pw3,ph3,_bpR,ppg,null);
     // Gold border
-    const pbord=ctx.createLinearGradient(px3,py3,px3+pw3,py3+ph3);
-    pbord.addColorStop(0,'#FFE040');pbord.addColorStop(0.5,'#FFA000');pbord.addColorStop(1,'#FFE040');
-    rp(ctx,px3,py3,pw3,ph3,_bpR);ctx.strokeStyle=pbord;ctx.lineWidth=2;ctx.stroke();
+    rp(ctx,px3,py3,pw3,ph3,_bpR);
+    if(!_IS_IOS){const pbord=ctx.createLinearGradient(px3,py3,px3+pw3,py3+ph3);pbord.addColorStop(0,'#FFE040');pbord.addColorStop(0.5,'#FFA000');pbord.addColorStop(1,'#FFE040');ctx.strokeStyle=pbord;}else{ctx.strokeStyle='#FFE040';}ctx.lineWidth=2;ctx.stroke();
     // Shine top
-    const psh=ctx.createLinearGradient(px3,py3,px3,py3+ph3*0.35);
+    if(!_IS_IOS){const psh=ctx.createLinearGradient(px3,py3,px3,py3+ph3*0.35);
     psh.addColorStop(0,'rgba(255,255,255,0.1)');psh.addColorStop(1,'rgba(255,255,255,0)');
-    rp(ctx,px3,py3,pw3,ph3*0.35,_bpR);ctx.fillStyle=psh;ctx.fill();
+    rp(ctx,px3,py3,pw3,ph3*0.35,_bpR);ctx.fillStyle=psh;ctx.fill();}
     // Title
     const tsz=cl(pw3*0.062|0,10,19);
     ctx.save();ctx.font=`bold ${tsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-    const ttg=ctx.createLinearGradient(0,py3+ph3*0.06,0,py3+ph3*0.2);
-    ttg.addColorStop(0,'#FFF0A0');ttg.addColorStop(1,'#FFA000');
-    ctx.fillStyle=ttg;ctx.shadowColor='rgba(255,200,0,0.7)';ctx.shadowBlur=12;
+    if(!_IS_IOS){const ttg=ctx.createLinearGradient(0,py3+ph3*0.06,0,py3+ph3*0.2);ttg.addColorStop(0,'#FFF0A0');ttg.addColorStop(1,'#FFA000');ctx.fillStyle=ttg;}else{ctx.fillStyle='#FFF0A0';}ctx.shadowColor='rgba(255,200,0,0.7)';ctx.shadowBlur=12;
     ctx.fillText('✦  BONUS — Choisissez une pièce !  ✦',px3+pw3/2,py3+ph3*0.13);
     ctx.shadowBlur=0;ctx.restore();
     // 5 pieces grid
@@ -1604,9 +1615,8 @@ function drawGame(t){
       const sx=px3+i*slotW,sy=slotY;
       // Slot background
       const ishov=(mouseX>=sx&&mouseX<sx+slotW&&mouseY>=sy&&mouseY<sy+slotH);
-      const slBg=ctx.createLinearGradient(sx,sy,sx,sy+slotH);
-      slBg.addColorStop(0,ishov?'rgba(255,200,0,0.22)':'rgba(255,255,255,0.06)');
-      slBg.addColorStop(1,ishov?'rgba(255,140,0,0.12)':'rgba(255,255,255,0.02)');
+      let slBg;
+      if(!_IS_IOS){slBg=ctx.createLinearGradient(sx,sy,sx,sy+slotH);slBg.addColorStop(0,ishov?'rgba(255,200,0,0.22)':'rgba(255,255,255,0.06)');slBg.addColorStop(1,ishov?'rgba(255,140,0,0.12)':'rgba(255,255,255,0.02)');}else{slBg=ishov?'rgba(255,200,0,0.22)':'rgba(255,255,255,0.06)';}
       rrect(ctx,sx+3,sy+3,slotW-6,slotH-6,Math.min(CR*2,12),slBg,ishov?hexA('#FFD700',0.6):hexA('#FFFFFF',0.15),ishov?1.5:0.8);
       // Draw piece centered in slot
       const sh=piece.shape;
@@ -1627,13 +1637,13 @@ function drawGame(t){
     const scpW=Math.min(W-24,360),scpH=Math.round(H*0.4);
     const scpX=(W-scpW)/2,scpY=(H-scpH)/2;
     ctx.fillStyle='rgba(0,0,0,0.76)';ctx.fillRect(0,0,W,H);
-    const spg=ctx.createLinearGradient(scpX,scpY,scpX,scpY+scpH);
-    spg.addColorStop(0,hexA(th.gbg,0.97));spg.addColorStop(1,hexA(th.bg,0.95));
+    let spg;
+    if(!_IS_IOS){spg=ctx.createLinearGradient(scpX,scpY,scpX,scpY+scpH);spg.addColorStop(0,hexA(th.gbg,0.97));spg.addColorStop(1,hexA(th.bg,0.95));}else{spg=hexA(th.gbg,0.97);}
     const _scR=Math.min(CR*3,20);
     rrect(ctx,scpX,scpY,scpW,scpH,_scR,spg,null);
-    const spsh=ctx.createLinearGradient(scpX,scpY,scpX,scpY+scpH*0.35);
+    if(!_IS_IOS){const spsh=ctx.createLinearGradient(scpX,scpY,scpX,scpY+scpH*0.35);
     spsh.addColorStop(0,'rgba(255,255,255,0.11)');spsh.addColorStop(1,'rgba(255,255,255,0)');
-    rp(ctx,scpX,scpY,scpW,scpH*0.35,_scR);ctx.fillStyle=spsh;ctx.fill();
+    rp(ctx,scpX,scpY,scpW,scpH*0.35,_scR);ctx.fillStyle=spsh;ctx.fill();}
     rp(ctx,scpX,scpY,scpW,scpH,_scR);ctx.strokeStyle=hexA(th.dc,0.7);ctx.lineWidth=2;ctx.stroke();
     const qSz=cl(scpW*0.068|0,10,20);
     ctx.save();ctx.font=`bold ${qSz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -1647,15 +1657,15 @@ function drawGame(t){
     ctx.shadowBlur=0;ctx.restore();
     const btnW=Math.floor(scpW*0.32),btnH=Math.floor(scpH*0.2);
     const ouiX=scpX+scpW*0.12,ouiY=scpY+scpH*0.55;
-    const ouiG=ctx.createLinearGradient(ouiX,ouiY,ouiX,ouiY+btnH);
-    ouiG.addColorStop(0,'#40C060');ouiG.addColorStop(1,'#205030');
+    let ouiG;
+    if(!_IS_IOS){ouiG=ctx.createLinearGradient(ouiX,ouiY,ouiX,ouiY+btnH);ouiG.addColorStop(0,'#40C060');ouiG.addColorStop(1,'#205030');}else{ouiG='#40C060';}
     rrect(ctx,ouiX,ouiY,btnW,btnH,btnH/3,ouiG,null);
     ctx.save();ctx.font=`bold ${Math.floor(btnH*0.5)}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle='#FFF';ctx.shadowColor='#60FF80';ctx.shadowBlur=6;ctx.fillText('OUI',ouiX+btnW/2,ouiY+btnH/2);ctx.restore();
     secondChanceBtns.oui={x:ouiX,y:ouiY,w:btnW,h:btnH};
     const nonX=scpX+scpW*0.56,nonY=ouiY;
-    const nonG=ctx.createLinearGradient(nonX,nonY,nonX,nonY+btnH);
-    nonG.addColorStop(0,'#C04040');nonG.addColorStop(1,'#601020');
+    let nonG;
+    if(!_IS_IOS){nonG=ctx.createLinearGradient(nonX,nonY,nonX,nonY+btnH);nonG.addColorStop(0,'#C04040');nonG.addColorStop(1,'#601020');}else{nonG='#C04040';}
     rrect(ctx,nonX,nonY,btnW,btnH,btnH/3,nonG,null);
     ctx.save();ctx.font=`bold ${Math.floor(btnH*0.5)}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle='#FFF';ctx.shadowColor='#FF6060';ctx.shadowBlur=6;ctx.fillText('NON',nonX+btnW/2,nonY+btnH/2);ctx.restore();
@@ -1678,14 +1688,14 @@ function drawGame(t){
       const pw2=Math.min(W-24,390),ph2=Math.round(H*0.62);
       const px=(W-pw2)/2,py=(H-ph2)/2-10;
       // Panel glass
-      const pg2=ctx.createLinearGradient(px,py,px,py+ph2);
-      pg2.addColorStop(0,hexA(th.gbg,0.97));pg2.addColorStop(1,hexA(th.bg,0.94));
+      let pg2;
+      if(!_IS_IOS){pg2=ctx.createLinearGradient(px,py,px,py+ph2);pg2.addColorStop(0,hexA(th.gbg,0.97));pg2.addColorStop(1,hexA(th.bg,0.94));}else{pg2=hexA(th.gbg,0.97);}
       const _goR=Math.min(CR*3,20);
       rrect(ctx,px,py,pw2,ph2,_goR,pg2,null);
       // Panel shine
-      const psg=ctx.createLinearGradient(px,py,px,py+ph2*0.35);
+      if(!_IS_IOS){const psg=ctx.createLinearGradient(px,py,px,py+ph2*0.35);
       psg.addColorStop(0,'rgba(255,255,255,0.13)');psg.addColorStop(1,'rgba(255,255,255,0)');
-      rp(ctx,px,py,pw2,ph2*0.35,_goR);ctx.fillStyle=psg;ctx.fill();
+      rp(ctx,px,py,pw2,ph2*0.35,_goR);ctx.fillStyle=psg;ctx.fill();}
       // Border: gold pulse on record, subtle otherwise
       if(isRec){ctx.save();ctx.shadowColor='#FFD700';ctx.shadowBlur=18+7*Math.abs(Math.sin(Date.now()*0.003));rp(ctx,px,py,pw2,ph2,_goR);ctx.strokeStyle=hexA('#FFD700',0.60);ctx.lineWidth=2;ctx.stroke();ctx.restore();}
       else{rp(ctx,px,py,pw2,ph2,_goR);ctx.strokeStyle=hexA(th.dc,0.7);ctx.lineWidth=2;ctx.stroke();}
@@ -1704,9 +1714,7 @@ function drawGame(t){
         ctx.restore();
       }else{
         ctx.font=`bold ${scSz*1.1}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;
-        const _sg2=ctx.createLinearGradient(0,py+ph2*0.26,0,py+ph2*0.40);
-        _sg2.addColorStop(0,th.tm);_sg2.addColorStop(1,th.ta);
-        ctx.fillStyle=_sg2;ctx.shadowColor=th.tm;ctx.shadowBlur=10;
+        if(!_IS_IOS){const _sg2=ctx.createLinearGradient(0,py+ph2*0.26,0,py+ph2*0.40);_sg2.addColorStop(0,th.tm);_sg2.addColorStop(1,th.ta);ctx.fillStyle=_sg2;}else{ctx.fillStyle=th.tm;}ctx.shadowColor=th.tm;ctx.shadowBlur=10;
         ctx.fillText(`${_goDisplayScore}`,W/2,py+ph2*0.33);ctx.shadowBlur=0;
       }
       ctx.globalAlpha=1;
@@ -1745,13 +1753,13 @@ function drawGame(t){
       const _btnH=cl(Math.round(ph2*0.115),36,52),_btnW=Math.floor((pw2-48)/2);
       const _btn1X=px+14,_btn2X=px+pw2-14-_btnW,_btnY=py+ph2-_btnH-14;
       // REJOUER button
-      const _r1g=ctx.createLinearGradient(_btn1X,_btnY,_btn1X,_btnY+_btnH);
-      _r1g.addColorStop(0,lerpC(th.ta,'#ffffff',0.15));_r1g.addColorStop(1,lerpC(th.ta,'#000000',0.40));
+      let _r1g;
+      if(!_IS_IOS){_r1g=ctx.createLinearGradient(_btn1X,_btnY,_btn1X,_btnY+_btnH);_r1g.addColorStop(0,lerpC(th.ta,'#ffffff',0.15));_r1g.addColorStop(1,lerpC(th.ta,'#000000',0.40));}else{_r1g=lerpC(th.ta,'#ffffff',0.15);}
       ctx.save();ctx.shadowColor=th.ta;ctx.shadowBlur=10+5*Math.abs(Math.sin(Date.now()*0.004));
       rrect(ctx,_btn1X,_btnY,_btnW,_btnH,_btnH/2,_r1g,null);
-      const _rsh1=ctx.createLinearGradient(_btn1X,_btnY,_btn1X,_btnY+_btnH*0.45);
+      if(!_IS_IOS){const _rsh1=ctx.createLinearGradient(_btn1X,_btnY,_btn1X,_btnY+_btnH*0.45);
       _rsh1.addColorStop(0,'rgba(255,255,255,0.28)');_rsh1.addColorStop(1,'rgba(255,255,255,0)');
-      rp(ctx,_btn1X+2,_btnY+2,_btnW-4,_btnH*0.45,_btnH/2);ctx.fillStyle=_rsh1;ctx.fill();
+      rp(ctx,_btn1X+2,_btnY+2,_btnW-4,_btnH*0.45,_btnH/2);ctx.fillStyle=_rsh1;ctx.fill();}
       rp(ctx,_btn1X,_btnY,_btnW,_btnH,_btnH/2);ctx.strokeStyle=hexA(th.tm,0.60);ctx.lineWidth=1.5;ctx.stroke();
       ctx.shadowBlur=0;
       const _bfsz=cl(Math.floor(_btnH*0.44),10,19);
@@ -1759,13 +1767,13 @@ function drawGame(t){
       ctx.restore();
       _goReplayRect={x:_btn1X,y:_btnY,w:_btnW,h:_btnH};
       // MENU button
-      const _r2g=ctx.createLinearGradient(_btn2X,_btnY,_btn2X,_btnY+_btnH);
-      _r2g.addColorStop(0,'#2c2c3e');_r2g.addColorStop(1,'#14141f');
+      let _r2g;
+      if(!_IS_IOS){_r2g=ctx.createLinearGradient(_btn2X,_btnY,_btn2X,_btnY+_btnH);_r2g.addColorStop(0,'#2c2c3e');_r2g.addColorStop(1,'#14141f');}else{_r2g='#2c2c3e';}
       ctx.save();
       rrect(ctx,_btn2X,_btnY,_btnW,_btnH,_btnH/2,_r2g,null);
-      const _rsh2=ctx.createLinearGradient(_btn2X,_btnY,_btn2X,_btnY+_btnH*0.45);
+      if(!_IS_IOS){const _rsh2=ctx.createLinearGradient(_btn2X,_btnY,_btn2X,_btnY+_btnH*0.45);
       _rsh2.addColorStop(0,'rgba(255,255,255,0.13)');_rsh2.addColorStop(1,'rgba(255,255,255,0)');
-      rp(ctx,_btn2X+2,_btnY+2,_btnW-4,_btnH*0.45,_btnH/2);ctx.fillStyle=_rsh2;ctx.fill();
+      rp(ctx,_btn2X+2,_btnY+2,_btnW-4,_btnH*0.45,_btnH/2);ctx.fillStyle=_rsh2;ctx.fill();}
       rp(ctx,_btn2X,_btnY,_btnW,_btnH,_btnH/2);ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=1.5;ctx.stroke();
       ctx.shadowBlur=0;
       drawPremText(ctx,'🏠 MENU',_btn2X+_btnW/2,_btnY+_btnH/2,`bold ${_bfsz}px system-ui,-apple-system,"SF Pro Display",Arial`,'rgba(255,255,255,0.92)','rgba(200,200,220,0.70)','rgba(0,0,0,0.4)','rgba(200,200,255,0.45)',4,1.5);
@@ -1790,7 +1798,7 @@ function drawGame(t){
     const _cbScale=combo>=6?1.0+0.08*Math.abs(Math.sin(t*0.022)):1.0;
     ctx.scale(_cbScale,_cbScale);
     // Starburst rays behind text (combo >= 5)
-    if(combo>=5){
+    if(combo>=5&&!_IS_IOS){
       const _cbRays=combo>=8?12:8;
       const _cbRayLen=_cbfsz*(combo>=8?2.2:1.6);
       ctx.save();ctx.rotate(t*0.008);
@@ -1846,9 +1854,9 @@ function drawGame(t){
     ctx.translate(_atX+(1-_aSlide)*_atW*0.25,_atY);
     rrect(ctx,0,0,_atW,_atH,8,'rgba(12,6,28,0.94)',hexA(THEMES[curTheme].tm,0.65),1.5);
     // Shine
-    const _ashg=ctx.createLinearGradient(0,0,0,_atH*0.5);
+    if(!_IS_IOS){const _ashg=ctx.createLinearGradient(0,0,0,_atH*0.5);
     _ashg.addColorStop(0,'rgba(255,255,255,0.10)');_ashg.addColorStop(1,'rgba(255,255,255,0)');
-    rrect(ctx,1,1,_atW-2,_atH*0.5,7,_ashg,null);
+    rrect(ctx,1,1,_atW-2,_atH*0.5,7,_ashg,null);}
     const _icSz=_atH-10;
     if(_achieveImgs[_at.idx])ctx.drawImage(_achieveImgs[_at.idx],5,5,_icSz,_icSz);
     const _atfz=Math.max(7,_atH*0.28|0);
@@ -1893,9 +1901,9 @@ function _drawModeOverlays(t,th){
     const _urgent=chronoTimeLeft<2000;
     if(_urgent){
       const _pulse=0.5+0.5*Math.abs(Math.sin(t*0.022));
-      const _vr=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.25,W/2,H/2,Math.max(W,H)*0.72);
+      if(!_IS_IOS){const _vr=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.25,W/2,H/2,Math.max(W,H)*0.72);
       _vr.addColorStop(0,'rgba(0,0,0,0)');_vr.addColorStop(1,`rgba(220,20,0,${(0.28*_pulse).toFixed(3)})`);
-      ctx.fillStyle=_vr;ctx.fillRect(0,0,W,H);
+      ctx.fillStyle=_vr;ctx.fillRect(0,0,W,H);}else{ctx.fillStyle=`rgba(220,20,0,${(0.14*_pulse).toFixed(3)})`;ctx.fillRect(0,0,W,H);}
     }
     // Seconds label — portrait: inside the bar; landscape: above the bar
     const sec=Math.ceil(chronoTimeLeft/1000);
@@ -2000,8 +2008,8 @@ function _drawModeOverlays(t,th){
         const npx=(W-npw)/2,npy=(H-nph)/2;
         if(isLastLvl){
           // ── HISTOIRE TERMINÉE ──
-          const cbg=ctx.createLinearGradient(npx,npy,npx,npy+nph);
-          cbg.addColorStop(0,'rgba(20,10,40,0.98)');cbg.addColorStop(1,'rgba(5,3,12,0.98)');
+          let cbg;
+          if(!_IS_IOS){cbg=ctx.createLinearGradient(npx,npy,npx,npy+nph);cbg.addColorStop(0,'rgba(20,10,40,0.98)');cbg.addColorStop(1,'rgba(5,3,12,0.98)');}else{cbg='rgba(20,10,40,0.98)';}
           rrect(ctx,npx,npy,npw,nph,16,cbg,null);
           rp(ctx,npx,npy,npw,nph,16);ctx.strokeStyle='rgba(255,200,50,0.9)';ctx.lineWidth=2.5;ctx.stroke();
           const nfsz=cl(npw*0.09|0,12,26);
@@ -2014,8 +2022,8 @@ function _drawModeOverlays(t,th){
           ctx.fillText('La progression repart de zéro',W/2,npy+nph*0.54);ctx.restore();
           const nbw=Math.min(npw-40,200),nbh=cl(Math.round(nph*0.20),28,44);
           const nbx=(W-nbw)/2,nby=npy+nph*0.68;
-          const nbg2=ctx.createLinearGradient(nbx,nby,nbx,nby+nbh);
-          nbg2.addColorStop(0,'#806000');nbg2.addColorStop(1,'#402800');
+          let nbg2;
+          if(!_IS_IOS){nbg2=ctx.createLinearGradient(nbx,nby,nbx,nby+nbh);nbg2.addColorStop(0,'#806000');nbg2.addColorStop(1,'#402800');}else{nbg2='#806000';}
           rrect(ctx,nbx,nby,nbw,nbh,nbh/2,nbg2,null);
           rp(ctx,nbx,nby,nbw,nbh,nbh/2);ctx.strokeStyle='rgba(255,200,50,0.7)';ctx.lineWidth=1.5;ctx.stroke();
           const nbfsz=cl(Math.floor(nbh*0.5),10,18);
@@ -2041,8 +2049,8 @@ function _drawModeOverlays(t,th){
           ctx.fillText(`${lvNum} / ${HISTOIRE_LEVELS.length}`,npx+npw/2,pby+pbh+12);ctx.restore();
           const nbw=Math.min(npw-40,200),nbh=cl(Math.round(nph*0.20),28,44);
           const nbx=(W-nbw)/2,nby=npy+nph*0.70;
-          const nbg2=ctx.createLinearGradient(nbx,nby,nbx,nby+nbh);
-          nbg2.addColorStop(0,'#2A6040');nbg2.addColorStop(1,'#143020');
+          let nbg2;
+          if(!_IS_IOS){nbg2=ctx.createLinearGradient(nbx,nby,nbx,nby+nbh);nbg2.addColorStop(0,'#2A6040');nbg2.addColorStop(1,'#143020');}else{nbg2='#2A6040';}
           rrect(ctx,nbx,nby,nbw,nbh,nbh/2,nbg2,null);
           rp(ctx,nbx,nby,nbw,nbh,nbh/2);ctx.strokeStyle='rgba(64,255,100,0.6)';ctx.lineWidth=1.5;ctx.stroke();
           const nbfsz=cl(Math.floor(nbh*0.5),10,18);

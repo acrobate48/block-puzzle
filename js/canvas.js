@@ -7,13 +7,14 @@ const ctx=canvas.getContext('2d');
 //  - ctx.shadowBlur (each non-zero value forces a separate GPU compositing pass)
 const _IS_IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||
   (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-// Neutralise shadowBlur on iOS — silently drops all 187 calls without touching call sites
-if(_IS_IOS){
+// Neutralise shadowBlur on iOS — silently drops all shadow calls without touching call sites
+// Wrapped in try/catch: some WebKit versions mark the property non-configurable and would throw
+if(_IS_IOS){try{
   Object.defineProperty(ctx,'shadowBlur',{get:()=>0,set:()=>{},configurable:true});
   Object.defineProperty(ctx,'shadowColor',{get:()=>'transparent',set:()=>{},configurable:true});
   Object.defineProperty(ctx,'shadowOffsetX',{get:()=>0,set:()=>{},configurable:true});
   Object.defineProperty(ctx,'shadowOffsetY',{get:()=>0,set:()=>{},configurable:true});
-}
+}catch(e){}}
 let W,H,CELL,GRID_X,GRID_Y,GW,GH,TRAY_Y,TRAY_H,PIECE_CELL,CR;
 
 function resize(){

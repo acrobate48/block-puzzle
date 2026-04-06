@@ -1152,24 +1152,10 @@ function drawGame(t){
       // Parasite overlay (if this cell is an active parasite source)
       if(_parasiteSet.has(r*100+c)){drawParasiteOverlay(ctx,x,y,CELL,t,r*17+c*31);}
     }else{
-      // Empty cell — frosted glass with animated inner glow
+      // Empty cell — single flat frosted fill (no per-cell gradient allocation)
       const er=Math.max(2,CELL/6|0);
-      // Base: diagonal frosted fill
-      const _efg=ctx.createLinearGradient(x+2,y+2,x+CELL-2,y+CELL-2);
-      _efg.addColorStop(0,hexA(th.sl,0.10));_efg.addColorStop(1,hexA(th.ge,0.24));
-      rp(ctx,x+2,y+2,CELL-4,CELL-4,er);ctx.fillStyle=_efg;ctx.fill();
-      // Animated inner glow (position-offset phase for ripple feel)
-      const _eig=ctx.createRadialGradient(x+CELL*0.38,y+CELL*0.32,0,x+CELL/2,y+CELL/2,CELL*0.52);
-      _eig.addColorStop(0,hexA(th.sl,0.07+0.04*Math.abs(Math.sin(t*0.0016+(x+y)*0.002))));_eig.addColorStop(1,'rgba(0,0,0,0)');
-      rp(ctx,x+2,y+2,CELL-4,CELL-4,er);ctx.fillStyle=_eig;ctx.fill();
-      // Top-left glass reflection
-      const _etg=ctx.createLinearGradient(x+2,y+2,x+CELL*0.55,y+CELL*0.42);
-      _etg.addColorStop(0,'rgba(255,255,255,0.07)');_etg.addColorStop(1,'rgba(255,255,255,0)');
-      rp(ctx,x+2,y+2,CELL-4,CELL-4,er);ctx.fillStyle=_etg;ctx.fill();
-      // Border with subtle glow
-      rp(ctx,x+2,y+2,CELL-4,CELL-4,er);ctx.strokeStyle=hexA(th.sl,0.16);ctx.lineWidth=1;ctx.stroke();
-      // Center dot
-      ctx.fillStyle=hexA(th.sl,0.15);ctx.beginPath();ctx.arc(x+CELL/2,y+CELL/2,Math.max(1,CELL*0.055),0,Math.PI*2);ctx.fill();
+      rp(ctx,x+2,y+2,CELL-4,CELL-4,er);ctx.fillStyle=hexA(th.sl,0.12);ctx.fill();
+      rp(ctx,x+2,y+2,CELL-4,CELL-4,er);ctx.strokeStyle=hexA(th.sl,0.18);ctx.lineWidth=1;ctx.stroke();
     }
   }}
   // Corner sparks on freshly placed cells

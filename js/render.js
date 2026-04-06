@@ -1702,6 +1702,7 @@ function initFx(ti){
 }
 
 function drawFx(ctx,fx,t){
+  if(!fx)return;
   const th=THEMES[fx.ti];
   switch(fx.ti){
     case 0:{

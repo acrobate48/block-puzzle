@@ -1057,7 +1057,7 @@ function drawGame(t){
   const th=THEMES[curTheme];
   if(!over&&_goExploded)_goExploded=false;
   if(shake>0){shake--;shakeX=rnd(-shakePow,shakePow)|0;shakeY=rnd(-shakePow,shakePow)|0;}else{shakeX=0;shakeY=0;}
-  if(!drawThemeVideo(curTheme,shakeX,shakeY)&&!drawThemeBg(curTheme,shakeX,shakeY)){ctx.drawImage(gameBg,shakeX,shakeY);}
+  if(!drawThemeVideo(curTheme,shakeX,shakeY)&&!drawThemeBg(curTheme,shakeX,shakeY)){if(gameBg)ctx.drawImage(gameBg,shakeX,shakeY);}
   if(typeof drawThemeTransition==='function')drawThemeTransition();
   _drawParallax(t);
   // Aurora borealis (Night, Cosmos)

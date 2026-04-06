@@ -303,12 +303,9 @@ function getCached(col,sz,skin,t){
 function drawCell(ctx,col,x,y,sz,skin,t,alpha=1){
   x=x|0;y=y|0;sz=sz|0;if(sz<1)return;
   if(_IS_IOS){
-    // Ultra-minimal: flat colored rect — no offscreen canvas, no GPU textures, no shadows
+    // iOS: use cached offscreen canvas (skins) but skip drop shadow + cell glow
     if(alpha<1)ctx.globalAlpha=alpha;
-    const _r=Math.max(2,sz/6|0);
-    ctx.fillStyle=col;rp(ctx,x+1,y+1,sz-2,sz-2,_r);ctx.fill();
-    // Tiny top highlight for depth
-    ctx.fillStyle='rgba(255,255,255,0.18)';ctx.fillRect(x+2,y+2,sz-4,Math.max(1,sz*0.14|0));
+    ctx.drawImage(getCached(col,sz,skin,t),x,y);
     if(alpha<1)ctx.globalAlpha=1;
     return;
   }

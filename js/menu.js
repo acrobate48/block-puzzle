@@ -1,6 +1,6 @@
 'use strict';
 // ─── MENU ────────────────────────────────────────────────────────────────────
-let menuBg=_IS_IOS?null:buildBg(0),menuFx=initFx(0);
+let menuBg=_IS_IOS?null:buildBg(0),menuFx=_IS_IOS?null:initFx(0);
 const _menuHoverBgCache=new Array(10).fill(null); // buildBg result per theme, built once
 let menuDeco=Array.from({length:12},()=>({x:rnd(0,W),y:rnd(0,H),vx:rnd(-0.28,0.28),vy:rnd(-0.18,0.18),color:rndc(COLORS),skin:rndI(0,9),sz:rnd(22,48)}));
 let menuParts=Array.from({length:70},(_,i)=>{

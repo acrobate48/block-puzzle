@@ -1217,7 +1217,7 @@ function drawGame(t){
   // Update pop animations (O(1) per entry)
   placedCellsMap.forEach((f,k)=>{if(f+1>=_SPRING.length)placedCellsMap.delete(k);else placedCellsMap.set(k,f+1);});
   // Clear line sweep animations — Apple-style: flash + bright sweep + glow trail
-  if(_IS_IOS){clearAnims.length=0;} else
+  if(_IS_IOS){clearAnims=clearAnims.filter(a=>{const dur=520;const p=Math.min(1,(Date.now()-a.born)/dur);if(p>=1)return false;if(p<0.3){const _sf=1-(p/0.3);ctx.fillStyle=`rgba(255,255,255,${(_sf*0.7).toFixed(3)})`;const rows=[...new Set(a.cells.map(c=>c.r))],cols=[...new Set(a.cells.map(c=>c.c))];rows.forEach(_r=>{ctx.fillRect(GRID_X,GRID_Y+_r*CELL,GW,CELL);});cols.forEach(_c=>{ctx.fillRect(GRID_X+_c*CELL,GRID_Y,CELL,GH);});}return true;});} else
   clearAnims=clearAnims.filter(a=>{
     const dur=520;
     const p=Math.min(1,(Date.now()-a.born)/dur);
@@ -1524,7 +1524,9 @@ function drawGame(t){
     }
   }
   // Impact ripples — expanding rings from block placements and bomb blasts
-  if(_IS_IOS){debris.length=0;dragTrail.length=0;
+  if(_IS_IOS){dragTrail.length=0;
+    if(debris.length>60)debris.splice(0,debris.length-60);
+    debris=debris.filter(d=>{d.draw(ctx);return d.update();});
     if(ripples.length>6)ripples.splice(0,ripples.length-6);
     ripples=ripples.filter(ri=>{ri.life--;if(ri.life<=0)return false;const _rp=1-ri.life/ri.ml;ri.r=ri.maxR*_rp;const _ra=(ri.life/ri.ml)*0.55;ctx.save();ctx.strokeStyle=hexA(ri.color,_ra);ctx.lineWidth=Math.max(1,3.5*(1-_rp));ctx.beginPath();ctx.arc(ri.x,ri.y,ri.r,0,Math.PI*2);ctx.stroke();ctx.restore();return true;});
     if(particles.length>80)particles.splice(0,particles.length-80);

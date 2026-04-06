@@ -72,11 +72,9 @@ window.addEventListener('error', (e) => {
 <script src="js/input.js"></script>
 <script src="js/loop.js"></script>
 <script>
-// Service Worker disabled — unregister any stale SW that may be intercepting requests
+// Register kill-switch SW to evict any broken SW from previous deploy
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(regs=>{
-    regs.forEach(r=>r.unregister());
-  }).catch(()=>{});
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 </script>
 </body>

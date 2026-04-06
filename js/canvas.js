@@ -51,8 +51,8 @@ const _THEME_NAMES=['jungle','desert','ocean','volcan','nuit','arctique','cosmos
 // ─── SVG BACKGROUND PRELOADER ─────────────────────────────────────────────────
 const _bgImgs=new Array(10).fill(null);
 const _bgReady=new Array(10).fill(false);
-// Skip SVG loading on iOS — saves 10 image decodes + ~180KB network on memory-limited devices
-if(!_IS_IOS)_THEME_NAMES.forEach((name,i)=>{
+// Load SVG backgrounds (lightweight — ~18KB each, no heavy decode)
+_THEME_NAMES.forEach((name,i)=>{
   const img=new Image();
   img.onload=()=>{_bgImgs[i]=img;_bgReady[i]=true;};
   img.onerror=()=>{

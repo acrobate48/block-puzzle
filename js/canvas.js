@@ -51,7 +51,7 @@ const _THEME_NAMES=['jungle','desert','ocean','volcan','nuit','arctique','cosmos
 // ─── SVG BACKGROUND PRELOADER ─────────────────────────────────────────────────
 const _bgImgs=new Array(10).fill(null);
 const _bgReady=new Array(10).fill(false);
-_THEME_NAMES.forEach((name,i)=>{
+if(!_IS_IOS)_THEME_NAMES.forEach((name,i)=>{
   const img=new Image();
   img.onload=()=>{_bgImgs[i]=img;_bgReady[i]=true;};
   img.onerror=()=>{

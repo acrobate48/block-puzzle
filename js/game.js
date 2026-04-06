@@ -1524,12 +1524,14 @@ function drawGame(t){
     }
   }
   // Impact ripples — expanding rings from block placements and bomb blasts
-  if(_IS_IOS){ripples.length=0;debris.length=0;dragTrail.length=0;
+  if(_IS_IOS){debris.length=0;dragTrail.length=0;
+    if(ripples.length>6)ripples.splice(0,ripples.length-6);
+    ripples=ripples.filter(ri=>{ri.life--;if(ri.life<=0)return false;const _rp=1-ri.life/ri.ml;ri.r=ri.maxR*_rp;const _ra=(ri.life/ri.ml)*0.55;ctx.save();ctx.strokeStyle=hexA(ri.color,_ra);ctx.lineWidth=Math.max(1,3.5*(1-_rp));ctx.beginPath();ctx.arc(ri.x,ri.y,ri.r,0,Math.PI*2);ctx.stroke();ctx.restore();return true;});
     if(particles.length>80)particles.splice(0,particles.length-80);
     particles=particles.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.13;p.life--;if(p.life<=0)return false;const ratio=p.life/p.ml,sz=Math.max(1,p.size*ratio);ctx.fillStyle=hexA(p.color,0.82*ratio);if(p.circle){ctx.beginPath();ctx.arc(p.x,p.y,sz,0,Math.PI*2);ctx.fill();}else ctx.fillRect(p.x-sz,p.y-sz,sz*2,sz*2);return true;});
     if(floats.length>20)floats.splice(0,floats.length-20);
     floats=floats.filter(f=>{f.draw(ctx);return f.update();});
-    screenFlash=0;
+    if(screenFlash>0){ctx.fillStyle=hexA(screenFlashCol,screenFlash/255*0.48);ctx.fillRect(0,0,W,H);screenFlash=Math.max(0,screenFlash-5);}
   }else{
   ripples=ripples.filter(ri=>{ri.life--;if(ri.life<=0)return false;const _rp=1-ri.life/ri.ml;ri.r=ri.maxR*_rp;const _ra=(ri.life/ri.ml)*0.55;ctx.save();ctx.strokeStyle=hexA(ri.color,_ra);ctx.lineWidth=Math.max(1,3.5*(1-_rp));ctx.shadowColor=ri.color;ctx.shadowBlur=12;ctx.beginPath();ctx.arc(ri.x,ri.y,ri.r,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.restore();return true;});
   // Particles + Debris

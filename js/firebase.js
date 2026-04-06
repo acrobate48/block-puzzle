@@ -76,7 +76,7 @@ function resetGame(){
   // Mode-specific reset
   contraBlocked=[];choixState='picking';choixOptions=[];choixOptionRects=[];choixSelected=-1;
   histoireGoalMet=false;histoireNextRect=null;
-  curTheme=selTheme;gameFx=initFx(selTheme);gameBg=buildBg(selTheme);fadeAlpha=1;
+  curTheme=selTheme;gameFx=initFx(selTheme);gameBg=_IS_IOS?null:buildBg(selTheme);fadeAlpha=1;
   _initMode();
 }
 function getCurTheme(){return(selTheme+Math.floor(score/500))%THEMES.length;}
@@ -92,7 +92,7 @@ function loadSave(){
     gameStartTime=Date.now()-(sv.gameStartTime?Date.now()-sv.gameStartTime:0);
     totalLinesCleared=sv.totalLinesCleared||0;maxComboGame=sv.maxComboGame||0;
     displayScore=score;
-    gameBg=buildBg(curTheme);gameFx=initFx(curTheme);
+    gameBg=_IS_IOS?null:buildBg(curTheme);gameFx=initFx(curTheme);
     gameState='playing';fadeAlpha=0.6;
     return true;
   }catch(e){return false;}

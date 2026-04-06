@@ -39,7 +39,7 @@ function resize(){
   CELL_CACHE.clear();
 }
 let _resizeTimer=null;
-window.addEventListener('resize',()=>{clearTimeout(_resizeTimer);_resizeTimer=setTimeout(()=>{resize();menuBg=buildBg(selTheme);},100);},false);
+window.addEventListener('resize',()=>{clearTimeout(_resizeTimer);_resizeTimer=setTimeout(()=>{resize();if(!_IS_IOS)menuBg=buildBg(selTheme);},100);},false);
 resize();
 
 // ─── THEME ASSET PATHS ────────────────────────────────────────────────────────

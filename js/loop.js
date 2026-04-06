@@ -9,6 +9,9 @@ function loop(ts){
   // Skip frames arriving faster than 120fps — reduces unnecessary GPU work on high-refresh displays
   if(ts-_lastTs<8){requestAnimationFrame(loop);return;}
   _lastTs=ts;
+  // Cap particle arrays — prevents memory accumulation on long sessions (critical on iOS)
+  if(typeof particles!=='undefined'&&particles.length>200)particles.splice(0,particles.length-200);
+  if(typeof debris!=='undefined'&&debris.length>150)debris.splice(0,debris.length-150);
   // Game-start sound on transition into playing
   if(gameState==='playing'&&_prevGameState!=='playing'){
     if(typeof sndStart==='function')sndStart();

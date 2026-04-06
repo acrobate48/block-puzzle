@@ -283,13 +283,17 @@ function _drawBevel(ctx,x,y,sz){
 }
 
 function getCached(col,sz,skin,t){
-  // Animated skins: bucket time into 100ms frames to avoid cache thrashing
-  const k=ANIMATED_SKINS.has(skin)?`${skin}_${col}_${sz}_${Math.floor(t/100)}`:`${skin}_${col}_${sz}`;
+  const animated=ANIMATED_SKINS.has(skin);
+  // On iOS: animated skins rendered at t=0 (no animation) — prevents cache key rotating
+  // every 100ms which would grow CELL_CACHE indefinitely (GPU OOM crash on iPhone)
+  const k=(!_IS_IOS&&animated)?`${skin}_${col}_${sz}_${Math.floor(t/100)}`:`${skin}_${col}_${sz}`;
   if(CELL_CACHE.has(k))return CELL_CACHE.get(k);
+  // Safety cap: prevent unbounded growth (critical — each entry is an offscreen GPU canvas)
+  if(CELL_CACHE.size>=200)CELL_CACHE.clear();
   const oc=document.createElement('canvas');oc.width=sz;oc.height=sz;
   const c2=oc.getContext('2d');
-  // For animated skins bake at position (0,0) using the bucketed time
-  const bakeT=ANIMATED_SKINS.has(skin)?Math.floor(t/100)*100:0;
+  if(!c2)return oc; // iOS canvas context limit exceeded — return empty canvas to avoid crash
+  const bakeT=(!_IS_IOS&&animated)?Math.floor(t/100)*100:0;
   SKIN_FNS[skin](c2,col,0,0,sz,bakeT);
   _drawBevel(c2,0,0,sz);
   CELL_CACHE.set(k,oc);return oc;

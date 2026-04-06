@@ -430,7 +430,7 @@ function onUp(e){
         if(n>=2){const cn=Math.min(n,4);floats.push(new FloatText(`COMBO ×${cn} POINT`,GRID_X+GW/2,GRID_Y+GH/2,THEMES[ti].hi||'#FFD700',1.6,110));}
         if(starPts>0)floats.push(new FloatText(`★+${starPts}`,GRID_X+GW/2,GRID_Y+miny*CELL-CELL*1.5,THEMES[ti].hi||'#FFE030',1.2,90));
         if(hasX2)floats.push(new FloatText('×2 POINTS 60s',GRID_X+GW/2,GRID_Y+GH*0.35,'#30FFAA',1.1,100));
-        const newTh=getCurTheme();if(newTh!==curTheme){curTheme=newTh;gameBg=_IS_IOS?null:buildBg(curTheme);gameFx=_IS_IOS?null:initFx(curTheme);screenFlash=200;screenFlashCol=THEMES[newTh].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));}
+        const newTh=getCurTheme();if(newTh!==curTheme){curTheme=newTh;gameBg=_IS_IOS?null:buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=200;screenFlashCol=THEMES[newTh].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));}
         // ── Perfect Clear bonus — entire board emptied ────────────────────────
         if(grid.every(row=>row.every(v=>!v||v==='__BLOCKED__'||v==='__CRACKED__'))){
           if(typeof _unlockAchieve==='function')_unlockAchieve(4); // Achievement #5 — perfect clear
@@ -500,7 +500,7 @@ function onUp(e){
 function handleMenuTap(x,y){
   layoutMenu();
   for(let i=0;i<skinRects.length;i++){const{x:rx,y:ry,w,h}=skinRects[i];if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){selSkin=i;if(typeof _addMenuRipple==='function')_addMenuRipple(rx+w/2,ry+h/2,COLORS[i%COLORS.length],Math.max(w,h)*1.4);return;}}
-  for(let i=0;i<themeRects.length;i++){const{x:rx,y:ry,w,h}=themeRects[i];if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){selTheme=i;if(!_IS_IOS)menuBg=buildBg(i);menuFx=_IS_IOS?null:initFx(i);
+  for(let i=0;i<themeRects.length;i++){const{x:rx,y:ry,w,h}=themeRects[i];if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){selTheme=i;if(!_IS_IOS)menuBg=buildBg(i);menuFx=initFx(i);
     if(typeof _addMenuRipple==='function'){
       _addMenuRipple(rx+w/2,ry+h/2,THEMES[i].tm,Math.max(w,h)*1.6);
       // Burst 8 particles in theme color from card center

@@ -1061,7 +1061,7 @@ function drawGame(t){
   if(typeof drawThemeTransition==='function')drawThemeTransition();
   _drawParallax(t);
   // Aurora borealis (Night, Cosmos)
-  _drawAurora(t);
+  if(!_IS_IOS)_drawAurora(t);
   // God rays (Jungle, Désert, Plage)
   _spawnGodRay();_drawGodRays();
   // Lensflare at 100K+
@@ -1161,25 +1161,18 @@ function drawGame(t){
   // Corner sparks on freshly placed cells
   _drawFreshCornerSparks();
   // Prismatic shimmer — Crystal skin
-  _drawCrystalShimmer(t);
-  // Combo fire cell overlay (combo ≥ 5)
-  _drawComboFireCells(t);
-  // Combo glowing grid dividers (combo ≥ 3)
-  _drawComboGridLines(t);
-  // Cosmos nebula drift
-  _drawCosmosnNebula(t);
-  // Rhythm heartbeat pulse
-  _drawRhythmPulse(t);
-  // Volcano eruption gust
-  _spawnVolcanoGust();
-  // Snow accumulation on Arctic grid bottom
-  _updateSnowAccum(t);
-  // Ambient grid mist
-  _drawGridMist(t);
-  // Grid pulse wave from recent placements
-  _drawGridWave(t);
-  // Power cell zap arcs (star ↔ X2 adjacent cells)
-  _drawPowerZaps(t);
+  if(!_IS_IOS){
+    _drawCrystalShimmer(t);
+    _drawComboFireCells(t);
+    _drawComboGridLines(t);
+    _drawCosmosnNebula(t);
+    _drawRhythmPulse(t);
+    _spawnVolcanoGust();
+    _updateSnowAccum(t);
+    _drawGridMist(t);
+    _drawGridWave(t);
+    _drawPowerZaps(t);
+  }
   // Almost-clear row/col golden highlight
   _drawAlmostClear(t);
   // Persistent halos on freshly placed cells
@@ -1190,11 +1183,11 @@ function drawGame(t){
   // Snow accumulation display (Arctic theme)
   _drawSnowAccum();
   // Depth fog at grid bottom (Ocean/Arctic)
-  _drawDepthFog(t);
-  // Ocean column drips
-  _updateColDrips();_drawColDrips();
-  // Heat shimmer (Volcano)
-  _drawHeatShimmer(t);
+  if(!_IS_IOS){
+    _drawDepthFog(t);
+    _updateColDrips();_drawColDrips();
+    _drawHeatShimmer(t);
+  }
   // Floor glow effect below grid
   _drawFloorEffect(t);
   // Stress cracks on overcrowded grid
@@ -1352,7 +1345,7 @@ function drawGame(t){
   const _trayFade=_trayEased;
   const _traySlideY=((1-_trayEased)*TRAY_H*0.45)|0;
   // Tray slot piece color radiance
-  _drawTrayRadiance();
+  if(!_IS_IOS)_drawTrayRadiance();
   // Tray speed glow (color border based on think time)
   _drawTraySpeedGlow(t);
   // Danger tray pulse — extra red glow when grid is near-full

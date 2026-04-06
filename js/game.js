@@ -2093,12 +2093,14 @@ function drawHUD(th){
       if(_nextMs){
         const _mFrac=Math.min(1,(score-_prevMs)/(_nextMs-_prevMs));
         const _mPulse=0.8+0.2*Math.abs(Math.sin(Date.now()*0.003));
-        const _mCol=_nextMs>=100000?`hsl(${(Date.now()*0.05)%360|0},100%,65%)`:'#FFD700';
+        const _mHue=_nextMs>=100000?(Date.now()*0.05)%360|0:-1;
+        const _mCol=_mHue>=0?`hsl(${_mHue},100%,65%)`:'#FFD700';
+        const _mA=(a)=>_mHue>=0?`hsla(${_mHue},100%,65%,${+a.toFixed(3)})`:hexA(_mCol,a);
         const _mg=ctx.createLinearGradient(0,0,W*_mFrac,0);
-        _mg.addColorStop(0,hexA(_mCol,0.18));_mg.addColorStop(0.7,hexA(_mCol,0.38*_mPulse));_mg.addColorStop(1,hexA(_mCol,0.55*_mPulse));
+        _mg.addColorStop(0,_mA(0.18));_mg.addColorStop(0.7,_mA(0.38*_mPulse));_mg.addColorStop(1,_mA(0.55*_mPulse));
         ctx.fillStyle=_mg;ctx.fillRect(0,0,Math.round(W*_mFrac),2);
         // Sparkle at tip of progress bar
-        ctx.save();ctx.shadowColor=_mCol;ctx.shadowBlur=4;ctx.fillStyle=hexA(_mCol,_mPulse);ctx.fillRect(Math.round(W*_mFrac)-2,0,2,2);ctx.restore();
+        ctx.save();ctx.shadowColor=_mCol;ctx.shadowBlur=4;ctx.fillStyle=_mA(_mPulse);ctx.fillRect(Math.round(W*_mFrac)-2,0,2,2);ctx.restore();
       }else{// All milestones passed — rainbow fill
         const _rh=(Date.now()*0.04)%360|0;ctx.fillStyle=`hsl(${_rh},100%,60%)`;ctx.fillRect(0,0,W,2);}
     }

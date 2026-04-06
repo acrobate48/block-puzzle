@@ -1929,8 +1929,8 @@ function _drawModeOverlays(t,th){
     ctx.fillStyle='rgba(0,0,0,0.72)';ctx.fillRect(0,0,W,H);
     const cw=Math.min(W-16,380),ch=Math.round(H*0.44);
     const cx2=(W-cw)/2,cy2=(H-ch)/2;
-    const cbg=ctx.createLinearGradient(cx2,cy2,cx2,cy2+ch);
-    cbg.addColorStop(0,'rgba(30,10,50,0.97)');cbg.addColorStop(1,'rgba(15,5,25,0.95)');
+    let cbg;
+    if(!_IS_IOS){cbg=ctx.createLinearGradient(cx2,cy2,cx2,cy2+ch);cbg.addColorStop(0,'rgba(30,10,50,0.97)');cbg.addColorStop(1,'rgba(15,5,25,0.95)');}else{cbg='rgba(30,10,50,0.97)';}
     const _chR=Math.min(CR*2,16);
     rrect(ctx,cx2,cy2,cw,ch,_chR,cbg,null);
     rp(ctx,cx2,cy2,cw,ch,_chR);ctx.strokeStyle='rgba(200,80,255,0.55)';ctx.lineWidth=2;ctx.stroke();
@@ -1944,8 +1944,8 @@ function _drawModeOverlays(t,th){
       const sx=cx2+i*slotW+6,sy=cy2+ch*0.2,sw=slotW-12,sh=ch*0.62;
       choixOptionRects.push({x:sx,y:sy,w:sw,h:sh});
       const hover=mouseX>=sx&&mouseX<sx+sw&&mouseY>=sy&&mouseY<sy+sh;
-      const sbg2=ctx.createLinearGradient(sx,sy,sx,sy+sh);
-      sbg2.addColorStop(0,hexA(piece.color,hover?0.38:0.20));sbg2.addColorStop(1,hexA(piece.color,hover?0.22:0.10));
+      let sbg2;
+      if(!_IS_IOS){sbg2=ctx.createLinearGradient(sx,sy,sx,sy+sh);sbg2.addColorStop(0,hexA(piece.color,hover?0.38:0.20));sbg2.addColorStop(1,hexA(piece.color,hover?0.22:0.10));}else{sbg2=hexA(piece.color,hover?0.38:0.20);}
       const _slR=Math.min(CR*2,12);
       rrect(ctx,sx,sy,sw,sh,_slR,sbg2,null);
       rp(ctx,sx,sy,sw,sh,_slR);ctx.strokeStyle=hexA(piece.color,hover?0.9:0.45);ctx.lineWidth=hover?2:1;ctx.stroke();
@@ -2074,7 +2074,7 @@ function drawHUD(th){
     ctx.fillStyle=th.hudBg||'rgba(0,0,0,0.88)';ctx.fillRect(0,0,W,bh);
     ctx.strokeStyle=th.hudBorder||hexA(th.sl,0.35);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,bh);ctx.lineTo(W,bh);ctx.stroke();
     // Thin combo accent bar along bottom of HUD strip
-    if(combo>=2&&!over){const _cbFrac=Math.min(1,combo/8);const _cbCol=combo>=6?'#FF40A0':combo>=4?'#FFA020':th.tm;const _cbW=Math.round(W*_cbFrac);const _cbX=(W-_cbW)/2|0;const _cbg=ctx.createLinearGradient(_cbX,bh-2,_cbX+_cbW,bh-2);_cbg.addColorStop(0,hexA(th.ta,0));_cbg.addColorStop(0.3,_cbCol);_cbg.addColorStop(0.7,_cbCol);_cbg.addColorStop(1,hexA(th.ta,0));ctx.fillStyle=_cbg;ctx.fillRect(_cbX,bh-2,_cbW,2);}
+    if(combo>=2&&!over){const _cbFrac=Math.min(1,combo/8);const _cbCol=combo>=6?'#FF40A0':combo>=4?'#FFA020':th.tm;const _cbW=Math.round(W*_cbFrac);const _cbX=(W-_cbW)/2|0;if(!_IS_IOS){const _cbg=ctx.createLinearGradient(_cbX,bh-2,_cbX+_cbW,bh-2);_cbg.addColorStop(0,hexA(th.ta,0));_cbg.addColorStop(0.3,_cbCol);_cbg.addColorStop(0.7,_cbCol);_cbg.addColorStop(1,hexA(th.ta,0));ctx.fillStyle=_cbg;}else{ctx.fillStyle=_cbCol;}ctx.fillRect(_cbX,bh-2,_cbW,2);}
     // Milestone progress bar — top edge of HUD strip (1px, shows progress to next milestone)
     if(!over){
       const _prevMs=_nextMilestoneIdx>0?_MILESTONES[_nextMilestoneIdx-1]:0;
@@ -2085,9 +2085,7 @@ function drawHUD(th){
         const _mHue=_nextMs>=100000?(Date.now()*0.05)%360|0:-1;
         const _mCol=_mHue>=0?`hsl(${_mHue},100%,65%)`:'#FFD700';
         const _mA=(a)=>_mHue>=0?`hsla(${_mHue},100%,65%,${+a.toFixed(3)})`:hexA(_mCol,a);
-        const _mg=ctx.createLinearGradient(0,0,W*_mFrac,0);
-        _mg.addColorStop(0,_mA(0.18));_mg.addColorStop(0.7,_mA(0.38*_mPulse));_mg.addColorStop(1,_mA(0.55*_mPulse));
-        ctx.fillStyle=_mg;ctx.fillRect(0,0,Math.round(W*_mFrac),2);
+        if(!_IS_IOS){const _mg=ctx.createLinearGradient(0,0,W*_mFrac,0);_mg.addColorStop(0,_mA(0.18));_mg.addColorStop(0.7,_mA(0.38*_mPulse));_mg.addColorStop(1,_mA(0.55*_mPulse));ctx.fillStyle=_mg;}else{ctx.fillStyle=_mA(0.38*_mPulse);}ctx.fillRect(0,0,Math.round(W*_mFrac),2);
         // Sparkle at tip of progress bar
         ctx.save();ctx.shadowColor=_mCol;ctx.shadowBlur=4;ctx.fillStyle=_mA(_mPulse);ctx.fillRect(Math.round(W*_mFrac)-2,0,2,2);ctx.restore();
       }else{// All milestones passed — rainbow fill
@@ -2126,12 +2124,12 @@ function drawHUD(th){
     const modeInfo=MODES[currentMode]||MODES.survie;
     const _mbH=Math.min(bh*0.46|0,26),_mbW=cl(fz*4.4|0,60,118);
     const _mbX=4,_mbY=(bh-_mbH)/2|0;
-    const _mbg=ctx.createLinearGradient(_mbX,_mbY,_mbX,_mbY+_mbH);
-    _mbg.addColorStop(0,hexA(modeInfo.color,0.28));_mbg.addColorStop(1,hexA(modeInfo.color,0.10));
+    let _mbg;
+    if(!_IS_IOS){_mbg=ctx.createLinearGradient(_mbX,_mbY,_mbX,_mbY+_mbH);_mbg.addColorStop(0,hexA(modeInfo.color,0.28));_mbg.addColorStop(1,hexA(modeInfo.color,0.10));}else{_mbg=hexA(modeInfo.color,0.28);}
     rrect(ctx,_mbX,_mbY,_mbW,_mbH,_mbH/2,_mbg,hexA(modeInfo.color,0.55),1);
-    const _mbsh=ctx.createLinearGradient(_mbX,_mbY,_mbX,_mbY+_mbH*0.48);
+    if(!_IS_IOS){const _mbsh=ctx.createLinearGradient(_mbX,_mbY,_mbX,_mbY+_mbH*0.48);
     _mbsh.addColorStop(0,'rgba(255,255,255,0.16)');_mbsh.addColorStop(1,'rgba(255,255,255,0)');
-    rp(ctx,_mbX+1,_mbY+1,_mbW-2,_mbH*0.48,_mbH/2);ctx.fillStyle=_mbsh;ctx.fill();
+    rp(ctx,_mbX+1,_mbY+1,_mbW-2,_mbH*0.48,_mbH/2);ctx.fillStyle=_mbsh;ctx.fill();}
     ctx.save();ctx.font=`bold ${fz*0.52|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=modeInfo.color;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.shadowColor=modeInfo.color;ctx.shadowBlur=5;ctx.fillText(modeInfo.icon+' '+modeInfo.name,_mbX+_mbW/2,_mbY+_mbH/2);ctx.shadowBlur=0;ctx.restore();
     // Record below badge
@@ -2152,8 +2150,8 @@ function drawHUD(th){
     // ── Pause button ──
     ctx.save();
     ctx.shadowColor=th.ta;ctx.shadowBlur=5;
-    const pbg=ctx.createLinearGradient(pauseX,btnY,pauseX,btnY+iconSz);
-    pbg.addColorStop(0,hexA(th.ta,0.50));pbg.addColorStop(1,hexA(th.ta,0.22));
+    let pbg;
+    if(!_IS_IOS){pbg=ctx.createLinearGradient(pauseX,btnY,pauseX,btnY+iconSz);pbg.addColorStop(0,hexA(th.ta,0.50));pbg.addColorStop(1,hexA(th.ta,0.22));}else{pbg=hexA(th.ta,0.50);}
     rrect(ctx,pauseX,btnY,iconSz,iconSz,iconSz/4,pbg,null);
     rp(ctx,pauseX,btnY,iconSz,iconSz,iconSz/4);ctx.strokeStyle=hexA(th.ta,0.65);ctx.lineWidth=1;ctx.stroke();
     ctx.shadowBlur=0;ctx.font=`${iconSz*0.56|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -2167,8 +2165,8 @@ function drawHUD(th){
     ctx.save();
     const sOn=_soundEnabled;
     ctx.shadowColor=sOn?'#40D8FF':'#FF6060';ctx.shadowBlur=5;
-    const sbg2=ctx.createLinearGradient(soundX,btnY,soundX,btnY+iconSz);
-    sbg2.addColorStop(0,sOn?'#1A3A50':'#3A1010');sbg2.addColorStop(1,sOn?'#0A1A26':'#1E0808');
+    let sbg2;
+    if(!_IS_IOS){sbg2=ctx.createLinearGradient(soundX,btnY,soundX,btnY+iconSz);sbg2.addColorStop(0,sOn?'#1A3A50':'#3A1010');sbg2.addColorStop(1,sOn?'#0A1A26':'#1E0808');}else{sbg2=sOn?'#1A3A50':'#3A1010';}
     rrect(ctx,soundX,btnY,iconSz,iconSz,iconSz/4,sbg2,null);
     rp(ctx,soundX,btnY,iconSz,iconSz,iconSz/4);ctx.strokeStyle=hexA(sOn?'#40D8FF':'#FF6060',0.55);ctx.lineWidth=1;ctx.stroke();
     ctx.shadowBlur=0;ctx.font=`${iconSz*0.58|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -2177,8 +2175,8 @@ function drawHUD(th){
     // ── Undo button ──
     {const _uav=_undoCount>0&&placeHistory.length>0;const _uby=(bh-smSz)/2|0;
     ctx.save();ctx.shadowColor=_uav?'#60D0FF':'rgba(0,0,0,0)';ctx.shadowBlur=_uav?5:0;
-    const _ubg=ctx.createLinearGradient(undoX,_uby,undoX,_uby+smSz);
-    _ubg.addColorStop(0,_uav?'rgba(0,55,110,0.82)':'rgba(20,20,22,0.60)');_ubg.addColorStop(1,_uav?'rgba(0,28,60,0.82)':'rgba(10,10,12,0.60)');
+    let _ubg;
+    if(!_IS_IOS){_ubg=ctx.createLinearGradient(undoX,_uby,undoX,_uby+smSz);_ubg.addColorStop(0,_uav?'rgba(0,55,110,0.82)':'rgba(20,20,22,0.60)');_ubg.addColorStop(1,_uav?'rgba(0,28,60,0.82)':'rgba(10,10,12,0.60)');}else{_ubg=_uav?'rgba(0,55,110,0.82)':'rgba(20,20,22,0.60)';}
     rrect(ctx,undoX,_uby,smSz,smSz,smSz/4,_ubg,null);
     rp(ctx,undoX,_uby,smSz,smSz,smSz/4);ctx.strokeStyle=_uav?hexA('#60D0FF',0.70):'rgba(70,70,70,0.38)';ctx.lineWidth=1;ctx.stroke();
     ctx.shadowBlur=0;ctx.font=`${smSz*0.50|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -2188,8 +2186,8 @@ function drawHUD(th){
     // ── Restart button ──
     {const _rby=(bh-smSz)/2|0;
     ctx.save();ctx.shadowColor='rgba(255,100,40,0.45)';ctx.shadowBlur=4;
-    const _rbg=ctx.createLinearGradient(restartX,_rby,restartX,_rby+smSz);
-    _rbg.addColorStop(0,'rgba(72,18,0,0.82)');_rbg.addColorStop(1,'rgba(36,9,0,0.82)');
+    let _rbg;
+    if(!_IS_IOS){_rbg=ctx.createLinearGradient(restartX,_rby,restartX,_rby+smSz);_rbg.addColorStop(0,'rgba(72,18,0,0.82)');_rbg.addColorStop(1,'rgba(36,9,0,0.82)');}else{_rbg='rgba(72,18,0,0.82)';}
     rrect(ctx,restartX,_rby,smSz,smSz,smSz/4,_rbg,null);
     rp(ctx,restartX,_rby,smSz,smSz,smSz/4);ctx.strokeStyle='rgba(255,100,40,0.55)';ctx.lineWidth=1;ctx.stroke();
     ctx.shadowBlur=0;ctx.font=`${smSz*0.52|0}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -2210,8 +2208,8 @@ function drawHUD(th){
     ctx.textAlign='left';ctx.textBaseline='alphabetic';
   }else{
     const hx=GRID_X+GW+8,hw=W-hx-5;
-    const hg3=ctx.createLinearGradient(hx,GRID_Y,hx,GRID_Y+GH);
-    hg3.addColorStop(0,hexA(th.gbg,0.72));hg3.addColorStop(1,hexA(th.bg,0.55));
+    let hg3;
+    if(!_IS_IOS){hg3=ctx.createLinearGradient(hx,GRID_Y,hx,GRID_Y+GH);hg3.addColorStop(0,hexA(th.gbg,0.72));hg3.addColorStop(1,hexA(th.bg,0.55));}else{hg3=hexA(th.gbg,0.72);}
     rrect(ctx,hx-3,GRID_Y,hw+3,GH,8,hg3,hexA(th.dc,0.45),1);
     let cy=GRID_Y+12;const fz=cl(hw*0.14|0,8,18);
     ctx.font=`${fz*0.72}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tg;ctx.textBaseline='top';ctx.fillText('SCORE',hx,cy);cy+=fz*0.85;

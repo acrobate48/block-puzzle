@@ -93,7 +93,9 @@ window.addEventListener('error',function(e){_d('ERR: '+(e.message||'?')+' @ '+(e
 <script src="js/input.js?v=12"></script>
 <script>_d('14/14 loop...');</script>
 <script src="js/loop.js?v=12"></script>
-<script>_d('ALL LOADED OK');setTimeout(function(){_diag.style.display='none';},5000);</script>
+<script>_d('ALL LOADED OK — tap to test');
+// Keep diag visible — don't auto-hide
+</script>
 <script>
 // Nuke all service workers and caches — no reload, no side effects
 if('serviceWorker' in navigator){

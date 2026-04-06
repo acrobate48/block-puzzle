@@ -9,7 +9,8 @@ let _lastTapT = 0;
 const _TAP_DEBOUNCE = 300;
 
 function getPos(e){if(e.touches&&e.touches.length>0)return{x:e.touches[0].clientX,y:e.touches[0].clientY};if(e.changedTouches&&e.changedTouches.length>0)return{x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};return{x:e.clientX,y:e.clientY};}
-function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;_tapStartX=x;_tapStartY=y;
+function onDown(e){try{e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;_tapStartX=x;_tapStartY=y;
+  if(typeof _d==='function')_d('TAP state='+gameState+' xy='+Math.round(x)+','+Math.round(y));
   if(gameState==='menu'){handleMenuTap(x,y);return;}
   if(gameState==='modeselect'){handleModeSelectTap(x,y);return;}
   if(gameState==='pause'){return;}
@@ -25,7 +26,8 @@ function onDown(e){e.preventDefault();const{x,y}=getPos(e);mouseX=x;mouseY=y;_ta
     const _pcx=GRID_X+(i+0.5)*pw,_pcy=TRAY_Y+TRAY_H/2;
     ripples.push({x:_pcx,y:_pcy,life:16,ml:16,maxR:CELL*1.1,color:tray[i].color});
     for(let _dp=0;_dp<6;_dp++){const _da=_dp/6*Math.PI*2;particles.push({x:_pcx,y:_pcy,vx:Math.cos(_da)*rnd(0.8,2.2),vy:Math.sin(_da)*rnd(0.8,2.2)-0.5,color:tray[i].color,size:rnd(1.5,3),life:rnd(12,22),ml:22,circle:true});}
-    break;}}}}
+    break;}}}}catch(err){if(typeof _d==='function')_d('ERR onDown: '+err.message);}
+}
 function onMove(e){e.preventDefault();const{x,y}=getPos(e);
   // Fix A: Only commit the new pointer position (and let the ghost piece follow)
   // once the finger has moved beyond the dead-zone threshold.  Until then we
@@ -430,7 +432,7 @@ function onUp(e){
         if(n>=2){const cn=Math.min(n,4);floats.push(new FloatText(`COMBO ×${cn} POINT`,GRID_X+GW/2,GRID_Y+GH/2,THEMES[ti].hi||'#FFD700',1.6,110));}
         if(starPts>0)floats.push(new FloatText(`★+${starPts}`,GRID_X+GW/2,GRID_Y+miny*CELL-CELL*1.5,THEMES[ti].hi||'#FFE030',1.2,90));
         if(hasX2)floats.push(new FloatText('×2 POINTS 60s',GRID_X+GW/2,GRID_Y+GH*0.35,'#30FFAA',1.1,100));
-        const newTh=getCurTheme();if(newTh!==curTheme){curTheme=newTh;gameBg=_IS_IOS?null:buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=200;screenFlashCol=THEMES[newTh].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));}
+        const newTh=getCurTheme();if(newTh!==curTheme){curTheme=newTh;gameBg=_IS_IOS?null:buildBg(curTheme);gameFx=_IS_IOS?null:initFx(curTheme);screenFlash=200;screenFlashCol=THEMES[newTh].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));}
         // ── Perfect Clear bonus — entire board emptied ────────────────────────
         if(grid.every(row=>row.every(v=>!v||v==='__BLOCKED__'||v==='__CRACKED__'))){
           if(typeof _unlockAchieve==='function')_unlockAchieve(4); // Achievement #5 — perfect clear
@@ -500,7 +502,7 @@ function onUp(e){
 function handleMenuTap(x,y){
   layoutMenu();
   for(let i=0;i<skinRects.length;i++){const{x:rx,y:ry,w,h}=skinRects[i];if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){selSkin=i;if(typeof _addMenuRipple==='function')_addMenuRipple(rx+w/2,ry+h/2,COLORS[i%COLORS.length],Math.max(w,h)*1.4);return;}}
-  for(let i=0;i<themeRects.length;i++){const{x:rx,y:ry,w,h}=themeRects[i];if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){selTheme=i;if(!_IS_IOS)menuBg=buildBg(i);menuFx=initFx(i);
+  for(let i=0;i<themeRects.length;i++){const{x:rx,y:ry,w,h}=themeRects[i];if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){selTheme=i;if(!_IS_IOS)menuBg=buildBg(i);menuFx=_IS_IOS?null:initFx(i);
     if(typeof _addMenuRipple==='function'){
       _addMenuRipple(rx+w/2,ry+h/2,THEMES[i].tm,Math.max(w,h)*1.6);
       // Burst 8 particles in theme color from card center

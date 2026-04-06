@@ -18,11 +18,13 @@ function loop(ts){
   }
   _prevGameState=gameState;
   ctx.clearRect(0,0,W,H);
-  if(gameState==='menu')drawMenu(ts);
-  else if(gameState==='modeselect')drawModeSelect(ts);
-  else if(gameState==='leaderboard')drawLeaderboard(ts);
-  else if(gameState==='pause'){drawGame(ts);drawPause(ts);}
-  else drawGame(ts);
+  try{
+    if(gameState==='menu')drawMenu(ts);
+    else if(gameState==='modeselect')drawModeSelect(ts);
+    else if(gameState==='leaderboard')drawLeaderboard(ts);
+    else if(gameState==='pause'){drawGame(ts);drawPause(ts);}
+    else drawGame(ts);
+  }catch(e){console.error('[BlockPuzzle] render error:',e);}
   // FPS counter (debug mode only)
   _fpsFrames++;
   if(Date.now()-_fpsSec>=1000){_fpsVal=_fpsFrames;_fpsFrames=0;_fpsSec=Date.now();}

@@ -883,7 +883,7 @@ function _drawFreshCornerSparks(){
   placedCellsMap.forEach((f,k)=>{
     if(f>=5)return; // only first 5 animation frames
     const r=Math.floor(k/100),c=k%100;
-    if(r<0||r>=ROWS||c<0||c>=COLS||!grid||!grid[r][c])return;
+    if(r<0||r>=ROWS||c<0||c>=COLS||!grid||!grid[r][c]||grid[r][c]==='__BLOCKED__')return;
     const x=GRID_X+c*CELL,y=GRID_Y+r*CELL;
     const col=grid[r][c];const csf=1-f/5;
     ctx.globalAlpha=csf*0.72;ctx.fillStyle=col;
@@ -957,7 +957,7 @@ function _triggerBoardExplosion(){
   if(!grid)return;
   for(let r=ROWS-1;r>=0;r--){
     for(let c=0;c<COLS;c++){
-      if(!grid[r][c])continue;
+      if(!grid[r][c]||grid[r][c]==='__BLOCKED__')continue;
       const delay=Math.floor((ROWS-1-r)*14+c*3+Math.random()*18);
       const cx=GRID_X+(c+0.5)*CELL,cy=GRID_Y+(r+0.5)*CELL;
       const col=grid[r][c];const ti=curTheme;

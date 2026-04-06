@@ -1364,7 +1364,7 @@ function drawGame(t){
     }
   }
   // ── Phase badge — subtle indicator of current engagement phase ──────────────
-  if(!_IS_IOS&&!over&&gameState==='playing'){
+  if(!over&&gameState==='playing'){
     const _ph2=_engPhase();
     const _phPulse=0.55+0.45*Math.abs(Math.sin(Date.now()*0.003));
     const _phSz=Math.max(7,Math.min(11,TRAY_H*0.18))|0;
@@ -1816,7 +1816,7 @@ function drawGame(t){
     }
   }
   // ── COMBO STREAK BADGE ───────────────────────────────────────────────────────
-  if(!_IS_IOS&&combo>=3&&!over){
+  if(combo>=3&&!over){
     const _cbPulse=0.88+0.12*Math.abs(Math.sin(t*0.016));
     const _cbfsz=cl(Math.floor(CELL*0.72*_cbPulse),16,36)|0;
     const _cbtxt=`🔥 COMBO ×${combo}`;
@@ -1861,7 +1861,7 @@ function drawGame(t){
     ctx.restore();
   }
   // ── PLACEMENT STREAK BADGE ──────────────────────────────────────────────────
-  if(!_IS_IOS&&_placementStreak>=2&&!over&&gameState==='playing'){
+  if(_placementStreak>=2&&!over&&gameState==='playing'){
     const _stfsz=Math.max(9,CELL*0.34)|0;
     const _stxt=`🎯 ×${_placementStreak}`;
     const _stCol=_placementStreak>=5?'#FF40D0':_placementStreak>=3?'#FFD700':'#60D0FF';

@@ -72,9 +72,12 @@ window.addEventListener('error', (e) => {
 <script src="js/input.js"></script>
 <script src="js/loop.js"></script>
 <script>
-// Register kill-switch SW to evict any broken SW from previous deploy
+// Nuke all service workers and caches — no reload, no side effects
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  navigator.serviceWorker.getRegistrations().then(r=>r.forEach(sw=>sw.unregister())).catch(()=>{});
+}
+if(window.caches){
+  caches.keys().then(k=>k.forEach(n=>caches.delete(n))).catch(()=>{});
 }
 </script>
 </body>

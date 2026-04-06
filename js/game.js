@@ -1083,18 +1083,15 @@ function drawGame(t){
   if(!_IS_IOS)drawFx(ctx,gameFx,t);
   _drawWeather(t);
   // ── DUST MOTES — lazy-initialized ambient floating particles ──────────────
-  if(!_IS_IOS){
   if(!dustMotes.length){for(let _di=0;_di<30;_di++)dustMotes.push({x:rnd(0,W),y:rnd(0,H),vx:rnd(-0.14,0.14),vy:rnd(-0.28,-0.04),a:rnd(0.03,0.13),sz:rnd(0.6,1.8),ph:rnd(0,Math.PI*2)});}
   ctx.save();
   dustMotes.forEach(dm=>{dm.x=(dm.x+dm.vx+W)%W;dm.y=(dm.y+dm.vy+H)%H;const _dp=0.5+0.5*Math.sin(t*0.0013+dm.ph);ctx.fillStyle=`rgba(255,255,255,${(dm.a*_dp).toFixed(3)})`;ctx.beginPath();ctx.arc(dm.x,dm.y,dm.sz,0,Math.PI*2);ctx.fill();});
-  ctx.restore();}
+  ctx.restore();
   // ── 3D Perspective tilt when dragging ────────────────────────────────────────
-  if(!_IS_IOS){
-    if(drag&&!over){_tiltX+=((mouseX-W/2)/W*0.018-_tiltX)*0.08;_tiltY+=((mouseY-H/2)/H*0.012-_tiltY)*0.06;}
-    else{_tiltX*=0.88;_tiltY*=0.88;}
-  }
+  if(drag&&!over){_tiltX+=((mouseX-W/2)/W*0.018-_tiltX)*0.08;_tiltY+=((mouseY-H/2)/H*0.012-_tiltY)*0.06;}
+  else{_tiltX*=0.88;_tiltY*=0.88;}
   ctx.save();ctx.translate(shakeX,shakeY);
-  if(!_IS_IOS&&(Math.abs(_tiltX)>0.0005||Math.abs(_tiltY)>0.0005)){
+  if(Math.abs(_tiltX)>0.0005||Math.abs(_tiltY)>0.0005){
     const _gCx=GRID_X+GW/2,_gCy=GRID_Y+GH/2;
     ctx.translate(_gCx,_gCy);ctx.transform(1,_tiltY,_tiltX,1,0,0);ctx.translate(-_gCx,-_gCy);
   }
@@ -1290,28 +1287,20 @@ function drawGame(t){
       const{gr,gc}=snapPos(mouseX,mouseY,piece.shape);
       const valid=_modeCanPlace(grid,piece.shape,gr,gc);
       const ghostColor=valid?piece.color:'#FF4040';
-      if(_IS_IOS){
-        // iOS: minimal ghost — translucent flat cells only, no effects
-        ctx.globalAlpha=valid?0.35:0.25;
-        piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;
-          if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS)drawCell(ctx,ghostColor,GRID_X+pc2*CELL,GRID_Y+pr2*CELL,CELL,selSkin,t);
-        }}));
-        ctx.globalAlpha=1;
-      }else{
-      // Spotlight: subtle radial darkening outside dragged piece focus area
-      {const sg=ctx.createRadialGradient(mouseX,mouseY,CELL*1.2,mouseX,mouseY,Math.max(W,H)*0.7);
+      // Spotlight (desktop only — gradient per frame)
+      if(!_IS_IOS){const sg=ctx.createRadialGradient(mouseX,mouseY,CELL*1.2,mouseX,mouseY,Math.max(W,H)*0.7);
       sg.addColorStop(0,'rgba(0,0,0,0)');sg.addColorStop(1,'rgba(0,0,0,0.22)');
       ctx.save();ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);ctx.restore();}
-      // Ghost afterimage trail (fading previous positions)
+      // Ghost afterimage trail
       if(valid)_addGhostTrail(piece.shape,gr,gc,piece.color);
       _drawGhostTrail(t);
-      // Column highlight — subtle pulse under ghost columns
+      // Column highlight
       const hlA=(0.06+0.03*Math.sin(Date.now()*0.004)).toFixed(3);
       ctx.save();ctx.fillStyle=`rgba(255,255,255,${hlA})`;
       piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pc2=gc+cc;if(pc2>=0&&pc2<COLS)ctx.fillRect(GRID_X+pc2*CELL,GRID_Y,CELL,GH);}}));
       ctx.restore();
-      // Altitude-based shadow on grid: grows as piece is held higher above snap position
-      const _altDist=Math.max(0,mouseY-(GRID_Y+(gr+piece.shape.length/2)*CELL));
+      // Altitude shadow (desktop only — gradient per cell)
+      if(!_IS_IOS){const _altDist=Math.max(0,mouseY-(GRID_Y+(gr+piece.shape.length/2)*CELL));
       const _altA=cl(_altDist/(CELL*4),0,0.45);
       if(_altA>0.01){ctx.save();ctx.globalAlpha=_altA;
         piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;
@@ -1321,12 +1310,12 @@ function drawGame(t){
             _sg.addColorStop(0,'rgba(0,0,0,0.5)');_sg.addColorStop(1,'rgba(0,0,0,0)');
             ctx.fillStyle=_sg;ctx.fillRect(_sx,_sy,CELL,CELL);
           }
-        }}));ctx.restore();}
-      // Ambient glow under ghost cells
-      ctx.save();ctx.shadowColor=ghostColor;ctx.shadowBlur=CELL*0.65;ctx.globalAlpha=0.20;
+        }}));ctx.restore();}}
+      // Ambient glow (desktop only — shadowBlur)
+      if(!_IS_IOS){ctx.save();ctx.shadowColor=ghostColor;ctx.shadowBlur=CELL*0.65;ctx.globalAlpha=0.20;
       piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;
         if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS){const er=Math.max(2,CELL/6|0);rrect(ctx,GRID_X+pc2*CELL+2,GRID_Y+pr2*CELL+2,CELL-4,CELL-4,er,ghostColor,null);}
-      }}));ctx.restore();
+      }}));ctx.restore();}
       // Ghost cells (translucent) with snap bounce scale
       const _snapSc=valid?_updateSnapBounce(gr,gc):1;
       ctx.globalAlpha=valid?0.38:0.28;
@@ -1342,7 +1331,6 @@ function drawGame(t){
         }
       }}));
       ctx.globalAlpha=1;
-      }
       // ── Snap lock indicator — pulsing corner brackets on valid drop zone ──────
       if(valid){
         const _slT=0.55+0.45*Math.sin(Date.now()*0.009);
@@ -1478,10 +1466,9 @@ function drawGame(t){
   // Rotation flash rings
   _drawRotFlashes();
   // Drag trail — spawn energy particles + render behind piece each frame
-  if(!_IS_IOS){
   // Combo fire trail at combo ≥ 5
   if(drag&&!over){const _dtp=tray[drag.idx];const _trailRate=combo>=5?0.72:0.50;if(_dtp&&Math.random()<_trailRate){const _trailCol=combo>=5?rndc(['#FF6020','#FF9020','#FFCC40','#FF3010']):_dtp.color;dragTrail.push({x:mouseX+rnd(-CELL*0.18,CELL*0.18),y:mouseY+rnd(-CELL*0.10,CELL*0.10),vx:rnd(-0.30,0.30),vy:rnd(-0.90,-0.10),life:combo>=5?28:20,ml:combo>=5?28:20,color:_trailCol,sz:rnd(combo>=5?2:1.5,combo>=5?5:3.5)});}}
-  dragTrail=dragTrail.filter(dt=>{dt.x+=dt.vx;dt.y+=dt.vy;dt.vy-=0.05;dt.life--;if(dt.life<=0)return false;const _da=dt.life/dt.ml;ctx.fillStyle=hexA(dt.color,_da*0.60);ctx.beginPath();ctx.arc(dt.x,dt.y,Math.max(1,dt.sz*_da),0,Math.PI*2);ctx.fill();return true;});}
+  dragTrail=dragTrail.filter(dt=>{dt.x+=dt.vx;dt.y+=dt.vy;dt.vy-=0.05;dt.life--;if(dt.life<=0)return false;const _da=dt.life/dt.ml;ctx.fillStyle=hexA(dt.color,_da*0.60);ctx.beginPath();ctx.arc(dt.x,dt.y,Math.max(1,dt.sz*_da),0,Math.PI*2);ctx.fill();return true;});
   // Dragged piece (on top, no shake) + speed timer indicator
   if(drag&&!over){
     const piece=tray[drag.idx];
@@ -1499,7 +1486,7 @@ function drawGame(t){
       sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){if(piece.isParasite)drawParasiteCell(ctx,ox+cc*_liftCell,oy+rr*_liftCell,_liftCell,t,rr*17+cc*31);else drawCell(ctx,piece.color,ox+cc*_liftCell,oy+rr*_liftCell,_liftCell,selSkin,t);}}));
       ctx.restore();
       // Speed ring indicator (arc showing elapsed think time) — desktop only
-      if(!_IS_IOS&&lastPlaceTime>0){
+      if(lastPlaceTime>0){
         const elapsed=Date.now()-lastPlaceTime;
         const maxT=SPEED_SLOW; // full ring at SLOW threshold
         const frac=Math.min(1,elapsed/maxT);
@@ -1713,7 +1700,7 @@ function drawGame(t){
     // Count up score display on game over screen
     if(_goDisplayScore<score){const _gg=score-_goDisplayScore;_goDisplayScore=Math.min(score,_goDisplayScore+Math.max(1,Math.ceil(_gg*(el<1400?0.055:0.20))));}
     // New record particle burst (one-time when count reaches final score)
-    if(_goDisplayScore>=score&&!_goRecBurst&&isRec){_goRecBurst=true;if(!_IS_IOS){for(let _i=0;_i<70;_i++){particles.push({x:W/2,y:H*0.42,vx:rnd(-7,7),vy:rnd(-9,-1),color:rndc(['#FFD700','#FF8C00','#FFEE60','#FFA020','#FFFFFF','#FF4080']),size:rnd(3,7),life:rnd(50,90),ml:90,circle:Math.random()>0.35});}if(typeof playEventVideo==='function')playEventVideo('celebration',false);}}
+    if(_goDisplayScore>=score&&!_goRecBurst&&isRec){_goRecBurst=true;for(let _i=0;_i<(_IS_IOS?30:70);_i++){particles.push({x:W/2,y:H*0.42,vx:rnd(-7,7),vy:rnd(-9,-1),color:rndc(['#FFD700','#FF8C00','#FFEE60','#FFA020','#FFFFFF','#FF4080']),size:rnd(3,7),life:rnd(50,90),ml:90,circle:Math.random()>0.35});}if(!_IS_IOS&&typeof playEventVideo==='function')playEventVideo('celebration',false);}
     ctx.fillStyle=`rgba(0,0,0,${Math.min(0.84,el/600*0.84).toFixed(3)})`;ctx.fillRect(0,0,W,H);
     if(!_IS_IOS&&typeof drawGameoverVideo==='function')drawGameoverVideo(curTheme,0.40);
     if(isRec&&typeof drawEventVideo==='function')drawEventVideo('celebration',0.50);
@@ -1875,7 +1862,6 @@ function drawGame(t){
   // ── MODE OVERLAYS ────────────────────────────────────────────────────────────
   _drawModeOverlays(t,th);
   // ── ACHIEVEMENT TOASTS ───────────────────────────────────────────────────────
-  if(false){_achieveToasts=[];} else
   _achieveToasts=_achieveToasts.filter(_at=>{
     const _ap=Math.min(1,(Date.now()-_at.born)/3200);
     if(_ap>=1)return false;
@@ -2284,7 +2270,6 @@ function drawHUD(th){
     ctx.textBaseline='alphabetic';
   }
   // ── UI ripples (HUD button press feedback) ──────────────────────────────────
-  if(false){_uiRipples.length=0;} else
   _uiRipples=_uiRipples.filter(_ur=>{
     const _up=Math.min(1,(Date.now()-_ur.born)/220);
     if(_up>=1)return false;

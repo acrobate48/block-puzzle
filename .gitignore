@@ -6,3 +6,5 @@ errors.log
 log.txt
 __pycache__/
 *.pyc
+node_modules/
+assets/video/frames/

@@ -276,6 +276,33 @@ function onUp(e){
       showAddCellsBonus=false;addCellsBonusTimer--;
       if(addCellsBonusTimer<=0){showAddCellsBonus=true;addCellsBonusTimer=Math.floor(rnd(8,15));}
       const ti=getCurTheme(),{n,cells,colors}=clearLines(grid);
+      // Constraint 2-hit: handle cracked/destroyed constraint blocks
+      {const _eM_c=currentMode==='histoire'?_getHistoireSubMode():currentMode;
+      if(_eM_c==='contraintes'&&contraBlocked.length>0){
+        // Destroyed constraints (were __CRACKED__, now null): remove from contraBlocked
+        const _crSet=new Set(cells.filter(({r,c})=>colors[r*100+c]==='__CRACKED__').map(({r,c})=>r*100+c));
+        if(_crSet.size>0){
+          contraBlocked=contraBlocked.filter(b=>!_crSet.has(b.r*100+b.c));
+          _crSet.forEach(k=>{const cr=Math.floor(k/100),cc2=k%100;
+            const _cx=GRID_X+(cc2+0.5)*CELL,_cy=GRID_Y+(cr+0.5)*CELL;
+            spawnParticles([{r:cr,c:cc2}],10,1.8,['#FF6030','#FF9020','#FF2000','#FFD700']);
+            floats.push(new FloatText('🔓 LIBRE !',_cx,_cy,'#FFD700',1.1,90));
+            ripples.push({x:_cx,y:_cy,life:28,ml:28,maxR:CELL*2.2,color:'#FF6030'});
+            shake=Math.max(shake,6);shakePow=Math.max(shakePow,3);
+          });
+        }
+        // Newly cracked (grid[r][c]==='__CRACKED__' but hp still 2): update hp + visual feedback
+        contraBlocked.forEach(b=>{
+          if(grid[b.r][b.c]==='__CRACKED__'&&b.hp>1){
+            b.hp=1;
+            const _cx=GRID_X+(b.c+0.5)*CELL,_cy=GRID_Y+(b.r+0.5)*CELL;
+            spawnParticles([{r:b.r,c:b.c}],6,1.3,['#FF5020','#FF7030','#FFD700']);
+            floats.push(new FloatText('💥 FISSURÉ !',_cx,_cy,'#FF8030',0.9,80));
+            ripples.push({x:_cx,y:_cy,life:22,ml:22,maxR:CELL*1.6,color:'#FF5020'});
+            shake=Math.max(shake,5);shakePow=Math.max(shakePow,2);
+          }
+        });
+      }}
       if(n>0){
         sndClear(n);
         if(typeof playEventVideo==='function')playEventVideo('line_clear',false);

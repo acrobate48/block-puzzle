@@ -1156,7 +1156,7 @@ function drawGame(t){
     const x=GRID_X+c*CELL,y=GRID_Y+r*CELL,color=grid[r][c];
     // Spring pop animation for recently placed cells
     const popF=placedCellsMap.get(r*100+c);
-    if(color){
+    if(color&&color!=='__BLOCKED__'&&color!=='__CRACKED__'){
       if(popF!==undefined&&popF<_SPRING.length){
         const sc=_SPRING[popF];const off=(CELL*(1-sc)/2)|0;
         // Placement glow halo — fades with spring animation (skip on iOS: gradient per cell per frame)

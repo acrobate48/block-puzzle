@@ -79,12 +79,12 @@ function layoutMenu(){
 
 function drawMenu(t){
   const th=THEMES[selTheme];
-  if(!drawThemeVideo(selTheme,0,0)&&!drawThemeBg(selTheme,0,0)){ctx.drawImage(menuBg,0,0);}
+  if(!drawThemeVideo(selTheme,0,0)&&!drawThemeBg(selTheme,0,0)){if(menuBg)ctx.drawImage(menuBg,0,0);else{ctx.fillStyle=THEMES[selTheme].sky||'#060A0A';ctx.fillRect(0,0,W,H);}}
   // Live hover theme preview — detect which theme button is hovered
   {let _hovIdx=-1;for(let _ti=0;_ti<themeRects.length;_ti++){const _tr=themeRects[_ti];if(_tr&&mouseX>=_tr.x&&mouseX<_tr.x+_tr.w&&mouseY>=_tr.y&&mouseY<_tr.y+_tr.h){_hovIdx=_ti;break;}}
   if(_hovIdx>=0&&_hovIdx!==selTheme){_menuHoverTheme=_hovIdx;_menuHoverAlpha=Math.min(0.45,_menuHoverAlpha+0.04);}else{_menuHoverAlpha=Math.max(0,_menuHoverAlpha-0.06);}
   if(_menuHoverAlpha>0.01&&_menuHoverTheme>=0){ctx.save();ctx.globalAlpha=_menuHoverAlpha;if(!drawThemeBg(_menuHoverTheme,0,0)&&!_IS_IOS){if(!_menuHoverBgCache[_menuHoverTheme])_menuHoverBgCache[_menuHoverTheme]=buildBg(_menuHoverTheme);ctx.drawImage(_menuHoverBgCache[_menuHoverTheme],0,0);}ctx.restore();}}
-  drawFx(ctx,menuFx,t);
+  if(!_IS_IOS)drawFx(ctx,menuFx,t);
   // ── Menu click ripples ──────────────────────────────────────────────────────
   _menuRipples=_menuRipples.filter(_mr=>{
     const _mp=Math.min(1,(Date.now()-_mr.born)/380);
@@ -107,7 +107,7 @@ function drawMenu(t){
   // Animated dot grid overlay (subtle premium texture)
   {const _gs=Math.round(Math.min(W,H)*0.088);const _gt=t*0.00045;ctx.save();ctx.fillStyle=hexA(th.tm,0.055);for(let _gy=_gs*0.5;_gy<H+_gs;_gy+=_gs){for(let _gx=_gs*0.5;_gx<W+_gs;_gx+=_gs){const _ox=Math.sin(_gt+_gy*0.014)*9,_oy=Math.cos(_gt+_gx*0.012)*9;ctx.beginPath();ctx.arc(_gx+_ox,_gy+_oy,1.3,0,Math.PI*2);ctx.fill();}}ctx.restore();}
   // Deco blocks
-  menuDeco.forEach(b=>{b.x=(b.x+b.vx+W)%W;b.y=(b.y+b.vy+H)%H;ctx.globalAlpha=0.11;drawCell(ctx,b.color,b.x-b.sz/2|0,b.y-b.sz/2|0,b.sz|0,b.skin,t);ctx.globalAlpha=1;});
+  if(!_IS_IOS)menuDeco.forEach(b=>{b.x=(b.x+b.vx+W)%W;b.y=(b.y+b.vy+H)%H;ctx.globalAlpha=0.11;drawCell(ctx,b.color,b.x-b.sz/2|0,b.y-b.sz/2|0,b.sz|0,b.skin,t);ctx.globalAlpha=1;});
   // Particles
   menuParts.forEach(p=>{
     p.x+=p.vx;p.y+=p.vy;p.life--;

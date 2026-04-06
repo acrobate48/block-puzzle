@@ -1068,7 +1068,7 @@ function drawGame(t){
   _maybeSpawnLensFlare();_drawLensFlares();
   // Neon flicker update (Néopolis)
   _updateNeonFlicker(t);
-  drawFx(ctx,gameFx,t);
+  if(!_IS_IOS)drawFx(ctx,gameFx,t);
   _drawWeather(t);
   // ── DUST MOTES — lazy-initialized ambient floating particles ──────────────
   if(!dustMotes.length){for(let _di=0;_di<30;_di++)dustMotes.push({x:rnd(0,W),y:rnd(0,H),vx:rnd(-0.14,0.14),vy:rnd(-0.28,-0.04),a:rnd(0.03,0.13),sz:rnd(0.6,1.8),ph:rnd(0,Math.PI*2)});}

@@ -57,6 +57,11 @@ function rclip(ctx,x,y,sz,r,fn){ctx.save();rp(ctx,x,y,sz,sz,r);ctx.clip();fn();c
 // Gradient + outline + glow for title characters
 function drawPremText(ctx,text,x,y,font,topCol,botCol,outlineCol,glowCol,glowSz=14,lw=3){
   ctx.save();ctx.font=font;ctx.textAlign='center';ctx.textBaseline='middle';
+  if(_IS_IOS){
+    ctx.strokeStyle=outlineCol||'rgba(0,0,0,0.6)';ctx.lineWidth=lw;ctx.lineJoin='round';ctx.strokeText(text,x,y);
+    ctx.fillStyle=topCol;ctx.fillText(text,x,y);
+    ctx.restore();return;
+  }
   const fsz=parseFloat((font.match(/[\d.]+/)||['14'])[0]);
   const g=ctx.createLinearGradient(0,y-fsz*0.5,0,y+fsz*0.5);
   g.addColorStop(0,topCol);g.addColorStop(0.55,botCol);g.addColorStop(1,lerpC(botCol,'#000000',0.3));
@@ -78,6 +83,16 @@ function bounceTitle(ctx,text,cx,by,t,font,topCol,botCol,glowCol,amp=7){
   const widths=chars.map(c=>ctx.measureText(c).width+1);
   const total=widths.reduce((s,w)=>s+w,0);
   let x=cx-total/2;
+  if(_IS_IOS){
+    // Flat text with bounce — no gradients
+    chars.forEach((ch,i)=>{
+      const bob=Math.sin(t*0.0024+i*0.78)*amp;
+      ctx.save();ctx.strokeStyle='rgba(0,0,0,0.55)';ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeText(ch,x,by+bob);
+      ctx.fillStyle=topCol;ctx.fillText(ch,x,by+bob);ctx.restore();
+      x+=widths[i];
+    });
+    ctx.restore();return;
+  }
   const fsz=parseFloat((font.match(/[\d.]+/)||['14'])[0]);
   chars.forEach((ch,i)=>{
     const bob=Math.sin(t*0.0024+i*0.78)*amp;

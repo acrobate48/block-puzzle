@@ -30,7 +30,7 @@ function loop(ts){
     else if(gameState==='leaderboard')drawLeaderboard(ts);
     else if(gameState==='pause'){drawGame(ts);drawPause(ts);}
     else drawGame(ts);
-  }catch(e){if(typeof _d==='function')_d('RENDER ERR: '+e.message+' state='+gameState);console.error('[BlockPuzzle] render error:',e);}
+  }catch(e){console.error('[BlockPuzzle] render error:',e);}
   // FPS counter (debug mode only)
   _fpsFrames++;
   if(Date.now()-_fpsSec>=1000){

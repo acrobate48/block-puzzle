@@ -453,7 +453,7 @@ function onUp(e){
 function handleMenuTap(x,y){
   layoutMenu();
   for(let i=0;i<skinRects.length;i++){const{x:rx,y:ry,w,h}=skinRects[i];if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){selSkin=i;if(typeof _addMenuRipple==='function')_addMenuRipple(rx+w/2,ry+h/2,COLORS[i%COLORS.length],Math.max(w,h)*1.4);return;}}
-  for(let i=0;i<themeRects.length;i++){const{x:rx,y:ry,w,h}=themeRects[i];if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){selTheme=i;menuBg=buildBg(i);menuFx=initFx(i);
+  for(let i=0;i<themeRects.length;i++){const{x:rx,y:ry,w,h}=themeRects[i];if(x>=rx&&x<rx+w&&y>=ry&&y<ry+h){selTheme=i;if(!_IS_IOS)menuBg=buildBg(i);menuFx=initFx(i);
     if(typeof _addMenuRipple==='function'){
       _addMenuRipple(rx+w/2,ry+h/2,THEMES[i].tm,Math.max(w,h)*1.6);
       // Burst 8 particles in theme color from card center

@@ -1181,7 +1181,7 @@ function drawGame(t){
     }
   }}
   // Corner sparks on freshly placed cells
-  if(!_IS_IOS)_drawFreshCornerSparks();
+  _drawFreshCornerSparks();
   // Prismatic shimmer — Crystal skin
   if(!_IS_IOS){
     _drawCrystalShimmer(t);
@@ -1199,9 +1199,9 @@ function drawGame(t){
   _drawAlmostClear(t);
   // Persistent halos on freshly placed cells
   _drawFreshHalos();
-  if(!_IS_IOS)_drawStampRings();
+  _drawStampRings();
   // Landing column flash (brief streak down columns of placed piece)
-  if(!_IS_IOS)_drawLandingFlashes();
+  _drawLandingFlashes();
   // Snow accumulation display (Arctic theme)
   if(!_IS_IOS)_drawSnowAccum();
   // Depth fog at grid bottom (Ocean/Arctic)
@@ -1476,7 +1476,7 @@ function drawGame(t){
   }
   ctx.restore();
   // Rotation flash rings
-  if(!_IS_IOS)_drawRotFlashes();
+  _drawRotFlashes();
   // Drag trail — spawn energy particles + render behind piece each frame
   if(!_IS_IOS){
   // Combo fire trail at combo ≥ 5
@@ -1708,7 +1708,7 @@ function drawGame(t){
   if(over){
     const el=Date.now()-overT;
     // Reset animated score counter when panel first appears
-    if(el<80){_goDisplayScore=0;_goRecBurst=false;if(!_goVideoStarted){_goVideoStarted=true;if(!_IS_IOS&&typeof startGameoverVideo==='function')startGameoverVideo(curTheme);}if(!_goExploded){_goExploded=true;if(!_IS_IOS)_triggerBoardExplosion();}}
+    if(el<80){_goDisplayScore=0;_goRecBurst=false;if(!_goVideoStarted){_goVideoStarted=true;if(!_IS_IOS&&typeof startGameoverVideo==='function')startGameoverVideo(curTheme);}if(!_goExploded){_goExploded=true;_triggerBoardExplosion();}}
     const isRec=score>=best&&score>0;
     // Count up score display on game over screen
     if(_goDisplayScore<score){const _gg=score-_goDisplayScore;_goDisplayScore=Math.min(score,_goDisplayScore+Math.max(1,Math.ceil(_gg*(el<1400?0.055:0.20))));}

@@ -5,8 +5,10 @@ const ctx=canvas.getContext('2d');
 // iOS WebKit (Chrome/Safari on iPhone/iPad) has severe limits on:
 //  - concurrent <video> elements (causes page crash on load)
 //  - ctx.shadowBlur (each non-zero value forces a separate GPU compositing pass)
-const _IS_IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||
-  (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+// var so it lands on window and is accessible from ALL scripts
+var _IS_IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)
+  ||(/Mac/i.test(navigator.userAgent)&&navigator.maxTouchPoints>1)
+  ||(navigator.maxTouchPoints>1&&/Apple/i.test(navigator.vendor));
 // Neutralise shadowBlur on iOS — silently drops all shadow calls without touching call sites
 // Wrapped in try/catch: some WebKit versions mark the property non-configurable and would throw
 if(_IS_IOS){try{

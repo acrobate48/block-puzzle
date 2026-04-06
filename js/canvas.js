@@ -2,6 +2,18 @@
 // ─── CANVAS ───────────────────────────────────────────────────────────────────
 const canvas=document.getElementById('c');
 const ctx=canvas.getContext('2d');
+// iOS WebKit (Chrome/Safari on iPhone/iPad) has severe limits on:
+//  - concurrent <video> elements (causes page crash on load)
+//  - ctx.shadowBlur (each non-zero value forces a separate GPU compositing pass)
+const _IS_IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||
+  (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+// Neutralise shadowBlur on iOS — silently drops all 187 calls without touching call sites
+if(_IS_IOS){
+  Object.defineProperty(ctx,'shadowBlur',{get:()=>0,set:()=>{},configurable:true});
+  Object.defineProperty(ctx,'shadowColor',{get:()=>'transparent',set:()=>{},configurable:true});
+  Object.defineProperty(ctx,'shadowOffsetX',{get:()=>0,set:()=>{},configurable:true});
+  Object.defineProperty(ctx,'shadowOffsetY',{get:()=>0,set:()=>{},configurable:true});
+}
 let W,H,CELL,GRID_X,GRID_Y,GW,GH,TRAY_Y,TRAY_H,PIECE_CELL,CR;
 
 function resize(){
@@ -62,9 +74,11 @@ function drawThemeBg(themeIdx,x,y,w,h){
 const _bgVids=new Array(10).fill(null);
 const _bgVidReady=new Array(10).fill(false);
 (function _initBgVids(){
+  // On iOS WebKit, do not preload videos — too many concurrent media elements crash the page.
+  // Videos will be loaded on-demand when the theme is first selected.
+  if(_IS_IOS)return;
   _THEME_NAMES.forEach((name,i)=>{
     const vid=document.createElement('video');
-    // Try new per-theme path first; fallback handled via onerror → src swap
     vid.src=`assets/themes/${name}/bg.mp4`;
     vid.loop=true;vid.muted=true;vid.playsInline=true;vid.preload='auto';
     vid.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;';
@@ -72,11 +86,10 @@ const _bgVidReady=new Array(10).fill(false);
     _bgVids[i]=vid;
     vid.addEventListener('canplaythrough',()=>{_bgVidReady[i]=true;vid.play().catch(()=>{});},{once:true});
     vid.addEventListener('error',()=>{
-      // Fallback to legacy flat path
       const vid2=document.createElement('video');
       vid2.src=`assets/video/bg_${name}.mp4`;
       vid2.loop=true;vid2.muted=true;vid2.playsInline=true;vid2.preload='auto';
-      vid2.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;';
+      vid2.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height=1px;pointer-events:none;';
       document.body.appendChild(vid2);
       _bgVids[i]=vid2;
       vid2.addEventListener('canplaythrough',()=>{_bgVidReady[i]=true;vid2.play().catch(()=>{});},{once:true});
@@ -103,14 +116,16 @@ function drawThemeVideo(themeIdx,x,y,w,h){
 
 // ─── EVENT VIDEO OVERLAYS ─────────────────────────────────────────────────────
 const _EVT_VIDS={};
-['celebration','line_clear','game_logo_loop','milestone_1k','milestone_5k','milestone_10k','milestone_50k','milestone_100k','perfect_clear','new_record','bomb_explode'].forEach(name=>{
-  const vid=document.createElement('video');
-  vid.src=`assets/video/${name}.mp4`;
-  vid.muted=true;vid.playsInline=true;vid.preload='auto';
-  vid.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;';
-  document.body.appendChild(vid);
-  _EVT_VIDS[name]=vid;
-});
+if(!_IS_IOS){
+  ['celebration','line_clear','game_logo_loop','milestone_1k','milestone_5k','milestone_10k','milestone_50k','milestone_100k','perfect_clear','new_record','bomb_explode'].forEach(name=>{
+    const vid=document.createElement('video');
+    vid.src=`assets/video/${name}.mp4`;
+    vid.muted=true;vid.playsInline=true;vid.preload='auto';
+    vid.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;';
+    document.body.appendChild(vid);
+    _EVT_VIDS[name]=vid;
+  });
+}
 
 function playEventVideo(name,loop){
   const vid=_EVT_VIDS[name];
@@ -175,7 +190,7 @@ const _medalImgs={};
 
 // ─── THEME TRANSITION VIDEO ───────────────────────────────────────────────────
 const _transVids=new Array(10).fill(null);const _transVidReady=new Array(10).fill(false);
-(function(){_THEME_NAMES.forEach((name,i)=>{
+if(!_IS_IOS){(function(){_THEME_NAMES.forEach((name,i)=>{
   const vid=document.createElement('video');
   vid.src=`assets/themes/${name}/transition.mp4`;
   vid.muted=true;vid.playsInline=true;vid.preload='auto';
@@ -183,7 +198,7 @@ const _transVids=new Array(10).fill(null);const _transVidReady=new Array(10).fil
   document.body.appendChild(vid);_transVids[i]=vid;
   vid.addEventListener('canplaythrough',()=>{_transVidReady[i]=true;},{once:true});
   vid.load();
-});})();
+});})();}
 let _transActive=false,_transTheme=0,_transBorn=0;
 const _TRANS_DUR=2000;
 function playThemeTransition(themeIdx){
@@ -204,7 +219,7 @@ function drawThemeTransition(){
 
 // ─── GAMEOVER VIDEO ───────────────────────────────────────────────────────────
 const _gameoverVids=new Array(10).fill(null);const _gameoverVidReady=new Array(10).fill(false);
-(function(){_THEME_NAMES.forEach((name,i)=>{
+if(!_IS_IOS){(function(){_THEME_NAMES.forEach((name,i)=>{
   const vid=document.createElement('video');
   vid.src=`assets/themes/${name}/gameover.mp4`;
   vid.loop=true;vid.muted=true;vid.playsInline=true;vid.preload='auto';
@@ -212,7 +227,7 @@ const _gameoverVids=new Array(10).fill(null);const _gameoverVidReady=new Array(1
   document.body.appendChild(vid);_gameoverVids[i]=vid;
   vid.addEventListener('canplaythrough',()=>{_gameoverVidReady[i]=true;},{once:true});
   vid.load();
-});})();
+});})();}
 function startGameoverVideo(themeIdx){const vid=_gameoverVids[themeIdx];if(vid){vid.currentTime=0;vid.play().catch(()=>{});}}
 function stopGameoverVideo(themeIdx){const vid=_gameoverVids[themeIdx];if(vid)vid.pause();}
 function drawGameoverVideo(themeIdx,alpha,x,y,w,h){

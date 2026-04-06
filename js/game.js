@@ -1386,7 +1386,7 @@ function drawGame(t){
   // Tray slot piece color radiance
   if(!_IS_IOS)_drawTrayRadiance();
   // Tray speed glow (color border based on think time)
-  if(!_IS_IOS)_drawTraySpeedGlow(t);
+  _drawTraySpeedGlow(t);
   // Danger tray pulse — extra red glow when grid is near-full
   if(_fillNow>0.85&&!over){
     const _dp=((_fillNow-0.85)/0.15);const _dpPulse=0.5+0.5*Math.abs(Math.sin(t*0.016*_dp+0.7));
@@ -1432,7 +1432,7 @@ function drawGame(t){
       ctx.fillText('☠ PARASITE',GRID_X+i*pw+pw/2,TRAY_Y+TRAY_H-lsz*0.75);ctx.shadowBlur=0;ctx.restore();
     }else{
       // Tray slot hover glow (mouse over slot, not dragging)
-      if(!_IS_IOS&&!drag){const _thov=mouseX>=GRID_X+i*pw&&mouseX<GRID_X+(i+1)*pw&&mouseY>=TRAY_Y&&mouseY<TRAY_Y+TRAY_H;
+      if(!drag){const _thov=mouseX>=GRID_X+i*pw&&mouseX<GRID_X+(i+1)*pw&&mouseY>=TRAY_Y&&mouseY<TRAY_Y+TRAY_H;
         if(_thov){const _hp=0.5+0.5*Math.abs(Math.sin(Date.now()*0.009));
           ctx.save();ctx.globalAlpha=0.36*_hp;ctx.shadowColor=piece.color;ctx.shadowBlur=PIECE_CELL*1.4*_hp;
           sh.forEach((line,rr)=>line.forEach((v,cc)=>{if(v)drawCell(ctx,piece.color,ox+cc*PIECE_CELL,(oy+rr*PIECE_CELL+_bobY)|0,PIECE_CELL,selSkin,t);}));
@@ -1875,7 +1875,7 @@ function drawGame(t){
   // ── MODE OVERLAYS ────────────────────────────────────────────────────────────
   _drawModeOverlays(t,th);
   // ── ACHIEVEMENT TOASTS ───────────────────────────────────────────────────────
-  if(_IS_IOS){_achieveToasts=[];} else
+  if(false){_achieveToasts=[];} else
   _achieveToasts=_achieveToasts.filter(_at=>{
     const _ap=Math.min(1,(Date.now()-_at.born)/3200);
     if(_ap>=1)return false;
@@ -2284,7 +2284,7 @@ function drawHUD(th){
     ctx.textBaseline='alphabetic';
   }
   // ── UI ripples (HUD button press feedback) ──────────────────────────────────
-  if(_IS_IOS){_uiRipples.length=0;} else
+  if(false){_uiRipples.length=0;} else
   _uiRipples=_uiRipples.filter(_ur=>{
     const _up=Math.min(1,(Date.now()-_ur.born)/220);
     if(_up>=1)return false;

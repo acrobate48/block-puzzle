@@ -63,7 +63,7 @@ function onUp(e){
   if(_hudBtnHit)_lastTapT=_nowTap;
   // Pause HUD button
   if(gameState==='playing'&&_pauseHudRect&&x>=_pauseHudRect.x&&x<_pauseHudRect.x+_pauseHudRect.w&&y>=_pauseHudRect.y&&y<_pauseHudRect.y+_pauseHudRect.h){
-    if(typeof _addUiRipple==='function')_addUiRipple(_pauseHudRect.x+_pauseHudRect.w/2,_pauseHudRect.y+_pauseHudRect.h/2,THEMES[curTheme]?.ta||'#FFFFFF',_pauseHudRect.w);
+    if(typeof _addUiRipple==='function')_addUiRipple(_pauseHudRect.x+_pauseHudRect.w/2,_pauseHudRect.y+_pauseHudRect.h/2,(THEMES[curTheme]&&THEMES[curTheme].ta)||'#FFFFFF',_pauseHudRect.w);
     gameState='pause';_pauseStartTime=Date.now();return;}
   // Sound toggle (in-game bar only — menu has its own handler in handleMenuTap)
   if(gameState==='playing'&&_soundRect&&x>=_soundRect.x&&x<_soundRect.x+_soundRect.w&&y>=_soundRect.y&&y<_soundRect.y+_soundRect.h){

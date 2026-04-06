@@ -80,6 +80,7 @@ function _drawWeather(t){
 // ─── 2. CHROMATIC ABERRATION ─────────────────────────────────────────────────
 function _drawChromaticAb(){
   if(shake<4)return;
+  if(_IS_IOS)return;
   const str=cl((shake-4)/18,0,1);
   const bw=Math.max(5,W*0.04)|0;
   ctx.save();
@@ -103,6 +104,7 @@ function _drawChromaticAb(){
 // ─── 3. COMBO COLOR GRADING ──────────────────────────────────────────────────
 function _drawComboGrade(){
   if(combo<4||over)return;
+  if(_IS_IOS)return;
   const lvl=cl(combo-4,0,6);
   const _cgCols=['rgba(255,80,0,','rgba(255,30,0,','rgba(200,0,0,','rgba(160,0,30,','rgba(100,0,80,','rgba(60,0,130,','rgba(40,0,170,'];
   const a=(lvl/9*0.38).toFixed(3);
@@ -119,6 +121,7 @@ function _drawComboGrade(){
 const _freshCells=new Map(); // r*100+c → {col,born,dur}
 function _addFreshCell(r,c,col){_freshCells.set(r*100+c,{col,born:Date.now(),dur:2200});}
 function _drawFreshHalos(){
+  if(_IS_IOS)return;
   const now=Date.now();
   ctx.save();
   _freshCells.forEach((v,k)=>{
@@ -207,6 +210,7 @@ function _drawFloorEffect(t){
 // ─── 7. SCANLINES — NÉOPOLIS CRT ─────────────────────────────────────────────
 function _drawScanlines(){
   if(curTheme!==9||over)return;
+  if(_IS_IOS)return;
   const _nf=getNeonFlicker();
   ctx.save();ctx.globalAlpha=0.055*_nf;
   for(let sy=0;sy<H;sy+=4){ctx.fillStyle='rgba(0,0,0,0.9)';ctx.fillRect(0,sy,W,2);}
@@ -406,6 +410,7 @@ let _landingFlashes=[]; // {cols:[c,..], born, color}
 function _addLandingFlash(cols,color){_landingFlashes.push({cols:[...cols],born:Date.now(),color:color||'#FFFFFF'});}
 function _drawLandingFlashes(){
   if(!_landingFlashes.length)return;
+  if(_IS_IOS)return;
   const now=Date.now();
   ctx.save();
   _landingFlashes=_landingFlashes.filter(lf=>{
@@ -449,6 +454,7 @@ function _drawTraySpeedGlow(t){
 // ─── 11. RAINBOW GLORY — score ≥ 100 000 ─────────────────────────────────────
 function _drawRainbowGlory(t){
   if(score<100000||over)return;
+  if(_IS_IOS)return;
   const speed=0.00045*(1+Math.min((score-100000)/400000,3));
   const hue=(t*speed*180/Math.PI)%360;
   const a=0.055+0.025*Math.sin(t*0.0022);
@@ -888,7 +894,7 @@ function _drawFreshCornerSparks(){
   placedCellsMap.forEach((f,k)=>{
     if(f>=5)return; // only first 5 animation frames
     const r=Math.floor(k/100),c=k%100;
-    if(r<0||r>=ROWS||c<0||c>=COLS||!grid||!grid[r][c]||grid[r][c]==='__BLOCKED__')return;
+    if(r<0||r>=ROWS||c<0||c>=COLS||!grid||!grid[r][c]||grid[r][c]==='__BLOCKED__'||grid[r][c]==='__CRACKED__')return;
     const x=GRID_X+c*CELL,y=GRID_Y+r*CELL;
     const col=grid[r][c];const csf=1-f/5;
     ctx.globalAlpha=csf*0.72;ctx.fillStyle=col;
@@ -962,7 +968,7 @@ function _triggerBoardExplosion(){
   if(!grid)return;
   for(let r=ROWS-1;r>=0;r--){
     for(let c=0;c<COLS;c++){
-      if(!grid[r][c]||grid[r][c]==='__BLOCKED__')continue;
+      if(!grid[r][c]||grid[r][c]==='__BLOCKED__'||grid[r][c]==='__CRACKED__')continue;
       const delay=Math.floor((ROWS-1-r)*14+c*3+Math.random()*18);
       const cx=GRID_X+(c+0.5)*CELL,cy=GRID_Y+(r+0.5)*CELL;
       const col=grid[r][c];const ti=curTheme;
@@ -1004,6 +1010,7 @@ function _drawStampRings(){
 
 // ─── 8. PARALLAX OVERLAY LAYERS ──────────────────────────────────────────────
 function _drawParallax(t){
+  if(_IS_IOS)return;
   const th=THEMES[curTheme];
   // Layer 1: slow drifting gradient clouds (opacity ~0.06)
   const l1x=(Math.sin(t*0.00018)*W*0.06)|0;
@@ -1068,9 +1075,9 @@ function drawGame(t){
   // Aurora borealis (Night, Cosmos)
   if(!_IS_IOS)_drawAurora(t);
   // God rays (Jungle, Désert, Plage)
-  _spawnGodRay();_drawGodRays();
+  if(!_IS_IOS){_spawnGodRay();_drawGodRays();}
   // Lensflare at 100K+
-  _maybeSpawnLensFlare();_drawLensFlares();
+  if(!_IS_IOS){_maybeSpawnLensFlare();_drawLensFlares();}
   // Neon flicker update (Néopolis)
   _updateNeonFlicker(t);
   if(!_IS_IOS)drawFx(ctx,gameFx,t);
@@ -1193,7 +1200,7 @@ function drawGame(t){
   // Landing column flash (brief streak down columns of placed piece)
   _drawLandingFlashes();
   // Snow accumulation display (Arctic theme)
-  _drawSnowAccum();
+  if(!_IS_IOS)_drawSnowAccum();
   // Depth fog at grid bottom (Ocean/Arctic)
   if(!_IS_IOS){
     _drawDepthFog(t);
@@ -1240,8 +1247,8 @@ function drawGame(t){
         ctx.restore();
       });
     }
-    // Sweep beam: bright vertical light moving left-to-right
-    const sweepX=GRID_X+eased*GW;
+    // Sweep beam: bright vertical light moving left-to-right (desktop only)
+    if(!_IS_IOS){const sweepX=GRID_X+eased*GW;
     const beamW=CELL*3.5;
     const sg=ctx.createLinearGradient(sweepX-beamW,0,sweepX+beamW*0.4,0);
     sg.addColorStop(0,'rgba(255,255,255,0)');
@@ -1255,7 +1262,7 @@ function drawGame(t){
     rows.forEach(r=>{ctx.rect(GRID_X,GRID_Y+r*CELL,GW,CELL);});
     ctx.clip();
     ctx.fillStyle=sg;ctx.fillRect(GRID_X,GRID_Y,GW,GH);
-    ctx.restore();
+    ctx.restore();}
     return true;
   });
   // Ghost piece (snap preview) + column highlight + ambient glow
@@ -1275,7 +1282,7 @@ function drawGame(t){
   }
   if(drag&&gameState==='playing'&&!over){
     // Spotlight: subtle radial darkening outside dragged piece focus area
-    {const sg=ctx.createRadialGradient(mouseX,mouseY,CELL*1.2,mouseX,mouseY,Math.max(W,H)*0.7);
+    if(!_IS_IOS){const sg=ctx.createRadialGradient(mouseX,mouseY,CELL*1.2,mouseX,mouseY,Math.max(W,H)*0.7);
     sg.addColorStop(0,'rgba(0,0,0,0)');sg.addColorStop(1,'rgba(0,0,0,0.22)');
     ctx.save();ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);ctx.restore();}
     const piece=tray[drag.idx];
@@ -1294,7 +1301,7 @@ function drawGame(t){
       // Altitude-based shadow on grid: grows as piece is held higher above snap position
       const _altDist=Math.max(0,mouseY-(GRID_Y+(gr+piece.shape.length/2)*CELL));
       const _altA=cl(_altDist/(CELL*4),0,0.45);
-      if(_altA>0.01){ctx.save();ctx.globalAlpha=_altA;
+      if(_altA>0.01&&!_IS_IOS){ctx.save();ctx.globalAlpha=_altA;
         piece.shape.forEach((line,rr)=>line.forEach((v,cc)=>{if(v){const pr2=gr+rr,pc2=gc+cc;
           if(pr2>=0&&pr2<ROWS&&pc2>=0&&pc2<COLS){
             const _sx=GRID_X+pc2*CELL+CELL*0.08,_sy=GRID_Y+pr2*CELL+CELL*0.08;
@@ -1961,16 +1968,28 @@ function _drawModeOverlays(t,th){
   }
   // ── CONTRAINTES ──
   if((effectiveMode==='contraintes')&&!over){
-    // Render blocked cells with crosshatch + red tint
-    contraBlocked.forEach(({r,c})=>{
+    // Render blocked cells: cracked (hp=1) vs intact (hp=2)
+    contraBlocked.forEach(({r,c,hp})=>{
       const x=GRID_X+c*CELL,y=GRID_Y+r*CELL;
-      ctx.save();ctx.globalAlpha=0.72;
-      ctx.fillStyle='rgba(180,20,20,0.45)';ctx.fillRect(x,y,CELL,CELL);
-      // Crosshatch
-      ctx.strokeStyle='rgba(255,60,40,0.55)';ctx.lineWidth=1.2;
-      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+CELL,y+CELL);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(x+CELL,y);ctx.lineTo(x,y+CELL);ctx.stroke();
-      ctx.strokeStyle='rgba(255,60,40,0.35)';ctx.strokeRect(x+1,y+1,CELL-2,CELL-2);
+      ctx.save();ctx.globalAlpha=0.75;
+      if(hp<=1){
+        // Cracked: orange tint + jagged crack lines
+        ctx.fillStyle='rgba(200,90,10,0.50)';ctx.fillRect(x,y,CELL,CELL);
+        ctx.strokeStyle='rgba(255,140,40,0.70)';ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+CELL,y+CELL);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(x+CELL,y);ctx.lineTo(x,y+CELL);ctx.stroke();
+        // Extra jagged crack
+        ctx.strokeStyle='rgba(255,200,80,0.55)';ctx.lineWidth=0.9;
+        ctx.beginPath();ctx.moveTo(x+CELL*0.5,y);ctx.lineTo(x+CELL*0.32,y+CELL*0.38);ctx.lineTo(x+CELL*0.58,y+CELL*0.65);ctx.lineTo(x+CELL*0.42,y+CELL);ctx.stroke();
+        ctx.strokeStyle='rgba(255,140,40,0.38)';ctx.strokeRect(x+1,y+1,CELL-2,CELL-2);
+      }else{
+        // Intact: red tint + crosshatch
+        ctx.fillStyle='rgba(180,20,20,0.45)';ctx.fillRect(x,y,CELL,CELL);
+        ctx.strokeStyle='rgba(255,60,40,0.55)';ctx.lineWidth=1.2;
+        ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+CELL,y+CELL);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(x+CELL,y);ctx.lineTo(x,y+CELL);ctx.stroke();
+        ctx.strokeStyle='rgba(255,60,40,0.35)';ctx.strokeRect(x+1,y+1,CELL-2,CELL-2);
+      }
       ctx.globalAlpha=1;ctx.restore();
     });
     // Blocked count badge — portrait: inside grid top; landscape: above grid
@@ -1981,7 +2000,9 @@ function _drawModeOverlays(t,th){
     rp(ctx,bx2,by2,bw2,bh2,bh2/2);ctx.strokeStyle='rgba(255,60,40,0.55)';ctx.lineWidth=1.2;ctx.stroke();
     const bfsz=cl(Math.floor(bh2*0.52),8,14);
     ctx.save();ctx.font=`bold ${bfsz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle='#FF6050';ctx.fillText(`⚠ ${bcount} cases bloquées`,bx2+bw2/2,by2+bh2/2);ctx.restore();
+    const _nCracked=contraBlocked.filter(b=>b.hp<=1).length,_nIntact=bcount-_nCracked;
+    const _badgeTxt=_nCracked>0?`⚠ ${_nIntact} bloquées  💥 ${_nCracked} fissurées`:`⚠ ${bcount} bloquées`;
+    ctx.fillStyle='#FF6050';ctx.fillText(_badgeTxt,bx2+bw2/2,by2+bh2/2);ctx.restore();
   }
   // ── HISTOIRE ──
   if(currentMode==='histoire'&&!over){

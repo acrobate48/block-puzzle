@@ -315,6 +315,26 @@ function onUp(e){
         const pBefore=parasites.length;
         parasites=parasites.filter(p=>!clearedSet.has(p.r*100+p.c));
         if(parasites.length<pBefore)floats.push(new FloatText('☠ PARASITE ÉLIMINÉ',GRID_X+GW/2,GRID_Y+GH*0.4,'#00FF80',1.0,90));
+        // Handle constraint blocks hit by cleared lines
+        {const _cEM=currentMode==='histoire'?_getHistoireSubMode():currentMode;
+        if(_cEM==='contraintes'){
+          contraBlocked.forEach(b=>{
+            if(clearedSet.has(b.r*100+b.c)){
+              b.hp--;
+              const _cx=GRID_X+b.c*CELL+CELL/2,_cy=GRID_Y+b.r*CELL+CELL/2;
+              if(b.hp>0){
+                grid[b.r][b.c]='__CRACKED__'; // still blocks placement, but one hit left
+                floats.push(new FloatText('FISSURÉ !',_cx,_cy,'#FF8040',1.1,80));
+                for(let _i=0;_i<6;_i++){const _a=_i/6*Math.PI*2;if(particles.length<200)particles.push({x:_cx,y:_cy,vx:Math.cos(_a)*rnd(1.5,3),vy:Math.sin(_a)*rnd(1.5,3)-0.5,color:'#FF8040',life:28,ml:28,size:rnd(2,4),circle:true});}
+              }else{
+                // grid[r][c] already null from clearLines — cell is now free to place on
+                floats.push(new FloatText('DÉTRUIT !',_cx,_cy,'#40FF80',1.2,90));
+                for(let _i=0;_i<10;_i++){const _a=_i/10*Math.PI*2;if(particles.length<200)particles.push({x:_cx,y:_cy,vx:Math.cos(_a)*rnd(2,4),vy:Math.sin(_a)*rnd(2,4)-1,color:rndc(['#40FF80','#80FFB0','#FFFFFF']),life:35,ml:35,size:rnd(2,5),circle:true});}
+              }
+            }
+          });
+          contraBlocked=contraBlocked.filter(b=>b.hp>0);
+        }}
         cells.forEach(({r,c})=>{
           // Star/X2 extra sparkle before clearing
           if(gridStars[r][c]){starPts+=25;const _scx=GRID_X+(c+0.5)*CELL,_scy=GRID_Y+(r+0.5)*CELL;for(let _si=0;_si<8;_si++){const _sa=_si/8*Math.PI*2,_ss=rnd(2.5,5.5);particles.push({x:_scx,y:_scy,vx:Math.cos(_sa)*_ss,vy:Math.sin(_sa)*_ss-1.5,color:rndc(['#FFD700','#FFEE80','#FFA000','#FFFFFF']),size:rnd(2,4),life:rnd(30,50),ml:50,circle:true});}ripples.push({x:_scx,y:_scy,life:20,ml:20,maxR:CELL*1.5,color:'#FFD700'});}
@@ -385,7 +405,7 @@ function onUp(e){
         if(hasX2)floats.push(new FloatText('×2 POINTS 60s',GRID_X+GW/2,GRID_Y+GH*0.35,'#30FFAA',1.1,100));
         const newTh=getCurTheme();if(newTh!==curTheme){curTheme=newTh;gameBg=_IS_IOS?null:buildBg(curTheme);gameFx=initFx(curTheme);screenFlash=200;screenFlashCol=THEMES[newTh].tm;floats.push(new FloatText(`🎨 ${THEMES[curTheme].name}`,W/2,H*0.45,THEMES[curTheme].tm,1.3,120));}
         // ── Perfect Clear bonus — entire board emptied ────────────────────────
-        if(grid.every(row=>row.every(v=>!v||v==='__BLOCKED__'))){
+        if(grid.every(row=>row.every(v=>!v||v==='__BLOCKED__'||v==='__CRACKED__'))){
           if(typeof _unlockAchieve==='function')_unlockAchieve(4); // Achievement #5 — perfect clear
           const pcPts=500;score+=pcPts;
           screenFlash=255;screenFlashCol='#FFD700';shake=Math.max(shake,22);shakePow=Math.max(shakePow,10);

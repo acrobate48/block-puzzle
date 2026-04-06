@@ -50,7 +50,7 @@ function newTray(g){
 function canPlace(grid,shape,row,col){for(let r=0;r<shape.length;r++)for(let c=0;c<shape[r].length;c++)if(shape[r][c]){const gr=row+r,gc=col+c;if(gr<0||gr>=ROWS||gc<0||gc>=COLS||grid[gr][gc])return false;}return true;}
 function placePiece(grid,shape,color,row,col){for(let r=0;r<shape.length;r++)for(let c=0;c<shape[r].length;c++)if(shape[r][c])grid[row+r][col+c]=color;}
 function clearLines(grid){const rf=[],cf=[];for(let r=0;r<ROWS;r++)if(grid[r].every(v=>v))rf.push(r);for(let c=0;c<COLS;c++){let f=true;for(let r=0;r<ROWS;r++)if(!grid[r][c]){f=false;break;}if(f)cf.push(c);}const cl2=new Set(),clC={};rf.forEach(r=>{for(let c=0;c<COLS;c++){const k=r*100+c;cl2.add(k);clC[k]=grid[r][c];}});cf.forEach(c=>{for(let r=0;r<ROWS;r++){const k=r*100+c;cl2.add(k);clC[k]=grid[r][c];}});cl2.forEach(k=>{grid[Math.floor(k/100)][k%100]=null;});return{n:rf.length+cf.length,cells:[...cl2].map(k=>({r:Math.floor(k/100),c:k%100})),colors:clC};}
-function anyValid(grid,tray){for(const p of tray)if(p)for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(_modeCanPlace(grid,p.shape,r,c))return true;return false;}
+function anyValid(grid,tray){for(const p of tray)if(p){let s=p.shape;for(let rot=0;rot<4;rot++){for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(_modeCanPlace(grid,s,r,c))return true;s=rotateShape(s);}}return false;}
 function _zenClearRows(){
   // Remove up to 2 rows with the most filled cells to make room
   const counts=Array.from({length:ROWS},(_,r)=>({r,n:grid[r].filter(Boolean).length}));

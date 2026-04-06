@@ -1524,7 +1524,9 @@ function drawGame(t){
     }
   }
   // Impact ripples — expanding rings from block placements and bomb blasts
-  if(_IS_IOS){ripples.length=0;particles.length=0;debris.length=0;dragTrail.length=0;
+  if(_IS_IOS){ripples.length=0;debris.length=0;dragTrail.length=0;
+    if(particles.length>80)particles.splice(0,particles.length-80);
+    particles=particles.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.13;p.life--;if(p.life<=0)return false;const ratio=p.life/p.ml,sz=Math.max(1,p.size*ratio);ctx.fillStyle=hexA(p.color,0.82*ratio);if(p.circle){ctx.beginPath();ctx.arc(p.x,p.y,sz,0,Math.PI*2);ctx.fill();}else ctx.fillRect(p.x-sz,p.y-sz,sz*2,sz*2);return true;});
     if(floats.length>20)floats.splice(0,floats.length-20);
     floats=floats.filter(f=>{f.draw(ctx);return f.update();});
     screenFlash=0;

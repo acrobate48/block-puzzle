@@ -149,7 +149,7 @@ function drawEventVideo(name,alpha,x,y,w,h){
 
 // ─── THEME ICON PRELOADER ─────────────────────────────────────────────────────
 const _themeIconImgs=new Array(10).fill(null);
-_THEME_NAMES.forEach((name,i)=>{const img=new Image();img.onload=()=>{_themeIconImgs[i]=img;};img.src=`assets/themes/${name}/icon.svg`;});
+if(!_IS_IOS)_THEME_NAMES.forEach((name,i)=>{const img=new Image();img.onload=()=>{_themeIconImgs[i]=img;};img.src=`assets/themes/${name}/icon.svg`;});
 function drawThemeIcon(themeIdx,x,y,w,h){
   const img=_themeIconImgs[themeIdx];if(!img)return false;
   ctx.save();ctx.drawImage(img,x,y,w||80,h||56);ctx.restore();return true;
@@ -157,7 +157,7 @@ function drawThemeIcon(themeIdx,x,y,w,h){
 
 // ─── HUD BORDER PRELOADER ─────────────────────────────────────────────────────
 const _hudBorderImgs=new Array(10).fill(null);
-_THEME_NAMES.forEach((name,i)=>{const img=new Image();img.onload=()=>{_hudBorderImgs[i]=img;};img.src=`assets/themes/${name}/hud_border.svg`;});
+if(!_IS_IOS)_THEME_NAMES.forEach((name,i)=>{const img=new Image();img.onload=()=>{_hudBorderImgs[i]=img;};img.src=`assets/themes/${name}/hud_border.svg`;});
 function drawHudBorder(themeIdx,x,y,w,h){
   const img=_hudBorderImgs[themeIdx];if(!img)return false;
   ctx.save();ctx.drawImage(img,x,y,w,h||20);ctx.restore();return true;
@@ -165,7 +165,7 @@ function drawHudBorder(themeIdx,x,y,w,h){
 
 // ─── GRID CORNER PRELOADER ────────────────────────────────────────────────────
 const _gridCornerImgs=new Array(10).fill(null);
-_THEME_NAMES.forEach((name,i)=>{const img=new Image();img.onload=()=>{_gridCornerImgs[i]=img;};img.src=`assets/themes/${name}/grid_corners.svg`;});
+if(!_IS_IOS)_THEME_NAMES.forEach((name,i)=>{const img=new Image();img.onload=()=>{_gridCornerImgs[i]=img;};img.src=`assets/themes/${name}/grid_corners.svg`;});
 function drawGridCorner(themeIdx,cx,cy,sz,rot){
   const img=_gridCornerImgs[themeIdx];if(!img)return false;
   ctx.save();ctx.translate(cx,cy);if(rot)ctx.rotate(rot);
@@ -175,7 +175,7 @@ function drawGridCorner(themeIdx,cx,cy,sz,rot){
 // ─── SKIN PREVIEW PRELOADER ───────────────────────────────────────────────────
 const _SKIN_NAMES_DIR=['pierre','cristal','bois','metal','marbre','candy','glace','feu','neon','galaxie'];
 const _skinPreviewImgs=new Array(10).fill(null);
-_SKIN_NAMES_DIR.forEach((name,i)=>{const img=new Image();img.onload=()=>{_skinPreviewImgs[i]=img;};img.src=`assets/skins/${name}/preview.svg`;});
+if(!_IS_IOS)_SKIN_NAMES_DIR.forEach((name,i)=>{const img=new Image();img.onload=()=>{_skinPreviewImgs[i]=img;};img.src=`assets/skins/${name}/preview.svg`;});
 function drawSkinPreview(skinIdx,x,y,w,h){
   const img=_skinPreviewImgs[skinIdx];if(!img)return false;
   ctx.save();ctx.drawImage(img,x,y,w,h);ctx.restore();return true;
@@ -183,13 +183,13 @@ function drawSkinPreview(skinIdx,x,y,w,h){
 
 // ─── ACHIEVEMENT ICON PRELOADER ───────────────────────────────────────────────
 const _achieveImgs=new Array(10).fill(null);
-for(let _ai=0;_ai<10;_ai++){const img=new Image();const _idx=_ai;img.onload=()=>{_achieveImgs[_idx]=img;};img.src=`assets/ui/achievement_${_ai+1}.svg`;}
+if(!_IS_IOS){for(let _ai=0;_ai<10;_ai++){const img=new Image();const _idx=_ai;img.onload=()=>{_achieveImgs[_idx]=img;};img.src=`assets/ui/achievement_${_ai+1}.svg`;}}
 
 // ─── TROPHY / MEDAL PRELOADERS ────────────────────────────────────────────────
 const _trophyImgs={};
-['1k','5k','10k','50k','100k'].forEach(n=>{const img=new Image();img.onload=()=>{_trophyImgs[n]=img;};img.src=`assets/ui/trophy_${n}.svg`;});
+if(!_IS_IOS)['1k','5k','10k','50k','100k'].forEach(n=>{const img=new Image();img.onload=()=>{_trophyImgs[n]=img;};img.src=`assets/ui/trophy_${n}.svg`;});
 const _medalImgs={};
-['gold','silver','bronze'].forEach(n=>{const img=new Image();img.onload=()=>{_medalImgs[n]=img;};img.src=`assets/ui/medal_${n}.svg`;});
+if(!_IS_IOS)['gold','silver','bronze'].forEach(n=>{const img=new Image();img.onload=()=>{_medalImgs[n]=img;};img.src=`assets/ui/medal_${n}.svg`;});
 
 // ─── THEME TRANSITION VIDEO ───────────────────────────────────────────────────
 const _transVids=new Array(10).fill(null);const _transVidReady=new Array(10).fill(false);

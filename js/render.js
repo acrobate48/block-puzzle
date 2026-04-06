@@ -3,7 +3,7 @@
 // Preloads SVG icons from assets/ui/ for hardware-accelerated canvas drawing.
 // Falls back to canvas-drawn versions if image fails to load.
 const _UI={};
-if(!_IS_IOS)['bomb','star','x2','trophy','combo_fire','lightning','skull','heart'].forEach(n=>{
+['bomb','star','x2','trophy','combo_fire','lightning','skull','heart'].forEach(n=>{
   const img=new Image();
   img.onload=()=>{_UI[n]=img;};
   img.src=`assets/ui/${n}.svg`;
@@ -21,13 +21,11 @@ function _loadIcon(name,path){
   img.onerror=()=>{_uiIconsReady[name]=false;};
   img.src=path;
 }
-if(!_IS_IOS){
 _loadIcon('bomb','assets/ui/bomb.svg');
 _loadIcon('star','assets/ui/star.svg');
 _loadIcon('x2','assets/ui/x2.svg');
 _loadIcon('fire','assets/ui/fire.svg');
 _loadIcon('trophy','assets/ui/trophy.svg');
-}
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 function hr(h){return parseInt(h.slice(1,3),16)}
 function hg(h){return parseInt(h.slice(3,5),16)}

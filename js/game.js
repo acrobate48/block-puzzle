@@ -1525,7 +1525,8 @@ function drawGame(t){
   }
   // Impact ripples — expanding rings from block placements and bomb blasts
   if(_IS_IOS){ripples.length=0;particles.length=0;debris.length=0;dragTrail.length=0;
-    floats=floats.filter(f=>f.update()); // update lifetime only, no draw
+    if(floats.length>20)floats.splice(0,floats.length-20);
+    floats=floats.filter(f=>{f.draw(ctx);return f.update();});
     screenFlash=0;
   }else{
   ripples=ripples.filter(ri=>{ri.life--;if(ri.life<=0)return false;const _rp=1-ri.life/ri.ml;ri.r=ri.maxR*_rp;const _ra=(ri.life/ri.ml)*0.55;ctx.save();ctx.strokeStyle=hexA(ri.color,_ra);ctx.lineWidth=Math.max(1,3.5*(1-_rp));ctx.shadowColor=ri.color;ctx.shadowBlur=12;ctx.beginPath();ctx.arc(ri.x,ri.y,ri.r,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.restore();return true;});

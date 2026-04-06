@@ -21,7 +21,7 @@ let W,H,CELL,GRID_X,GRID_Y,GW,GH,TRAY_Y,TRAY_H,PIECE_CELL,CR;
 
 function resize(){
   W=window.innerWidth;H=window.innerHeight;
-  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const dpr=_IS_IOS?1:Math.min(window.devicePixelRatio||1,2);
   canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
   canvas.style.width=W+'px';canvas.style.height=H+'px';
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -51,7 +51,8 @@ const _THEME_NAMES=['jungle','desert','ocean','volcan','nuit','arctique','cosmos
 // ─── SVG BACKGROUND PRELOADER ─────────────────────────────────────────────────
 const _bgImgs=new Array(10).fill(null);
 const _bgReady=new Array(10).fill(false);
-_THEME_NAMES.forEach((name,i)=>{
+// Skip SVG loading on iOS — saves 10 image decodes + ~180KB network on memory-limited devices
+if(!_IS_IOS)_THEME_NAMES.forEach((name,i)=>{
   const img=new Image();
   img.onload=()=>{_bgImgs[i]=img;_bgReady[i]=true;};
   img.onerror=()=>{

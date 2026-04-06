@@ -5,6 +5,7 @@ let leaderboardData=[];
 let playerPseudo='';try{playerPseudo=localStorage.getItem('bp_pseudo')||'';}catch(e){}
 let _fbDb=null;
 (function(){
+  if(typeof firebase==='undefined')return; // Firebase SDK not loaded (iOS)
   try{
     const cfg=window.FIREBASE_CONFIG;
     const app=firebase.initializeApp(cfg);

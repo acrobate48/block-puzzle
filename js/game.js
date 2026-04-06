@@ -1083,47 +1083,52 @@ function drawGame(t){
     const _gCx=GRID_X+GW/2,_gCy=GRID_Y+GH/2;
     ctx.translate(_gCx,_gCy);ctx.transform(1,_tiltY,_tiltX,1,0,0);ctx.translate(-_gCx,-_gCy);
   }
-  // Grid frame (glass effect)
+  // Grid frame
   const b2=Math.max(4,CELL*0.1|0);
-  const fg3=ctx.createLinearGradient(GRID_X-b2,GRID_Y-b2,GRID_X-b2,GRID_Y+GH+b2);
-  fg3.addColorStop(0,hexA(th.sl,0.9));fg3.addColorStop(1,hexA(th.dc,0.9));
   // Score-level glow multiplier: 1× at 0, 2.5× at 100K+
   const _scoreGlowMul=1+Math.min(1.5,score/66666);
   // Danger heartbeat: grid pulses brighter when >80% full
   const _fillNow=grid.reduce((s,row)=>s+row.filter(Boolean).length,0)/(ROWS*COLS);
   const _dangerBeat=_fillNow>0.80?1+0.5*Math.abs(Math.sin(t*(_fillNow>0.92?0.022:0.014))):1;
-  ctx.save();ctx.shadowColor=th.gridGlow||th.ta;ctx.shadowBlur=(8+4*Math.sin(t*0.001))*_scoreGlowMul*_dangerBeat;
-  rrect(ctx,GRID_X-b2,GRID_Y-b2,GW+b2*2,GH+b2*2,CR+b2,fg3,th.gridBorder||th.sl,1.5);
-  ctx.restore();
-  // Extra score milestone ring (overlay outside grid frame when score >= 5000)
-  if(score>=5000&&!over){
-    const _tier=score>=100000?4:score>=50000?3:score>=10000?2:score>=5000?1:0;
-    const _tierCols=['#60C0FF','#60FFB0','#FFD060','#FF8020','#FF40FF'];
-    const _tierA=(0.18+0.12*Math.abs(Math.sin(t*0.0014)))*Math.min(1,_tier*0.35+0.35);
-    ctx.save();ctx.shadowColor=_tierCols[_tier-1]||_tierCols[0];ctx.shadowBlur=10*_dangerBeat;
-    rp(ctx,GRID_X-b2-2,GRID_Y-b2-2,GW+b2*4+4,GH+b2*4+4,CR+b2+2);
-    ctx.strokeStyle=hexA(_tierCols[_tier-1]||_tierCols[0],_tierA);ctx.lineWidth=1.5;ctx.stroke();
+  if(!_IS_IOS){
+    // Full glass effect (desktop/Android) — 5 gradients per frame
+    const fg3=ctx.createLinearGradient(GRID_X-b2,GRID_Y-b2,GRID_X-b2,GRID_Y+GH+b2);
+    fg3.addColorStop(0,hexA(th.sl,0.9));fg3.addColorStop(1,hexA(th.dc,0.9));
+    ctx.save();ctx.shadowColor=th.gridGlow||th.ta;ctx.shadowBlur=(8+4*Math.sin(t*0.001))*_scoreGlowMul*_dangerBeat;
+    rrect(ctx,GRID_X-b2,GRID_Y-b2,GW+b2*2,GH+b2*2,CR+b2,fg3,th.gridBorder||th.sl,1.5);
     ctx.restore();
+    if(score>=5000&&!over){
+      const _tier=score>=100000?4:score>=50000?3:score>=10000?2:score>=5000?1:0;
+      const _tierCols=['#60C0FF','#60FFB0','#FFD060','#FF8020','#FF40FF'];
+      const _tierA=(0.18+0.12*Math.abs(Math.sin(t*0.0014)))*Math.min(1,_tier*0.35+0.35);
+      ctx.save();ctx.shadowColor=_tierCols[_tier-1]||_tierCols[0];ctx.shadowBlur=10*_dangerBeat;
+      rp(ctx,GRID_X-b2-2,GRID_Y-b2-2,GW+b2*4+4,GH+b2*4+4,CR+b2+2);
+      ctx.strokeStyle=hexA(_tierCols[_tier-1]||_tierCols[0],_tierA);ctx.lineWidth=1.5;ctx.stroke();
+      ctx.restore();
+    }
+    if(typeof drawGridCorner==='function'){const _csz=Math.min(GW,GH)*0.14|0;if(_csz>=10){ctx.save();ctx.globalAlpha=0.72;drawGridCorner(curTheme,GRID_X,GRID_Y,_csz,0);drawGridCorner(curTheme,GRID_X+GW,GRID_Y,_csz,Math.PI/2);drawGridCorner(curTheme,GRID_X,GRID_Y+GH,_csz,-Math.PI/2);drawGridCorner(curTheme,GRID_X+GW,GRID_Y+GH,_csz,Math.PI);ctx.restore();}}
+    const gig=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X,GRID_Y+GH);
+    gig.addColorStop(0,hexA(th.gbg,0.90));gig.addColorStop(1,hexA(th.ge,0.90));
+    ctx.fillStyle=gig;ctx.fillRect(GRID_X,GRID_Y,GW,GH);
+    const rimT=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X,GRID_Y+GH*0.12);
+    rimT.addColorStop(0,'rgba(255,255,255,0.14)');rimT.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=rimT;ctx.fillRect(GRID_X,GRID_Y,GW,GH*0.12);
+    const rimL=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X+GW*0.06,GRID_Y);
+    rimL.addColorStop(0,'rgba(255,255,255,0.09)');rimL.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=rimL;ctx.fillRect(GRID_X,GRID_Y,GW*0.06,GH);
+  } else {
+    // iOS: flat fills only — no per-frame gradient allocation
+    rrect(ctx,GRID_X-b2,GRID_Y-b2,GW+b2*2,GH+b2*2,CR+b2,hexA(th.gbg,0.88),th.gridBorder||th.sl,1.5);
+    ctx.fillStyle=hexA(th.gbg,0.88);ctx.fillRect(GRID_X,GRID_Y,GW,GH);
   }
-  // Grid corner decorations
-  if(typeof drawGridCorner==='function'){const _csz=Math.min(GW,GH)*0.14|0;if(_csz>=10){ctx.save();ctx.globalAlpha=0.72;drawGridCorner(curTheme,GRID_X,GRID_Y,_csz,0);drawGridCorner(curTheme,GRID_X+GW,GRID_Y,_csz,Math.PI/2);drawGridCorner(curTheme,GRID_X,GRID_Y+GH,_csz,-Math.PI/2);drawGridCorner(curTheme,GRID_X+GW,GRID_Y+GH,_csz,Math.PI);ctx.restore();}}
-  // Grid glass inner
-  const gig=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X,GRID_Y+GH);
-  gig.addColorStop(0,hexA(th.gbg,0.90));gig.addColorStop(1,hexA(th.ge,0.90));
-  ctx.fillStyle=gig;ctx.fillRect(GRID_X,GRID_Y,GW,GH);
-  // Inner rim light — top + left edge brighter (Apple glassmorphism)
-  const rimT=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X,GRID_Y+GH*0.12);
-  rimT.addColorStop(0,'rgba(255,255,255,0.14)');rimT.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=rimT;ctx.fillRect(GRID_X,GRID_Y,GW,GH*0.12);
-  const rimL=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X+GW*0.06,GRID_Y);
-  rimL.addColorStop(0,'rgba(255,255,255,0.09)');rimL.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=rimL;ctx.fillRect(GRID_X,GRID_Y,GW*0.06,GH);
   // Animated grid atmosphere — ambient pulse + subtle grid lines
   ctx.save();
   const _ambP=0.06+0.04*Math.sin(t*0.0012);
-  const _ambG=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X,GRID_Y+GH*0.45);
-  _ambG.addColorStop(0,hexA(th.ta,_ambP));_ambG.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=_ambG;ctx.fillRect(GRID_X,GRID_Y,GW,GH*0.45);
+  if(!_IS_IOS){
+    const _ambG=ctx.createLinearGradient(GRID_X,GRID_Y,GRID_X,GRID_Y+GH*0.45);
+    _ambG.addColorStop(0,hexA(th.ta,_ambP));_ambG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=_ambG;ctx.fillRect(GRID_X,GRID_Y,GW,GH*0.45);
+  }
   const _glP=0.022+0.012*Math.sin(t*0.0018);
   ctx.strokeStyle=hexA(th.sl,_glP);ctx.lineWidth=0.5;
   for(let _gr2=0;_gr2<=ROWS;_gr2++){ctx.beginPath();ctx.moveTo(GRID_X,GRID_Y+_gr2*CELL);ctx.lineTo(GRID_X+GW,GRID_Y+_gr2*CELL);ctx.stroke();}
@@ -1140,9 +1145,9 @@ function drawGame(t){
     if(color){
       if(popF!==undefined&&popF<_SPRING.length){
         const sc=_SPRING[popF];const off=(CELL*(1-sc)/2)|0;
-        // Placement glow halo — fades with spring animation
+        // Placement glow halo — fades with spring animation (skip on iOS: gradient per cell per frame)
         const _glA=(1-popF/_SPRING.length)*0.52;
-        if(_glA>0.03){const _gx=x+CELL/2,_gy=y+CELL/2;const _gg2=ctx.createRadialGradient(_gx,_gy,0,_gx,_gy,CELL*0.78);_gg2.addColorStop(0,hexA(color,_glA*0.9));_gg2.addColorStop(0.5,hexA(color,_glA*0.35));_gg2.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=_gg2;ctx.fillRect(x-CELL*0.3,y-CELL*0.3,CELL*1.6,CELL*1.6);}
+        if(!_IS_IOS&&_glA>0.03){const _gx=x+CELL/2,_gy=y+CELL/2;const _gg2=ctx.createRadialGradient(_gx,_gy,0,_gx,_gy,CELL*0.78);_gg2.addColorStop(0,hexA(color,_glA*0.9));_gg2.addColorStop(0.5,hexA(color,_glA*0.35));_gg2.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=_gg2;ctx.fillRect(x-CELL*0.3,y-CELL*0.3,CELL*1.6,CELL*1.6);}
         drawCell(ctx,color,x+off,y+off,Math.ceil(CELL*sc),selSkin,t);
       } else drawCell(ctx,color,x,y,CELL,selSkin,t);
       // Star overlay

@@ -641,7 +641,7 @@ function _applySettingTap(r, tx) {
     _applySliderValue(r.key, t);
   } else if (r.type === 'theme') {
     selTheme = r.val;
-    menuBg = buildBg(selTheme);
+    if(!_IS_IOS) menuBg = buildBg(selTheme);
   } else if (r.type === 'skin') {
     selSkin = r.val;
   }

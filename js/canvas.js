@@ -54,12 +54,7 @@ const _bgReady=new Array(10).fill(false);
 if(!_IS_IOS)_THEME_NAMES.forEach((name,i)=>{
   const img=new Image();
   img.onload=()=>{_bgImgs[i]=img;_bgReady[i]=true;};
-  img.onerror=()=>{
-    // Fallback: try legacy flat path assets/backgrounds/bg_name.svg
-    const img2=new Image();
-    img2.onload=()=>{_bgImgs[i]=img2;_bgReady[i]=true;};
-    img2.src=`assets/backgrounds/bg_${name}.svg`;
-  };
+  img.onerror=()=>{};
   img.src=`assets/themes/${name}/bg.svg`;
 });
 
@@ -88,16 +83,7 @@ const _bgVidReady=new Array(10).fill(false);
     document.body.appendChild(vid);
     _bgVids[i]=vid;
     vid.addEventListener('canplaythrough',()=>{_bgVidReady[i]=true;vid.play().catch(()=>{});},{once:true});
-    vid.addEventListener('error',()=>{
-      const vid2=document.createElement('video');
-      vid2.src=`assets/video/bg_${name}.mp4`;
-      vid2.loop=true;vid2.muted=true;vid2.playsInline=true;vid2.preload='auto';
-      vid2.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1px;height=1px;pointer-events:none;';
-      document.body.appendChild(vid2);
-      _bgVids[i]=vid2;
-      vid2.addEventListener('canplaythrough',()=>{_bgVidReady[i]=true;vid2.play().catch(()=>{});},{once:true});
-      vid2.load();
-    },{once:true});
+    vid.addEventListener('error',()=>{},{once:true});
     vid.load();
   });
 })();

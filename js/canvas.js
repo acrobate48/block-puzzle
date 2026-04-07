@@ -37,6 +37,7 @@ function resize(){
   TRAY_Y=GRID_Y+GH+6;
   PIECE_CELL=Math.floor(CELL*0.58);
   CELL_CACHE.clear();
+  if(typeof _rebuildGameCache==='function')_rebuildGameCache();
 }
 let _resizeTimer=null;
 window.addEventListener('resize',()=>{clearTimeout(_resizeTimer);_resizeTimer=setTimeout(()=>{resize();if(!_IS_IOS)menuBg=buildBg(selTheme);},100);},false);

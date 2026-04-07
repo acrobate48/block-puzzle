@@ -8,3 +8,4 @@ __pycache__/
 *.pyc
 node_modules/
 assets/video/frames/
+.claude/worktrees/

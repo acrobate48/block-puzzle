@@ -27,12 +27,18 @@ _loadIcon('x2','assets/ui/x2.svg');
 _loadIcon('fire','assets/ui/fire.svg');
 _loadIcon('trophy','assets/ui/trophy.svg');
 // ─── UTILS ───────────────────────────────────────────────────────────────────
-function hr(h){return parseInt(h.slice(1,3),16)}
-function hg(h){return parseInt(h.slice(3,5),16)}
-function hb(h){return parseInt(h.slice(5,7),16)}
+// Memoized hex component parsers --- avoids repeated parseInt+slice per frame
+const _hrCache=Object.create(null);
+const _hgCache=Object.create(null);
+const _hbCache=Object.create(null);
+function hr(h){let v=_hrCache[h];if(v!==undefined)return v;v=parseInt(h.slice(1,3),16);_hrCache[h]=v;return v}
+function hg(h){let v=_hgCache[h];if(v!==undefined)return v;v=parseInt(h.slice(3,5),16);_hgCache[h]=v;return v}
+function hb(h){let v=_hbCache[h];if(v!==undefined)return v;v=parseInt(h.slice(5,7),16);_hbCache[h]=v;return v}
 function rgb(r,g,b){return`rgb(${r|0},${g|0},${b|0})`}
 function rgba(r,g,b,a){return`rgba(${r|0},${g|0},${b|0},${+a.toFixed(3)})`}
-function hexA(h,a){return rgba(hr(h),hg(h),hb(h),a)}
+// Memoized hexA --- avoids redundant hr/hg/hb + string building per frame
+const _hexACache=Object.create(null);
+function hexA(h,a){const ak=+a.toFixed(3);const k=h+'|'+ak;let v=_hexACache[k];if(v!==undefined)return v;v=rgba(hr(h),hg(h),hb(h),a);_hexACache[k]=v;return v}
 function cl(v,lo,hi){return v<lo?lo:v>hi?hi:v}
 function lerp(a,b,t){return a+(b-a)*t}
 function lerpC(c1,c2,t){return rgb(lerp(hr(c1),hr(c2),t),lerp(hg(c1),hg(c2),t),lerp(hb(c1),hb(c2),t))}
@@ -62,7 +68,7 @@ function drawPremText(ctx,text,x,y,font,topCol,botCol,outlineCol,glowCol,glowSz=
     ctx.fillStyle=topCol;ctx.fillText(text,x,y);
     ctx.restore();return;
   }
-  const fsz=parseFloat((font.match(/[\d.]+/)||['14'])[0]);
+  const fsz=_parseFsz(font);
   const g=ctx.createLinearGradient(0,y-fsz*0.5,0,y+fsz*0.5);
   g.addColorStop(0,topCol);g.addColorStop(0.55,botCol);g.addColorStop(1,lerpC(botCol,'#000000',0.3));
   if(glowCol){ctx.shadowColor=glowCol;ctx.shadowBlur=glowSz;}
@@ -93,7 +99,7 @@ function bounceTitle(ctx,text,cx,by,t,font,topCol,botCol,glowCol,amp=7){
     });
     ctx.restore();return;
   }
-  const fsz=parseFloat((font.match(/[\d.]+/)||['14'])[0]);
+  const fsz=_parseFsz(font);
   chars.forEach((ch,i)=>{
     const bob=Math.sin(t*0.0024+i*0.78)*amp;
     const shine=Math.sin(t*0.0028+i*0.4)*0.2;
@@ -232,9 +238,12 @@ function drawParasiteOverlay(ctx,x,y,sz,t,phase){
 }
 
 // Score number with digit gradient
+// Memoized font-size extraction --- avoids regex per frame
+const _fszCache=Object.create(null);
+function _parseFsz(font){let v=_fszCache[font];if(v!==undefined)return v;v=parseFloat((font.match(/[\d.]+/)||['14'])[0]);_fszCache[font]=v;return v}
 function drawScore(ctx,text,x,y,th,font){
   ctx.save();ctx.font=font;ctx.textAlign='center';ctx.textBaseline='middle';
-  const fsz=parseFloat((font.match(/[\d.]+/)||['14'])[0]);
+  const fsz=_parseFsz(font);
   const g=ctx.createLinearGradient(0,y-fsz*0.5,0,y+fsz*0.5);
   g.addColorStop(0,th.hi||th.tm);g.addColorStop(0.5,th.tm);g.addColorStop(1,lerpC(th.ta,'#000',0.2));
   // Bloom pass 1 — wide soft glow
@@ -301,14 +310,16 @@ function getCached(col,sz,skin,t){
   const animated=ANIMATED_SKINS.has(skin);
   // On iOS: animated skins rendered at t=0 (no animation) — prevents cache key rotating
   // every 100ms which would grow CELL_CACHE indefinitely (GPU OOM crash on iPhone)
-  const k=(!_IS_IOS&&animated)?`${skin}_${col}_${sz}_${Math.floor(t/100)}`:`${skin}_${col}_${sz}`;
-  if(CELL_CACHE.has(k))return CELL_CACHE.get(k);
+  // Optimized: string concat instead of template literal, bitwise floor
+  const k=(!_IS_IOS&&animated)?skin+'_'+col+'_'+sz+'_'+(t/100|0):skin+'_'+col+'_'+sz;
+  const cached=CELL_CACHE.get(k);
+  if(cached!==undefined)return cached;
   // Safety cap: prevent unbounded growth (critical — each entry is an offscreen GPU canvas)
   if(CELL_CACHE.size>=200)CELL_CACHE.clear();
   const oc=document.createElement('canvas');oc.width=sz;oc.height=sz;
   const c2=oc.getContext('2d');
   if(!c2)return oc; // iOS canvas context limit exceeded — return empty canvas to avoid crash
-  const bakeT=(!_IS_IOS&&animated)?Math.floor(t/100)*100:0;
+  const bakeT=(!_IS_IOS&&animated)?(t/100|0)*100:0;
   SKIN_FNS[skin](c2,col,0,0,sz,bakeT);
   _drawBevel(c2,0,0,sz);
   CELL_CACHE.set(k,oc);return oc;
@@ -329,7 +340,7 @@ function drawCell(ctx,col,x,y,sz,skin,t,alpha=1){
   rp(ctx,x,y,sz,sz,_r);ctx.fillStyle='#000';ctx.fill();
   ctx.restore();
   if(alpha<1)ctx.globalAlpha=alpha;
-  const _thCG=(typeof curTheme!=='undefined'&&THEMES[curTheme])?THEMES[curTheme].cellGlow:null;
+  const _th=(typeof curTheme!=='undefined')?THEMES[curTheme]:null;const _thCG=_th?_th.cellGlow:null;
   if(_thCG){ctx.save();ctx.shadowColor=_thCG;ctx.shadowBlur=4;ctx.drawImage(getCached(col,sz,skin,t),x,y);ctx.restore();}
   else ctx.drawImage(getCached(col,sz,skin,t),x,y);
   if(alpha<1)ctx.globalAlpha=1;
@@ -1736,7 +1747,7 @@ function drawFx(ctx,fx,t){
 
       // 1. GOD RAYS à travers la canopée — rayons diagonaux animés
       ctx.save();
-      fx.mist.forEach((m,_mi)=>{
+      for(let _mi=0,_ml=fx.mist.length;_mi<_ml;_mi++){const m=fx.mist[_mi];
         const _ray_x=m.x*0.85+W*0.08,_ray_w=10+_mi*7;
         const pulse=0.5+0.5*Math.abs(Math.sin(t*0.00042+_mi*1.8));
         const _rg=ctx.createLinearGradient(_ray_x,0,_ray_x+H*0.16,H*0.62);
@@ -1747,23 +1758,23 @@ function drawFx(ctx,fx,t){
         ctx.moveTo(_ray_x-_ray_w,0);ctx.lineTo(_ray_x+_ray_w,0);
         ctx.lineTo(_ray_x+_ray_w+H*0.16,H*0.62);ctx.lineTo(_ray_x-_ray_w+H*0.16,H*0.62);
         ctx.closePath();ctx.fill();
-      });
+      }
       ctx.restore();
 
       // 2. Brume de sol — ellipses ondulantes (fond, avant les feuilles)
-      fx.mist.forEach(m=>{m.x=(m.x+m.vx);if(m.x>W+m.w){m.x=-m.w;m.y=rnd(H*0.72,H*0.96);}
+      for(let _mi2=0,_ml2=fx.mist.length;_mi2<_ml2;_mi2++){const m=fx.mist[_mi2];m.x=(m.x+m.vx);if(m.x>W+m.w){m.x=-m.w;m.y=rnd(H*0.72,H*0.96);}
         const wave=Math.sin(t*0.00065+m.ph)*m.h*0.28;
         const mg=ctx.createRadialGradient(m.x,m.y+wave,2,m.x,m.y+wave,m.w*0.55);
         mg.addColorStop(0,`rgba(175,238,150,${(m.a).toFixed(3)})`);
         mg.addColorStop(0.6,`rgba(110,195,90,${(m.a*0.42).toFixed(3)})`);
         mg.addColorStop(1,'rgba(0,0,0,0)');
         ctx.fillStyle=mg;ctx.beginPath();ctx.ellipse(m.x,m.y+wave,m.w*0.55,m.h,0,0,Math.PI*2);ctx.fill();
-      });
+      }
 
       // 3. Feuilles z-depth — triées lointain→proche, taille+alpha selon z
       ctx.save();
       fx.leaves.sort((a,b)=>(a.sz-b.sz));
-      fx.leaves.forEach(lf=>{
+      for(let _li=0,_ll=fx.leaves.length;_li<_ll;_li++){const lf=fx.leaves[_li];
         lf.x+=lf.vx+Math.sin(t*0.001+lf.wave)*0.32;lf.y+=lf.vy;lf.ang+=lf.vrot;lf.wave+=0.018;
         if(lf.y>H+18){lf.y=-15;lf.x=Math.random()*W;}
         const a2=lf.ang*Math.PI/180,sz=lf.sz;
@@ -1780,11 +1791,11 @@ function drawFx(ctx,fx,t){
           ctx.strokeStyle=`rgba(80,180,40,0.7)`;ctx.lineWidth=0.5;
           ctx.beginPath();ctx.moveTo(lf.x,lf.y);ctx.lineTo(lf.x+Math.cos(a2)*sz,lf.y+Math.sin(a2)*sz);ctx.stroke();
         }
-      });
+      }
       ctx.globalAlpha=1;ctx.restore();
 
       // 4. Lucioles pulsantes (bloom cinématographique)
-      fx.glows.forEach(gl=>{
+      for(let _gi=0,_gl=fx.glows.length;_gi<_gl;_gi++){const gl=fx.glows[_gi];
         gl.x+=gl.vx+Math.sin(t*0.0009+gl.ph)*0.38;gl.y+=gl.vy+Math.cos(t*0.0007+gl.ph*1.3)*0.22;gl.ph+=gl.psp;
         if(gl.x<-12)gl.x=W+12;if(gl.x>W+12)gl.x=-12;
         if(gl.y<H*0.35)gl.vy=Math.abs(gl.vy)*0.6+0.05;
@@ -1798,14 +1809,14 @@ function drawFx(ctx,fx,t){
         ctx.save();ctx.shadowColor=gl.col;ctx.shadowBlur=gl.sz*4;
         ctx.fillStyle=hexA(gl.col,0.92*pulse);ctx.beginPath();ctx.arc(gl.x,gl.y,gl.sz*0.75,0,Math.PI*2);ctx.fill();
         ctx.shadowBlur=0;ctx.restore();
-      });
+      }
       break;}
     case 1:{
       const _fXsX=fx._fXsunX,_fXsY=fx._fXsunY;
 
       // 1. GOD RAYS VOLUMÉTRIQUES — rayons du soleil désertique (en premier, sous tout)
       ctx.save();
-      fx._fXrays.forEach(ray=>{
+      for(let _ri=0,_rl=fx._fXrays.length;_ri<_rl;_ri++){const ray=fx._fXrays[_ri];
         const pulse=0.55+0.45*Math.abs(Math.sin(t*ray.sp*1.7+ray.ph));
         const ang=ray.ang+Math.sin(t*ray.sp+ray.ph)*0.18;
         const endX=_fXsX+Math.cos(ang)*ray.len*H;
@@ -1825,7 +1836,7 @@ function drawFx(ctx,fx,t){
         ctx.lineTo(endX-perpX*ray.w*(1.5+pulse*0.8),endY-perpY*ray.w*(1.5+pulse*0.8));
         ctx.lineTo(endX+perpX*ray.w*(1.5+pulse*0.8),endY+perpY*ray.w*(1.5+pulse*0.8));
         ctx.closePath();ctx.fill();
-      });
+      }
       ctx.restore();
 
       // 2. SOLEIL avec halo bloom cinématographique (shadowBlur 28-40px)
@@ -1848,7 +1859,7 @@ function drawFx(ctx,fx,t){
       ctx.shadowBlur=0;ctx.restore();
 
       // 3. DUST DEVILS — nuages de poussière lointains (depth of field : flous via alpha faible)
-      fx._fXdust.forEach(d=>{
+      for(let _di=0,_dl=fx._fXdust.length;_di<_dl;_di++){const d=fx._fXdust[_di];
         d.x+=d.vx+Math.sin(t*0.00055+d.ph)*0.22;
         d.y+=d.vy+Math.cos(t*0.00042+d.ph*1.4)*0.12;
         if(d.x>W+d.sz*2){d.x=-d.sz*2;}
@@ -1860,11 +1871,11 @@ function drawFx(ctx,fx,t){
         dg.addColorStop(0.5,`rgba(175,130,55,${(d.a*pulse*0.4).toFixed(3)})`);
         dg.addColorStop(1,'rgba(155,110,35,0)');
         ctx.fillStyle=dg;ctx.beginPath();ctx.ellipse(d.x,d.y,d.sz*3.2,d.sz*1.8,0,0,Math.PI*2);ctx.fill();
-      });
+      }
 
       // 4. COLONNES DE CHALEUR (heat shimmer) — lignes verticales ondulantes près de l'horizon
       ctx.save();
-      fx._fXheat.forEach(hc=>{
+      for(let _hi2=0,_hl=fx._fXheat.length;_hi2<_hl;_hi2++){const hc=fx._fXheat[_hi2];
         hc.ph+=0.011;
         const baseY=H*0.56+Math.sin(t*0.00038+hc.ph)*H*0.04;
         const sway=Math.sin(t*0.00095+hc.ph*2.2)*hc.w*0.55;
@@ -1882,13 +1893,13 @@ function drawFx(ctx,fx,t){
           hc.x+sway*0.2,baseY-hc.h
         );
         ctx.stroke();
-      });
+      }
       ctx.restore();
 
       // 5. GRAINS DE SABLE z-depth — triés par z (lointain → proche), taille+opacité selon z
       fx._fXgrains.sort((a,b)=>a.z-b.z);
       ctx.save();
-      fx._fXgrains.forEach(g=>{
+      for(let _gi2=0,_gl2=fx._fXgrains.length;_gi2<_gl2;_gi2++){const g=fx._fXgrains[_gi2];
         g.x=(g.x+g.vx);if(g.x>W+2)g.x=-2;
         g.y+=g.vy+Math.sin(t*0.0018+g.x*0.012)*0.08*g.z;
         // Couleur chaude — les grains proches sont plus saturés/foncés
@@ -1911,7 +1922,7 @@ function drawFx(ctx,fx,t){
           ctx.lineWidth=0.5;
           ctx.beginPath();ctx.moveTo(g.x,g.y);ctx.lineTo(g.x-g.vx*4.5,g.y);ctx.stroke();
         }
-      });
+      }
       ctx.restore();
       break;}
 
@@ -1923,7 +1934,7 @@ function drawFx(ctx,fx,t){
       // 1. GOD RAYS SOUS-MARINS — colonnes de lumière solaire ondulantes (dessinées en premier)
       ctx.save();
       ctx.globalCompositeOperation='screen';
-      fx._fXwRays.forEach(ray=>{
+      for(let _ri2=0,_rl2=fx._fXwRays.length;_ri2<_rl2;_ri2++){const ray=fx._fXwRays[_ri2];
         const pulse=0.52+0.48*Math.abs(Math.sin(t*ray.sp+ray.ph));
         const sway=Math.sin(t*ray.sp*1.4+ray.ph)*ray.w*0.55;
         const rx=ray.x+sway;
@@ -1941,7 +1952,7 @@ function drawFx(ctx,fx,t){
         ctx.lineTo(rx+halfBot+sway*0.4,H);
         ctx.lineTo(rx-halfBot+sway*0.4,H);
         ctx.closePath();ctx.fill();
-      });
+      }
       ctx.globalCompositeOperation='source-over';
       ctx.restore();
 
@@ -1977,7 +1988,7 @@ function drawFx(ctx,fx,t){
       // 4. BULLES z-depth — triées lointain→proche, taille+opacité selon profondeur
       fx.bubbles.sort((a,b)=>a.z-b.z);
       ctx.save();
-      fx.bubbles.forEach(b=>{
+      for(let _bi=0,_bl=fx.bubbles.length;_bi<_bl;_bi++){const b=fx.bubbles[_bi];
         b.x+=b.vx+Math.sin(t*0.001+b.wave)*0.25*(0.3+b.z*0.8);
         b.y+=b.vy;
         b.wave+=0.013;
@@ -2036,11 +2047,11 @@ function drawFx(ctx,fx,t){
             ctx.stroke();
           }
         }
-      });
+      }
       ctx.restore();
       // 5. Bancs de poissons — silhouettes animées z-depth
       ctx.save();
-      fx._fXfish.forEach(school=>{
+      for(let _fi=0,_fl=fx._fXfish.length;_fi<_fl;_fi++){const school=fx._fXfish[_fi];
         school.x+=school.vx;
         if(school.x>W+80)school.x=-80;if(school.x<-80)school.x=W+80;
         const _fr=hr(school.col),_fg=hg(school.col),_fb=hb(school.col);
@@ -2053,7 +2064,7 @@ function drawFx(ctx,fx,t){
           ctx.beginPath();ctx.moveTo(_fsz*1.6,0);ctx.lineTo(-_fsz,_fsz*0.55);ctx.lineTo(-_fsz*0.5,0);ctx.lineTo(-_fsz,_fsz*-0.55);ctx.closePath();ctx.fill();
           ctx.restore();
         });
-      });
+      }
       ctx.restore();
       break;}
 
@@ -2065,7 +2076,7 @@ function drawFx(ctx,fx,t){
       // 1. GOD RAYS VOLCANIQUES — cônes orangés/rouges partant du cratère (dessinés en premier)
       ctx.save();
       ctx.globalCompositeOperation='screen';
-      fx._fXvolRays.forEach(ray=>{
+      for(let _ri3=0,_rl3=fx._fXvolRays.length;_ri3<_rl3;_ri3++){const ray=fx._fXvolRays[_ri3];
         const pulse=0.52+0.48*Math.abs(Math.sin(t*ray.sp+ray.ph));
         const ang=ray.ang+Math.sin(t*ray.sp*0.8+ray.ph)*0.14;
         const endX=_fXcrX+Math.cos(ang)*ray.len*H;
@@ -2084,7 +2095,7 @@ function drawFx(ctx,fx,t){
         ctx.lineTo(endX-perpX*ray.w*(1.4+pulse*0.7),endY-perpY*ray.w*(1.4+pulse*0.7));
         ctx.lineTo(endX+perpX*ray.w*(1.4+pulse*0.7),endY+perpY*ray.w*(1.4+pulse*0.7));
         ctx.closePath();ctx.fill();
-      });
+      }
       ctx.globalCompositeOperation='source-over';
       ctx.restore();
 
@@ -2113,7 +2124,7 @@ function drawFx(ctx,fx,t){
       ctx.shadowBlur=0;ctx.restore();
 
       // 3. FUMÉE VOLUMÉTRIQUE — nuages qui montent et grossissent depuis le cratère
-      fx._fXsmoke.forEach(sm=>{
+      for(let _si=0,_sl=fx._fXsmoke.length;_si<_sl;_si++){const sm=fx._fXsmoke[_si];
         sm.x+=sm.vx+Math.sin(t*0.00042+sm.ph)*0.18;
         sm.y+=sm.vy;sm.r+=sm.grow;sm.a*=0.9985;
         if(sm.y<-sm.r*2||sm.a<0.008){
@@ -2129,7 +2140,7 @@ function drawFx(ctx,fx,t){
         smg.addColorStop(0.55,`rgba(${sr},${sg},${sb},${(sm.a*pulse*0.38).toFixed(3)})`);
         smg.addColorStop(1,'rgba(0,0,0,0)');
         ctx.fillStyle=smg;ctx.beginPath();ctx.ellipse(sm.x,sm.y,sm.r,sm.r*0.6,0,0,Math.PI*2);ctx.fill();
-      });
+      }
 
       // 4. LAVE ONDULANTE AU SOL (inchangée, conservée)
       {const lg=ctx.createLinearGradient(0,H-55,0,H);lg.addColorStop(0,'rgba(210,48,5,0)');lg.addColorStop(1,'rgba(210,48,5,0.5)');ctx.fillStyle=lg;ctx.fillRect(0,H-55,W,55);}
@@ -2138,18 +2149,18 @@ function drawFx(ctx,fx,t){
       ctx.lineTo(W,H);ctx.closePath();ctx.fill();
 
       // 5. BRAISES CLASSIQUES (inchangées, conservées)
-      fx.embers.forEach(em=>{
+      for(let _ei=0,_el=fx.embers.length;_ei<_el;_ei++){const em=fx.embers[_ei];
         em.x+=em.vx+Math.sin(t*0.003+em.x*0.02)*0.4;em.y+=em.vy;em.life--;
         if(em.life<=0||em.y<-10){em.x=Math.random()*W;em.y=H-20;em.vy=rnd(-1.2,-0.3);em.life=120;}
         const ratio=em.life/em.ml;
         ctx.fillStyle=`rgba(${em.rc},${em.gc_},5,${(0.68*ratio).toFixed(2)})`;
         ctx.beginPath();ctx.arc(em.x,em.y,em.sz,0,Math.PI*2);ctx.fill();
-      });
+      }
 
       // 6. CENDRES VOLCANIQUES z-depth — triées lointain→proche, taille+opacité selon profondeur
       fx._fXash.sort((a,b)=>a.z-b.z);
       ctx.save();
-      fx._fXash.forEach(as=>{
+      for(let _ai=0,_al=fx._fXash.length;_ai<_al;_ai++){const as=fx._fXash[_ai];
         as.x+=as.vx+Math.sin(t*0.00072+as.ph)*0.25*as.z;
         as.y+=as.vy;as.life--;
         if(as.life<=0||as.y<-8){
@@ -2188,7 +2199,7 @@ function drawFx(ctx,fx,t){
           ctx.fillStyle=`rgba(255,255,200,${(as.a*ratio*0.45*as.z).toFixed(3)})`;
           ctx.beginPath();ctx.arc(as.x-as.sz*0.3,as.y-as.sz*0.3,as.sz*0.32,0,Math.PI*2);ctx.fill();
         }
-      });
+      }
       ctx.restore();
 
       // 7. COULÉES DE LAVE ANIMÉES — rivières incandescentes qui coulent vers le bas
@@ -2253,18 +2264,18 @@ function drawFx(ctx,fx,t){
       });
       ctx.globalCompositeOperation='source-over';ctx.restore();
       // 2. Étoiles scintillantes
-      fx.stars.forEach(st=>{const br=cl(st.br*(0.5+0.5*Math.sin(t*st.sp+st.ph)),18,255)|0;ctx.fillStyle=`rgba(${br},${br},${cl(br+20,0,255)},0.9)`;ctx.beginPath();ctx.arc(st.x,st.y,st.sz,0,Math.PI*2);ctx.fill();});
+      for(let _si2=0,_sl2=fx.stars.length;_si2<_sl2;_si2++){const st=fx.stars[_si2];const br=cl(st.br*(0.5+0.5*Math.sin(t*st.sp+st.ph)),18,255)|0;ctx.fillStyle=`rgba(${br},${br},${cl(br+20,0,255)},0.9)`;ctx.beginPath();ctx.arc(st.x,st.y,st.sz,0,Math.PI*2);ctx.fill();}
       // 3. Clignotement des fenêtres de la ville
-      fx._fX4wins.forEach(w=>{
+      for(let _wi=0,_wl=fx._fX4wins.length;_wi<_wl;_wi++){const w=fx._fX4wins[_wi];
         const pulse=0.5+0.5*Math.sin(t*w.sp+w.ph);
         const a=((w.on?0.45+0.25*pulse:0.05+0.07*pulse)).toFixed(2);
         ctx.fillStyle=w.col==='#FFE090'?`rgba(255,220,130,${a})`:w.col==='#B0D0FF'?`rgba(175,210,255,${a})`:`rgba(255,178,80,${a})`;
         ctx.fillRect(w.x,w.y,w.w,w.h);
         if(Math.random()<0.002)w.on=!w.on;
-      });
+      }
       // 4. Projecteurs rotatifs
       ctx.save();
-      fx._fX4lights.forEach(sl=>{
+      for(let _li2=0,_ll2=fx._fX4lights.length;_li2<_ll2;_li2++){const sl=fx._fX4lights[_li2];
         sl.ang+=sl.sp;
         const endX=sl.ox+Math.cos(sl.ang)*H*0.85,endY=H+Math.sin(sl.ang)*H*0.85;
         const sg=ctx.createLinearGradient(sl.ox,H,endX,endY);
@@ -2272,18 +2283,18 @@ function drawFx(ctx,fx,t){
         ctx.fillStyle=sg;
         const perpX=-Math.sin(sl.ang)*12,perpY=Math.cos(sl.ang)*12;
         ctx.beginPath();ctx.moveTo(sl.ox-6,H);ctx.lineTo(sl.ox+6,H);ctx.lineTo(endX+perpX,endY+perpY);ctx.lineTo(endX-perpX,endY-perpY);ctx.closePath();ctx.fill();
-      });
+      }
       ctx.restore();
       // 5. Chauves-souris volantes
       ctx.save();
-      fx._fX4bats.forEach(bt=>{
+      for(let _bi2=0,_bl2=fx._fX4bats.length;_bi2<_bl2;_bi2++){const bt=fx._fX4bats[_bi2];
         bt.x=(bt.x+bt.vx+W*1.2)%(W*1.2)-W*0.1;
         const by=bt.y+Math.sin(t*0.0028+bt.ph)*8;
         const wf=Math.sin(t*0.012+bt.ph),sz=bt.sz;
         ctx.strokeStyle='rgba(18,8,38,0.58)';ctx.lineWidth=1.2;
         ctx.beginPath();ctx.moveTo(bt.x,by);ctx.quadraticCurveTo(bt.x-sz*0.7,by-sz*0.5*wf,bt.x-sz,by+sz*0.1);ctx.stroke();
         ctx.beginPath();ctx.moveTo(bt.x,by);ctx.quadraticCurveTo(bt.x+sz*0.7,by-sz*0.5*wf,bt.x+sz,by+sz*0.1);ctx.stroke();
-      });
+      }
       ctx.restore();
       // 6. Étoile filante
       fx.st-=1/60;if(fx.st<=0){fx.shoot={x:rnd(0,W),y:rnd(0,H*0.25),vx:rnd(5,9),vy:rnd(2,4),life:28};fx.st=rnd(90,220);}
@@ -2324,7 +2335,7 @@ function drawFx(ctx,fx,t){
       });
       ctx.globalCompositeOperation='source-over';ctx.restore();
       // Snowflakes (cristaux hexagonaux)
-      fx.snow.forEach(sf=>{sf.x+=sf.vx+Math.sin(t*0.001+sf.y*0.018)*0.28;sf.y+=sf.vy;sf.rot+=sf.vrot;if(sf.y>H+18){sf.y=-12;sf.x=Math.random()*W;}ctx.save();ctx.translate(sf.x,sf.y);ctx.rotate(sf.rot*Math.PI/180);ctx.strokeStyle=`rgba(195,232,255,${sf.a})`;ctx.lineWidth=1;const sl=sf.sz;for(let _a=0;_a<6;_a++){const rad=_a*Math.PI/3;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(rad)*sl,Math.sin(rad)*sl);ctx.stroke();const mx=Math.cos(rad)*sl*0.55,my=Math.sin(rad)*sl*0.55,b1=Math.cos(rad+Math.PI/4)*sl*0.22,b2=Math.sin(rad+Math.PI/4)*sl*0.22;ctx.beginPath();ctx.moveTo(mx-b1,my-b2);ctx.lineTo(mx+b1,my+b2);ctx.stroke();}ctx.restore();});
+      for(let _si3=0,_sl3=fx.snow.length;_si3<_sl3;_si3++){const sf=fx.snow[_si3];sf.x+=sf.vx+Math.sin(t*0.001+sf.y*0.018)*0.28;sf.y+=sf.vy;sf.rot+=sf.vrot;if(sf.y>H+18){sf.y=-12;sf.x=Math.random()*W;}ctx.save();ctx.translate(sf.x,sf.y);ctx.rotate(sf.rot*Math.PI/180);ctx.strokeStyle=`rgba(195,232,255,${sf.a})`;ctx.lineWidth=1;const sl=sf.sz;for(let _a=0;_a<6;_a++){const rad=_a*Math.PI/3;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(rad)*sl,Math.sin(rad)*sl);ctx.stroke();const mx=Math.cos(rad)*sl*0.55,my=Math.sin(rad)*sl*0.55,b1=Math.cos(rad+Math.PI/4)*sl*0.22,b2=Math.sin(rad+Math.PI/4)*sl*0.22;ctx.beginPath();ctx.moveTo(mx-b1,my-b2);ctx.lineTo(mx+b1,my+b2);ctx.stroke();}ctx.restore();}
       // Ice sparkles on ground surface
       const _iceY=H*0.74;
       for(let _si=0;_si<5;_si++){
@@ -2338,13 +2349,13 @@ function drawFx(ctx,fx,t){
       break;}
     case 6:{
       // 1. Nébuleuse scintillante (blobs colorés)
-      fx.nebula.forEach(nb=>{
+      for(let _ni=0,_nl=fx.nebula.length;_ni<_nl;_ni++){const nb=fx.nebula[_ni];
         nb.x=(nb.x+nb.vx+W)%W;nb.y=(nb.y+nb.vy+H)%H;
         const pulse=0.6+0.4*Math.abs(Math.sin(t*0.00055+nb.r*0.01));
         const ng=ctx.createRadialGradient(nb.x,nb.y,4,nb.x,nb.y,nb.r);
         ng.addColorStop(0,hexA(nb.col,nb.a*pulse));ng.addColorStop(1,'rgba(0,0,0,0)');
         ctx.fillStyle=ng;ctx.beginPath();ctx.arc(nb.x,nb.y,nb.r,0,Math.PI*2);ctx.fill();
-      });
+      }
       // 2. Champ d'étoiles parallaxe 3 couches
       fx._fX6layers.forEach((layer,li)=>{
         layer.forEach(st=>{
@@ -2400,7 +2411,7 @@ function drawFx(ctx,fx,t){
       // 3. Feuillage en parallaxe — tri par z croissant (lointain → proche)
       // Trier une fois par frame (24 éléments, négligeable)
       fx._fXleaves.sort((a,b)=>a.z-b.z);
-      fx._fXleaves.forEach(lf=>{
+      for(let _li3=0,_ll3=fx._fXleaves.length;_li3<_ll3;_li3++){const lf=fx._fXleaves[_li3];
         lf.x+=lf.vx;lf.y+=lf.vy+Math.sin(t*0.00065+lf.wave)*0.18*lf.z;lf.ang+=lf.vrot;lf.wave+=0.012;
         if(lf.x>W+lf.sz*2){lf.x=-lf.sz*2;lf.y=rnd(H*0.04,H*0.88);}
         // Depth of field simulé : éléments lointains plus transparents et flous (réduit via globalAlpha)
@@ -2424,10 +2435,10 @@ function drawFx(ctx,fx,t){
         ctx.strokeStyle=`rgba(180,255,140,${(depthAlpha*0.55).toFixed(3)})`;ctx.lineWidth=0.5;
         ctx.beginPath();ctx.moveTo(lf.x,lf.y);ctx.lineTo(lf.x+Math.cos(a)*sz*0.85,lf.y+Math.sin(a)*sz*0.85);ctx.stroke();
         ctx.restore();
-      });
+      }
 
       // 4. Spores bioluminescentes — z-depth + bloom 4K (lointain=petit/discret, proche=grand/lumineux)
-      fx._fXspores.forEach(sp=>{
+      for(let _si4=0,_sl4=fx._fXspores.length;_si4<_sl4;_si4++){const sp=fx._fXspores[_si4];
         sp.x+=sp.vx+Math.sin(t*0.00088+sp.ph)*0.14*sp.z;
         sp.y+=sp.vy;sp.ph+=0.007;
         if(sp.y<-8){sp.y=H+8;sp.x=rnd(0,W);}
@@ -2452,11 +2463,11 @@ function drawFx(ctx,fx,t){
         ctx.fillStyle=`rgba(140,255,160,${finalAlpha.toFixed(3)})`;
         ctx.beginPath();ctx.arc(sp.x,sp.y,finalSz,0,Math.PI*2);ctx.fill();
         ctx.shadowBlur=0;ctx.restore();
-      });
+      }
 
       // 5. Lucioles z-depth — triées par z, ombres projetées au sol, trails HiDPI
       fx._fXflies.sort((a,b)=>a.z-b.z);
-      fx._fXflies.forEach(fl=>{
+      for(let _fi2=0,_fl2=fx._fXflies.length;_fi2<_fl2;_fi2++){const fl=fx._fXflies[_fi2];
         fl.x+=fl.vx+Math.sin(t*0.0014+fl.ph)*0.42*fl.z;
         fl.y+=fl.vy+Math.cos(t*0.001+fl.ph)*0.30*fl.z;
         fl.x=(fl.x+W)%W;if(fl.y<H*0.08)fl.vy=Math.abs(fl.vy);if(fl.y>H*0.95)fl.vy=-Math.abs(fl.vy);
@@ -2502,7 +2513,7 @@ function drawFx(ctx,fx,t){
         ctx.shadowBlur=0;ctx.fillStyle=`rgba(255,255,255,${(fa*0.55*fl.z).toFixed(3)})`;
         ctx.beginPath();ctx.arc(fl.x-finalSz*0.28,fl.y-finalSz*0.25,finalSz*0.28,0,Math.PI*2);ctx.fill();
         ctx.restore();
-      });
+      }
       break;}
 
     case 8:{fx.wo+=0.009;
@@ -2537,7 +2548,7 @@ function drawFx(ctx,fx,t){
         });
         ctx.globalAlpha=1;ctx.restore();
       }fx.jelly.forEach(jl=>{jl.x=(jl.x+jl.vx+W)%W;jl.y+=jl.vy+Math.sin(t*jl.psp+jl.ph)*0.12;if(jl.y<-jl.sz*2.5){jl.y=H+jl.sz;jl.x=rnd(0,W);}const pulse=0.82+0.18*Math.sin(t*jl.psp*2.2+jl.ph);const jr=hr(jl.col),jg=hg(jl.col),jb=hb(jl.col);const jw=jl.sz*pulse,jh=jl.sz*0.58*pulse;ctx.save();const jglow=ctx.createRadialGradient(jl.x,jl.y,0,jl.x,jl.y,jw*1.7);jglow.addColorStop(0,`rgba(${jr},${jg},${jb},0.18)`);jglow.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=jglow;ctx.beginPath();ctx.arc(jl.x,jl.y,jw*1.7,0,Math.PI*2);ctx.fill();const jdome=ctx.createRadialGradient(jl.x,jl.y-jh*0.3,jw*0.1,jl.x,jl.y,jw);jdome.addColorStop(0,`rgba(255,255,255,0.38)`);jdome.addColorStop(0.4,`rgba(${jr},${jg},${jb},0.28)`);jdome.addColorStop(1,`rgba(${jr},${jg},${jb},0.08)`);ctx.fillStyle=jdome;ctx.beginPath();ctx.ellipse(jl.x,jl.y,jw,jh,0,Math.PI,0);ctx.closePath();ctx.fill();ctx.strokeStyle=`rgba(${jr},${jg},${jb},0.30)`;ctx.lineWidth=0.8;ctx.stroke();for(let ti2=0;ti2<4;ti2++){const tx=jl.x+(ti2-1.5)*jw*0.45;const tph2=jl.tph[ti2];const wave1=Math.sin(t*0.002+tph2)*jw*0.28,wave2=Math.sin(t*0.0017+tph2+1.2)*jw*0.22;const tlen=jl.sz*(1.2+0.4*Math.abs(Math.sin(t*jl.psp+tph2)));ctx.strokeStyle=`rgba(${jr},${jg},${jb},0.28)`;ctx.lineWidth=0.9;ctx.beginPath();ctx.moveTo(tx,jl.y);ctx.bezierCurveTo(tx+wave1,jl.y+tlen*0.35,tx+wave2,jl.y+tlen*0.65,tx+wave1*0.5,jl.y+tlen);ctx.stroke();}ctx.restore();});fx.birds.forEach(b=>{b.x=(b.x+b.vx)%W;const by=b.y+Math.sin(t*0.002+b.phase)*5;ctx.strokeStyle='rgba(55,18,8,0.55)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(b.x,by);ctx.quadraticCurveTo(b.x+b.sz/2,by-b.sz*0.42,b.x+b.sz,by);ctx.stroke();});break;}
-    case 9:{const _g9=ctx.createLinearGradient(0,fx.gY,0,fx.gY+45);_g9.addColorStop(0,'rgba(0,70,160,0.10)');_g9.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=_g9;ctx.fillRect(0,fx.gY,W,45);fx.rain.forEach(r=>{r.y+=r.vy;if(r.y>H+r.len){r.y=-r.len;r.x=rnd(0,W);}ctx.strokeStyle=`rgba(80,150,220,${r.a})`;ctx.lineWidth=0.7;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+1.5,r.y+r.len);ctx.stroke();});fx.wins.forEach(w=>{const p=0.5+0.5*Math.sin(t*w.sp+w.ph);const a=((w.on?0.42+0.28*p:0.04+0.07*p)).toFixed(2);ctx.fillStyle=w.col==='#00DDFF'?`rgba(0,220,255,${a})`:w.col==='#A040FF'?`rgba(160,55,255,${a})`:`rgba(255,210,100,${a})`;ctx.fillRect(w.x,w.y,w.w,w.h);if(Math.random()<0.003)w.on=!w.on;});fx.vehicles.forEach(v=>{v.x+=v.vx;if(v.x>W+v.trail+10){v.x=-v.trail-10;v.y=rnd(H*0.22,H*0.57);v.vx=rnd(2.8,7.0);v.col=rndc(['#00DDFF','#FF40A0','#FF8020','#A040FF','#40FFD0']);}const _t9=ctx.createLinearGradient(v.x-v.trail,v.y,v.x,v.y);_t9.addColorStop(0,'rgba(0,0,0,0)');_t9.addColorStop(1,hexA(v.col,0.88));ctx.strokeStyle=_t9;ctx.lineWidth=v.sz*0.45;ctx.beginPath();ctx.moveTo(v.x-v.trail,v.y);ctx.lineTo(v.x,v.y);ctx.stroke();ctx.save();ctx.shadowColor=v.col;ctx.shadowBlur=v.sz*5.5;ctx.fillStyle=hexA(v.col,0.95);ctx.beginPath();ctx.arc(v.x,v.y,v.sz,0,Math.PI*2);ctx.fill();ctx.restore();});fx.holo=(fx.holo+0.9)%H;ctx.fillStyle='rgba(0,200,255,0.020)';ctx.fillRect(0,fx.holo,W,2);
+    case 9:{const _g9=ctx.createLinearGradient(0,fx.gY,0,fx.gY+45);_g9.addColorStop(0,'rgba(0,70,160,0.10)');_g9.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=_g9;ctx.fillRect(0,fx.gY,W,45);for(let _ri4=0,_rl4=fx.rain.length;_ri4<_rl4;_ri4++){const r=fx.rain[_ri4];r.y+=r.vy;if(r.y>H+r.len){r.y=-r.len;r.x=rnd(0,W);}ctx.strokeStyle=`rgba(80,150,220,${r.a})`;ctx.lineWidth=0.7;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+1.5,r.y+r.len);ctx.stroke();}for(let _wi2=0,_wl2=fx.wins.length;_wi2<_wl2;_wi2++){const w=fx.wins[_wi2];const p=0.5+0.5*Math.sin(t*w.sp+w.ph);const a=((w.on?0.42+0.28*p:0.04+0.07*p)).toFixed(2);ctx.fillStyle=w.col==='#00DDFF'?`rgba(0,220,255,${a})`:w.col==='#A040FF'?`rgba(160,55,255,${a})`:`rgba(255,210,100,${a})`;ctx.fillRect(w.x,w.y,w.w,w.h);if(Math.random()<0.003)w.on=!w.on;}for(let _vi=0,_vl=fx.vehicles.length;_vi<_vl;_vi++){const v=fx.vehicles[_vi];v.x+=v.vx;if(v.x>W+v.trail+10){v.x=-v.trail-10;v.y=rnd(H*0.22,H*0.57);v.vx=rnd(2.8,7.0);v.col=rndc(['#00DDFF','#FF40A0','#FF8020','#A040FF','#40FFD0']);}const _t9=ctx.createLinearGradient(v.x-v.trail,v.y,v.x,v.y);_t9.addColorStop(0,'rgba(0,0,0,0)');_t9.addColorStop(1,hexA(v.col,0.88));ctx.strokeStyle=_t9;ctx.lineWidth=v.sz*0.45;ctx.beginPath();ctx.moveTo(v.x-v.trail,v.y);ctx.lineTo(v.x,v.y);ctx.stroke();ctx.save();ctx.shadowColor=v.col;ctx.shadowBlur=v.sz*5.5;ctx.fillStyle=hexA(v.col,0.95);ctx.beginPath();ctx.arc(v.x,v.y,v.sz,0,Math.PI*2);ctx.fill();ctx.restore();}fx.holo=(fx.holo+0.9)%H;ctx.fillStyle='rgba(0,200,255,0.020)';ctx.fillRect(0,fx.holo,W,2);
       // Neon sign panels
       if(fx._n9signs){fx._n9signs.forEach(sg=>{
         sg.flickerT--;

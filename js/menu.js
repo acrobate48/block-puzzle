@@ -9,6 +9,39 @@ let menuParts=_IS_IOS?[]:Array.from({length:70},(_,i)=>{
     color:rndc(COLORS),size:big?rnd(4,9):rnd(1.5,4),life:rnd(0,big?240:180),ml:big?240:180,star:big};
 });
 let skinRects=[],themeRects=[],playRect=null;
+let _menuLayoutW=0,_menuLayoutH=0;
+const _FONT_FAMILY='system-ui,-apple-system,"SF Pro Display",Arial';
+let _menuFontH=0;
+let _menuFontTitle='',_menuFontSub='',_menuFontLbl='',_menuFontLblBold='';
+let _menuFontBsz='',_menuFontBszBold='',_menuFontBszCombo='',_menuFontBszHint='';
+function _rebuildMenuFonts(){
+  if(_menuFontH===H)return;
+  _menuFontH=H;
+  const _c=H<750;
+  const f=_c?cl(Math.floor(H*0.070),18,38):cl(Math.floor(H*0.082),20,62);
+  _menuFontTitle=f+'px Impact,'+_FONT_FAMILY;
+  const s=cl(Math.floor(H*0.022),8,15);
+  _menuFontSub=s+'px '+_FONT_FAMILY;
+  const l=cl(Math.floor(H*0.020),7,13);
+  _menuFontLbl=l+'px '+_FONT_FAMILY;
+  _menuFontLblBold='bold '+l+'px '+_FONT_FAMILY;
+  const b=cl(Math.floor(H*0.020),8,14);
+  _menuFontBsz=b+'px '+_FONT_FAMILY;
+  _menuFontBszBold='bold '+(b*1.18|0)+'px '+_FONT_FAMILY;
+  _menuFontBszCombo=(b*0.85|0)+'px '+_FONT_FAMILY;
+  _menuFontBszHint=(b*0.76|0)+'px '+_FONT_FAMILY;
+}
+let _dotGridW=0,_dotGridH=0,_dotGridPositions=null;
+function _rebuildDotGrid(){
+  if(_dotGridW===W&&_dotGridH===H)return;
+  _dotGridW=W;_dotGridH=H;
+  const gs=Math.round(Math.min(W,H)*0.088);
+  const arr=[];
+  for(let gy=gs*0.5;gy<H+gs;gy+=gs)
+    for(let gx=gs*0.5;gx<W+gs;gx+=gs)
+      arr.push(gx,gy);
+  _dotGridPositions=new Float64Array(arr);
+}
 // ─── LIVE THEME HOVER PREVIEW ─────────────────────────────────────────────────
 let _menuHoverTheme=-1,_menuHoverAlpha=0;
 // ─── MENU CLICK RIPPLES ───────────────────────────────────────────────────────
@@ -18,6 +51,8 @@ function _addMenuRipple(x,y,col,maxR){
 }
 
 function layoutMenu(){
+  if(_menuLayoutW===W&&_menuLayoutH===H&&skinRects.length>0)return;
+  _menuLayoutW=W;_menuLayoutH=H;
   // Compact mode for small/medium screens (height < 750px) to prevent layout overflow
   const _compact=H<750;
   const SKW=Math.floor((W-18)/5)-4;
@@ -104,12 +139,13 @@ function drawMenu(t){
     ctx.restore();
     return true;
   });
-  // Animated dot grid overlay (subtle premium texture)
-  {const _gs=Math.round(Math.min(W,H)*0.088);const _gt=t*0.00045;ctx.save();ctx.fillStyle=hexA(th.tm,0.055);for(let _gy=_gs*0.5;_gy<H+_gs;_gy+=_gs){for(let _gx=_gs*0.5;_gx<W+_gs;_gx+=_gs){const _ox=Math.sin(_gt+_gy*0.014)*9,_oy=Math.cos(_gt+_gx*0.012)*9;ctx.beginPath();ctx.arc(_gx+_ox,_gy+_oy,1.3,0,Math.PI*2);ctx.fill();}}ctx.restore();}
+  // Animated dot grid overlay
+  {_rebuildDotGrid();const _gt=t*0.00045;const _d=_dotGridPositions;const _dl=_d.length;ctx.save();ctx.fillStyle=hexA(th.tm,0.055);for(let _i=0;_i<_dl;_i+=2){const gx=_d[_i],gy=_d[_i+1];const ox=Math.sin(_gt+gy*0.014)*9,oy=Math.cos(_gt+gx*0.012)*9;ctx.beginPath();ctx.arc(gx+ox,gy+oy,1.3,0,Math.PI*2);ctx.fill();}ctx.restore();}
   // Deco blocks
-  if(!_IS_IOS)menuDeco.forEach(b=>{b.x=(b.x+b.vx+W)%W;b.y=(b.y+b.vy+H)%H;ctx.globalAlpha=0.11;drawCell(ctx,b.color,b.x-b.sz/2|0,b.y-b.sz/2|0,b.sz|0,b.skin,t);ctx.globalAlpha=1;});
+  if(!_IS_IOS){for(let _di=0,_dLen=menuDeco.length;_di<_dLen;_di++){const b=menuDeco[_di];b.x=(b.x+b.vx+W)%W;b.y=(b.y+b.vy+H)%H;ctx.globalAlpha=0.11;drawCell(ctx,b.color,b.x-b.sz/2|0,b.y-b.sz/2|0,b.sz|0,b.skin,t);ctx.globalAlpha=1;}}
   // Particles
-  menuParts.forEach(p=>{
+  for(let _pi=0,_pLen=menuParts.length;_pi<_pLen;_pi++){
+    const p=menuParts[_pi];
     p.x+=p.vx;p.y+=p.vy;p.life--;
     if(p.life<=0||p.y<-10){
       p.x=rnd(0,W);p.y=H+rnd(0,20);
@@ -136,7 +172,7 @@ function drawMenu(t){
       ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();
     }
     ctx.restore();
-  });
+  }
   // Constellation — lignes entre particules proches
   ctx.save();
   const _cDist=W*0.17;
@@ -156,22 +192,22 @@ function drawMenu(t){
   // Overlay
   ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(0,0,W,H);
   layoutMenu();
+  _rebuildMenuFonts();
   // Title — compact mode uses smaller font to save vertical space on small/medium screens
   const _menuCompact=H<750;
   const fsz=_menuCompact?cl(Math.floor(H*0.070),18,38):cl(Math.floor(H*0.082),20,62);
-  const font=`${fsz}px Impact,system-ui,-apple-system,"SF Pro Display",Arial`;
   const titleY=Math.round(H*(_menuCompact?0.072:0.086))+fsz;
-  bounceTitle(ctx,'BLOCK',W/2,titleY,t,font,th.hi||th.tm,lerpC(th.tm,'#804000',0.4),th.ta,7);
-  bounceTitle(ctx,'PUZZLE',W/2,titleY+fsz*1.1,t,font,th.ta,lerpC(th.ta,'#003060',0.5),th.tm,5);
+  bounceTitle(ctx,'BLOCK',W/2,titleY,t,_menuFontTitle,th.hi||th.tm,lerpC(th.tm,'#804000',0.4),th.ta,7);
+  bounceTitle(ctx,'PUZZLE',W/2,titleY+fsz*1.1,t,_menuFontTitle,th.ta,lerpC(th.ta,'#003060',0.5),th.tm,5);
   // Subtitle
-  const subSz=cl(Math.floor(H*0.022),8,15);
-  ctx.save();ctx.font=`${subSz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tg;ctx.textAlign='center';ctx.shadowColor=th.tg;ctx.shadowBlur=6;
+  ctx.save();ctx.font=_menuFontSub;ctx.fillStyle=th.tg;ctx.textAlign='center';ctx.shadowColor=th.tg;ctx.shadowBlur=6;
   ctx.fillText('— Choisis ton style —',W/2,titleY+fsz*2.28);ctx.restore();
   // SKIN label
   const lblSz=cl(Math.floor(H*0.020),7,13);
-  if(skinRects.length){labelText(ctx,'SKIN',W/2,skinRects[0].y-lblSz-1,th.tg,`bold ${lblSz}px system-ui,-apple-system,"SF Pro Display",Arial`,'center',true);}
+  if(skinRects.length){labelText(ctx,'SKIN',W/2,skinRects[0].y-lblSz-1,th.tg,_menuFontLblBold,'center',true);}
   // Skin cards — glassmorphism
-  skinRects.forEach((sr,i)=>{
+  for(let i=0,_srLen=skinRects.length;i<_srLen;i++){
+    const sr=skinRects[i];
     const sel=i===selSkin;const{x,y,w,h}=sr;
     // Glow ring for selected
     if(sel){const t2=Date.now()*0.003;const gr=0.65+0.35*Math.sin(t2);ctx.save();ctx.shadowColor=th.tm;ctx.shadowBlur=14*gr;rp(ctx,x-1,y-1,w+2,h+2,h/5);ctx.strokeStyle=th.tm;ctx.lineWidth=2;ctx.stroke();ctx.restore();}
@@ -201,16 +237,18 @@ function drawMenu(t){
     }
     // Name
     const nfz=cl(Math.floor(h*0.19),7,14);
-    ctx.save();ctx.font=`bold ${nfz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    const _nfzFont='bold '+nfz+'px '+_FONT_FAMILY;
+    ctx.save();ctx.font=_nfzFont;ctx.textAlign='center';ctx.textBaseline='middle';
     if(sel){ctx.shadowColor=th.tm;ctx.shadowBlur=6;}
     ctx.fillStyle=sel?th.tm:th.ta;ctx.fillText(SKIN_NAMES[i],x+w/2,y+h-nfz*0.6);
     ctx.restore();
-    if(sel){ctx.font=`bold ${nfz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=th.tm;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('✓',x+4,y+nfz+3);}
-  });
+    if(sel){ctx.font=_nfzFont;ctx.fillStyle=th.tm;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('✓',x+4,y+nfz+3);}
+  }
   // THEME label
-  if(themeRects.length){labelText(ctx,'THÈME',W/2,themeRects[0].y-lblSz-1,th.tg,`bold ${lblSz}px system-ui,-apple-system,"SF Pro Display",Arial`,'center',true);}
+  if(themeRects.length){labelText(ctx,'THÈME',W/2,themeRects[0].y-lblSz-1,th.tg,_menuFontLblBold,'center',true);}
   // Theme buttons
-  themeRects.forEach((tr,i)=>{
+  for(let i=0,_trLen=themeRects.length;i<_trLen;i++){
+    const tr=themeRects[i];
     const sth=THEMES[i],sel=i===selTheme;const{x,y,w,h}=tr;
     // Hover aura (non-selected)
     const _isThHov=!sel&&mouseX>=x-3&&mouseX<x+w+3&&mouseY>=y-3&&mouseY<y+h+3;
@@ -225,11 +263,11 @@ function drawMenu(t){
     // Theme icon (small icon left of text)
     const _ticW=Math.min(w*0.28,h*1.4)|0,_ticH=h;
     const _iconDrawn=!_IS_IOS&&typeof drawThemeIcon==='function'&&drawThemeIcon(i,x,y,_ticW,_ticH);
-    ctx.save();ctx.font=`bold ${tfz}px system-ui,-apple-system,"SF Pro Display",Arial`;
+    ctx.save();ctx.font='bold '+tfz+'px '+_FONT_FAMILY;
     ctx.textAlign=_iconDrawn?'right':'center';ctx.textBaseline='middle';
     if(sel){ctx.shadowColor=sth.tm;ctx.shadowBlur=5;}
     ctx.fillStyle='rgba(255,255,255,0.95)';ctx.fillText(sth.name,_iconDrawn?x+w-3:x+w/2,y+h/2);ctx.restore();
-  });
+  }
   // ── JOUER ──
   if(playRect){
     const{x,y,w,h}=playRect;const now=Date.now();
@@ -255,7 +293,7 @@ function drawMenu(t){
     rp(ctx,x,y,w,h,h/2);ctx.strokeStyle=hexA(th.tm,0.65);ctx.lineWidth=1.5;ctx.stroke();
     rp(ctx,x+1.5,y+1.5,w-3,h-3,h/2-1.5);ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();
     const pfz=cl(Math.floor(h*0.48),12,22);
-    drawPremText(ctx,'JOUER',x+w/2,y+h/2,`bold ${pfz}px system-ui,-apple-system,"SF Pro Display",Arial`,th.hi||th.tm,lerpC(th.tm,'#fff',0.3),'rgba(0,0,0,0.5)',th.tm,10,2.5);
+    drawPremText(ctx,'JOUER',x+w/2,y+h/2,'bold '+pfz+'px '+_FONT_FAMILY,th.hi||th.tm,lerpC(th.tm,'#fff',0.3),'rgba(0,0,0,0.5)',th.tm,10,2.5);
     ctx.textAlign='center';ctx.textBaseline='middle';
   }
   // ── REPRENDRE (si sauvegarde) ── [between JOUER and CLASSEMENT]
@@ -269,7 +307,7 @@ function drawMenu(t){
     rp(ctx,x,y,w,h,h/2);ctx.strokeStyle=hexA('#40FF80',0.5);ctx.lineWidth=1.5;ctx.stroke();
     ctx.shadowBlur=0;
     const rfz=cl(Math.floor(h*0.48),12,22);
-    drawPremText(ctx,'▶  REPRENDRE',x+w/2,y+h/2,`bold ${rfz}px system-ui,-apple-system,"SF Pro Display",Arial`,'#FFFFFF','#A0FFB0','rgba(0,0,0,0.5)','#40FF80',8,2);
+    drawPremText(ctx,'▶  REPRENDRE',x+w/2,y+h/2,'bold '+rfz+'px '+_FONT_FAMILY,'#FFFFFF','#A0FFB0','rgba(0,0,0,0.5)','#40FF80',8,2);
     ctx.restore();
   }
   // ── CLASSEMENT MONDIAL ──
@@ -283,7 +321,7 @@ function drawMenu(t){
     rp(ctx,x,y,w,h,h/2);ctx.strokeStyle=hexA('#FFD700',0.55);ctx.lineWidth=1.5;ctx.stroke();
     ctx.shadowBlur=0;
     const lfz=cl(Math.floor(h*0.46),12,21);
-    drawPremText(ctx,'🏆  CLASSEMENT',x+w/2,y+h/2,`bold ${lfz}px system-ui,-apple-system,"SF Pro Display",Arial`,'#FFD700','#B8860B','rgba(0,0,0,0.5)','#FFD700',8,2);
+    drawPremText(ctx,'🏆  CLASSEMENT',x+w/2,y+h/2,'bold '+lfz+'px '+_FONT_FAMILY,'#FFD700','#B8860B','rgba(0,0,0,0.5)','#FFD700',8,2);
     ctx.restore();
   }
   // ── BOUTON SON (icône fixée en haut à droite) ──
@@ -297,7 +335,7 @@ function drawMenu(t){
     if(!_IS_IOS){const ssh=ctx.createLinearGradient(x,y,x,y+h*0.5);ssh.addColorStop(0,'rgba(255,255,255,0.18)');ssh.addColorStop(1,'rgba(255,255,255,0)');rp(ctx,x+2,y+2,w-4,h*0.5,8);ctx.fillStyle=ssh;ctx.fill();}
     rp(ctx,x,y,w,h,10);ctx.strokeStyle=hexA(on?'#40D8FF':'#FF6060',0.6);ctx.lineWidth=1.5;ctx.stroke();
     ctx.shadowBlur=0;
-    ctx.font=`${Math.floor(h*0.58)}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font=(Math.floor(h*0.58))+'px '+_FONT_FAMILY;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(on?'🔊':'🔇',x+w/2,y+h/2);
     ctx.restore();
   }
@@ -305,11 +343,11 @@ function drawMenu(t){
   const bsz=cl(Math.floor(H*0.020),8,14);
   const btmY=H-bsz*2.5;
   ctx.textAlign='center';ctx.textBaseline='alphabetic';
-  if(best>0){ctx.save();ctx.font=`bold ${bsz*1.18}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.shadowColor=th.tm;ctx.shadowBlur=12;ctx.fillStyle=th.tm;ctx.fillText(`★ RECORD : ${best}`,W/2,btmY);ctx.shadowBlur=22;ctx.shadowColor=th.hi||th.tm;ctx.globalAlpha=0.38;ctx.fillText(`★ RECORD : ${best}`,W/2,btmY);ctx.globalAlpha=1;ctx.restore();
+  if(best>0){ctx.save();ctx.font=_menuFontBszBold;ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.shadowColor=th.tm;ctx.shadowBlur=12;ctx.fillStyle=th.tm;ctx.fillText(`★ RECORD : ${best}`,W/2,btmY);ctx.shadowBlur=22;ctx.shadowColor=th.hi||th.tm;ctx.globalAlpha=0.38;ctx.fillText(`★ RECORD : ${best}`,W/2,btmY);ctx.globalAlpha=1;ctx.restore();
     // Animated sparkles around record score
     if(Math.random()<0.06)menuParts.push({x:rnd(W/2-60,W/2+60),y:btmY+rnd(-bsz*0.5,bsz*0.1),vx:rnd(-0.6,0.6),vy:rnd(-1.5,-0.3),color:th.tm,size:rnd(1.5,3),life:rnd(30,60),ml:60,star:true});}
-  if(bestCombo>1){ctx.save();ctx.font=`${bsz*0.85}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=hexA(th.ta,0.80);ctx.textAlign='center';ctx.shadowColor=th.ta;ctx.shadowBlur=4;ctx.fillText(`Meilleur combo : ×${bestCombo}`,W/2,btmY+bsz*1.35);ctx.restore();}
-  ctx.font=`${bsz*0.76}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.fillStyle=hexA(th.tg,0.45);ctx.fillText('Toucher JOUER pour commencer',W/2,H-4);
+  if(bestCombo>1){ctx.save();ctx.font=_menuFontBszCombo;ctx.fillStyle=hexA(th.ta,0.80);ctx.textAlign='center';ctx.shadowColor=th.ta;ctx.shadowBlur=4;ctx.fillText(`Meilleur combo : ×${bestCombo}`,W/2,btmY+bsz*1.35);ctx.restore();}
+  ctx.font=_menuFontBszHint;ctx.fillStyle=hexA(th.tg,0.45);ctx.fillText('Toucher JOUER pour commencer',W/2,H-4);
   ctx.textAlign='left';ctx.textBaseline='alphabetic';
 }
 
@@ -375,15 +413,15 @@ function drawPause(t){
   rp(ctx,p.x,p.y,p.w,p.h,20);ctx.strokeStyle=hexA(th.sl,0.7);ctx.lineWidth=1.5;ctx.stroke();
   // Title
   const tsz=cl(p.h*0.10,18,30);
-  drawPremText(ctx,'⏸  PAUSE',p.x+p.w/2,_pauseBtns._titleY,`bold ${tsz}px system-ui,-apple-system,"SF Pro Display",Arial`,th.hi||th.tm,th.ta,'rgba(0,0,0,0.5)',th.hi||th.tm,10,2);
+  drawPremText(ctx,'⏸  PAUSE',p.x+p.w/2,_pauseBtns._titleY,'bold '+tsz+'px '+_FONT_FAMILY,th.hi||th.tm,th.ta,'rgba(0,0,0,0.5)',th.hi||th.tm,10,2);
   // Mode badge
   const mode=MODES[currentMode]||MODES.survie;
   const bw2=ctx.measureText(mode.icon+' '+mode.name).width+30;
-  ctx.font=`bold 13px system-ui,-apple-system,"SF Pro Display",Arial`;
+  ctx.font='bold 13px '+_FONT_FAMILY;
   const bx2=(W-bw2)/2|0;
   const by2=_pauseBtns._badgeY|0;
   rrect(ctx,bx2,by2,bw2,24,12,hexA(mode.color,0.22),hexA(mode.color,0.80),1.5);
-  ctx.font='bold 13px system-ui,-apple-system,"SF Pro Display",Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=mode.color;
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=mode.color;
   ctx.fillText(mode.icon+' '+mode.name,p.x+p.w/2,by2+12);
   // Buttons
   const btnDefs={
@@ -397,7 +435,9 @@ function drawPause(t){
       border:_musicEnabled?'#60C8FF':'#C060FF'},
     quit:{icon:'🏠',lbl:'MENU PRINCIPAL',g0:'#6A2C0A',g1:'#381505',border:'#FF7040'}
   };
-  ['resume','restart','sound','music','quit'].forEach((k,i)=>{
+  const _pbKeys=['resume','restart','sound','music','quit'];
+  for(let i=0;i<_pbKeys.length;i++){
+    const k=_pbKeys[i];
     const btn=_pauseBtns[k];const def=btnDefs[k];
     const{x:bx,y:by,w:bw,h:bh}=btn;const br=bh/2;
     const pulse=0.5+0.5*Math.sin(now*0.003+i*1.2);
@@ -411,22 +451,22 @@ function drawPause(t){
     if(!_IS_IOS){const sh=ctx.createLinearGradient(bx,by,bx,by+bh*0.45);sh.addColorStop(0,'rgba(255,255,255,0.16)');sh.addColorStop(1,'rgba(255,255,255,0)');ctx.save();rp(ctx,bx,by,bw,bh,br);ctx.clip();ctx.fillStyle=sh;ctx.fillRect(bx,by,bw,bh*0.45);ctx.restore();}
     // Label
     const fs=cl(bh*0.40,12,20);
-    ctx.font=`bold ${fs}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='bold '+fs+'px '+_FONT_FAMILY;ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillStyle='rgba(255,255,255,0.95)';
     ctx.shadowColor=def.border;ctx.shadowBlur=4;
     ctx.fillText(def.icon+'  '+def.lbl,bx+bw/2,by+bh/2);
     ctx.shadowBlur=0;
-  });
+  }
   // Score actuel
   const scSz=cl(H*0.026,10,14);
-  ctx.font=`${scSz}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=th.tm;
+  ctx.font=scSz+'px '+_FONT_FAMILY;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=th.tm;
   ctx.fillText(`Score actuel : ${score}`,p.x+p.w/2,_pauseBtns._scoreY+scSz/2);
   // Volume slider
   if(_volumeSliderRect){
     const{x:vx,y:vy,w:vw,h:vh}=_volumeSliderRect;
     const th2=THEMES[curTheme];
     // Label
-    ctx.font=`bold ${cl(vh*0.7,9,13)}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.font='bold '+cl(vh*0.7,9,13)+'px '+_FONT_FAMILY;ctx.textAlign='left';ctx.textBaseline='middle';
     ctx.fillStyle=th2.tg;ctx.fillText('🔊 Volume',vx,vy-10);
     // Track background
     rrect(ctx,vx,vy,vw,vh,vh/2,hexA(th2.sl,0.4),hexA(th2.sl,0.7),1);
@@ -443,7 +483,7 @@ function drawPause(t){
     ctx.strokeStyle='rgba(255,255,255,0.6)';ctx.lineWidth=1.5;ctx.stroke();
     ctx.restore();
     // Value text
-    ctx.font=`bold ${cl(vh*0.65,8,12)}px system-ui,-apple-system,"SF Pro Display",Arial`;ctx.textAlign='right';ctx.fillStyle=th2.tm;
+    ctx.font='bold '+cl(vh*0.65,8,12)+'px '+_FONT_FAMILY;ctx.textAlign='right';ctx.fillStyle=th2.tm;
     ctx.fillText(`${Math.round(_volume*100)}%`,vx+vw,vy-10);
   }
   ctx.restore();
@@ -459,7 +499,9 @@ function handlePauseTap(x,y){
     }
   }
   if(!_pauseBtns.resume)return;
-  ['resume','restart','sound','quit'].forEach(k=>{
+  const _ptKeys=['resume','restart','sound','quit'];
+  for(let _pti=0;_pti<_ptKeys.length;_pti++){
+    const k=_ptKeys[_pti];
     const b=_pauseBtns[k];if(!b)return;
     if(x>=b.x&&x<b.x+b.w&&y>=b.y&&y<b.y+b.h){
       if(k==='resume'){
@@ -470,6 +512,6 @@ function handlePauseTap(x,y){
       else if(k==='music'){if(typeof toggleMusic==='function')toggleMusic();}
       else if(k==='quit'){_pauseStartTime=0;gameState='menu';}
     }
-  });
+  }
 }
 
